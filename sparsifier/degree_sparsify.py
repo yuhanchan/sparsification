@@ -1,4 +1,5 @@
 import os
+import sys
 import os.path as osp
 import json
 import tempfile
@@ -17,7 +18,7 @@ def compile_degree_pruner():
     os.chdir(cwd)
 
 
-def degree_sparsify(dataset, dataset_name, in_or_out, degree_thres, config=None):
+def degree_sparsify(dataset, dataset_name, in_or_out, degree_thres, config=None, recompile=False):
     """
     Input:
         dataset: PygDataset
@@ -47,13 +48,19 @@ def degree_sparsify(dataset, dataset_name, in_or_out, degree_thres, config=None)
         edge_selection = torch.load(prune_file_path)
     else:
         myLogger.info(message=f'Prune file not exist, generating {in_or_out}_degree prune file with threshold {degree_thres}')
-        compile_degree_pruner()
+        if recompile:
+            compile_degree_pruner()
         edge_list_path = os.path.join(current_file_dir, f'../data/{dataset_name}/raw/edge_list.el')  
         tmpfile = tempfile.NamedTemporaryFile(mode='w+', delete=True)
         os.chdir(current_file_dir)
         os.system(f'./bin/degree_prune -f {edge_list_path} -q {in_or_out}_threshold -x {degree_thres} -o {tmpfile.name}')
         os.chdir(cwd)
-        edge_selection = torch.tensor(np.loadtxt(tmpfile.name, dtype=np.int32)).type(torch.bool)
+        if dataset_name in ['Reddit', 'Reddit2', 'ogbn_products']:
+            edge_selection = torch.ones(dataset[0].edge_index.shape[1]).type(torch.bool)
+            edge_selection[np.loadtxt(tmpfile.name)] = False
+        else:
+            myLogger.error(message=f'{dataset_name} is not supported. Exiting...')
+            sys.exit(1)
         if prune_file_path is not None:
             os.makedirs(osp.dirname(prune_file_path), exist_ok=True)
             torch.save(edge_selection, prune_file_path)
