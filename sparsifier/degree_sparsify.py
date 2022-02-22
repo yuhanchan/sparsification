@@ -1,20 +1,69 @@
+import os
+import os.path as osp
+import json
+import tempfile
+import numpy as np
+import torch
+import myLogger
 
-def in_degree_sparsify(degree_thres):
+def compile_degree_pruner():
+    cwd = os.getcwd()
+    current_file_dir = os.path.dirname(os.path.realpath(__file__))
+    bin_path = os.path.join(current_file_dir, 'bin')
+    os.makedirs(bin_path, exist_ok=True)
+
+    os.chdir(current_file_dir)
+    os.system(f'make -f {current_file_dir}/Makefile')
+    os.chdir(cwd)
+
+
+def degree_sparsify(dataset, dataset_name, in_or_out, degree_thres, config=None):
     """
     Input:
+        dataset: PygDataset
+        dataset_name: str, name of dataset 
+        in_or_out: str, 'in' or 'out'
         degree_thres: int, threshold for in-degree
-        
+        config: loaded from config.json
     Output:
         edge_selection: tensor, shape (size), type torch.bool
     """
-    pass
-            
-def out_degree_sparsify(degree_thres):
-    """
-    Input:
-        degree_thres: int, threshold for out-degree
-        
-    Output:
-        edge_selection: tensor, shape (size), type torch.bool
-    """
-    pass
+    assert in_or_out in ['in', 'out'], 'in_or_out should be "in" or "out"'
+    cwd = os.getcwd()
+    current_file_dir = os.path.dirname(os.path.realpath(__file__))
+
+    myLogger.info(f'Getting {in_or_out}_degree prune file with threshold {degree_thres} for {dataset_name}')
+    if config == None or str(degree_thres) not in config[dataset_name]['degree_thres_to_drop_rate_map']:
+        myLogger.info(message=f'No config found for {dataset_name} with threshold {degree_thres}, edge_selection will be generated, but will not be saved to file')
+        prune_file_path = None
+    else:
+        prune_file_path = os.path.join(current_file_dir, 
+                                       f'../data/{dataset_name}/pruned/{in_or_out}_degree/', 
+                                       str(config[dataset_name]['degree_thres_to_drop_rate_map'][str(degree_thres)]), 
+                                       'edge_selection.npy')
+
+    if prune_file_path is not None and osp.exists(prune_file_path):
+        myLogger.info(message=f'Prune file already exists, loading edge selection')
+        edge_selection = torch.load(prune_file_path)
+    else:
+        myLogger.info(message=f'Prune file not exist, generating {in_or_out}_degree prune file with threshold {degree_thres}')
+        compile_degree_pruner()
+        edge_list_path = os.path.join(current_file_dir, f'../data/{dataset_name}/raw/edge_list.el')  
+        tmpfile = tempfile.NamedTemporaryFile(mode='w+', delete=True)
+        os.chdir(current_file_dir)
+        os.system(f'./bin/degree_prune -f {edge_list_path} -q {in_or_out}_threshold -x {degree_thres} -o {tmpfile.name}')
+        os.chdir(cwd)
+        edge_selection = torch.tensor(np.loadtxt(tmpfile.name, dtype=np.int32)).type(torch.bool)
+        if prune_file_path is not None:
+            os.makedirs(osp.dirname(prune_file_path), exist_ok=True)
+            torch.save(edge_selection, prune_file_path)
+            myLogger.info(message=f'Prune file saved for future use')
+    return edge_selection
+
+
+def in_degree_sparsify(dataset, dataset_name, degree_thres, config=None):
+    degree_sparsify(dataset, dataset_name, 'in', degree_thres, config=config)
+
+
+def out_degree_sparsify(dataset, dataset_name, degree_thres, config=None):
+    degree_sparsify(dataset, dataset_name, 'out', degree_thres, config=config)
