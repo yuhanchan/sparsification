@@ -56,7 +56,7 @@ def degree_sparsify(dataset, dataset_name, in_or_out, degree_thres, config=None,
         os.system(f'./bin/degree_prune -f {edge_list_path} -q {in_or_out}_threshold -x {degree_thres} -o {tmpfile.name}')
         os.chdir(cwd)
         if dataset_name in ['Reddit', 'Reddit2', 'ogbn_products']:
-            edge_selection = torch.ones(dataset[0].edge_index.shape[1]).type(torch.bool)
+            edge_selection = torch.ones(dataset.data.edge_index.shape[1]).type(torch.bool)
             edge_selection[np.loadtxt(tmpfile.name)] = False
         else:
             myLogger.error(message=f'{dataset_name} is not supported. Exiting...')
