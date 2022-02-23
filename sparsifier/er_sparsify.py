@@ -156,7 +156,7 @@ def er_sparsify(dataset, dataset_name, epsilon: Union[int, float, list], config)
                  list -> compute each epsilon, no return
         config: config dict
     Output:
-        data
+        datai: data with pruned edge index and edge weight
     """
     global npz_file_path, csv_file_path, pkl_file_path, prune_file_dir
     npz_file_path = osp.join(osp.dirname(osp.abspath(__file__)), f'../data/{dataset_name}/raw/V.npz')

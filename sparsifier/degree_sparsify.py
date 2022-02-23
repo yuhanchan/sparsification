@@ -27,7 +27,7 @@ def degree_sparsify(dataset, dataset_name, in_or_out, degree_thres, config=None,
         degree_thres: int, threshold for in-degree
         config: loaded from config.json
     Output:
-        edge_selection: tensor, shape (size), type torch.bool
+        data: data with pruned edge index
     """
     assert in_or_out in ['in', 'out'], 'in_or_out should be "in" or "out"'
     cwd = os.getcwd()
@@ -65,7 +65,10 @@ def degree_sparsify(dataset, dataset_name, in_or_out, degree_thres, config=None,
             os.makedirs(osp.dirname(prune_file_path), exist_ok=True)
             torch.save(edge_selection, prune_file_path)
             myLogger.info(message=f'Prune file saved for future use')
-    return edge_selection
+
+    data = dataset.data
+    data.edge_index = data.edge_index[:, edge_selection]
+    return data
 
 
 def in_degree_sparsify(dataset, dataset_name, degree_thres, config=None):

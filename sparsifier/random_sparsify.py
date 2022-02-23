@@ -16,7 +16,7 @@ def random_sparsify(dataset, dataset_name, drop_rate):
         dataset_name: str, name of dataset
         drop_rate: float, between 0 and 1 
     Output:
-        edge_selection: tensor, shape (size), type torch.bool
+        data: data with pruned edge index
     """
     myLogger.info(f'Getting random prune file with prune rate {drop_rate} for {dataset_name}')
     prune_file_path = osp.join(osp.dirname(osp.abspath(__file__)), f'../data/{dataset_name}/pruned/random/{drop_rate}/edge_selection.npy')
@@ -34,4 +34,7 @@ def random_sparsify(dataset, dataset_name, drop_rate):
         os.makedirs(osp.dirname(prune_file_path), exist_ok=True)
         torch.save(edge_selection, prune_file_path)
         myLogger.info(message=f'Prune file saved for future use')
-    return edge_selection
+        
+    data = dataset.data
+    data.edge_index = data.edge_index[:, edge_selection]
+    return data
