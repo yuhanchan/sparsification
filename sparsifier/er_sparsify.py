@@ -2,6 +2,7 @@ import os
 import os.path as osp
 import sys
 import pickle
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -59,11 +60,11 @@ def stage2():
         os.system(f"julia compute_V.jl --filepath={npz_file_path}")
         os.chdir(cwd)
 
-def compute_edge_data(epsilon: str, Pe, C, weights, start_nodes, end_nodes, N, dataset_name, config):
-    if not isinstance(epsilon, str):
-        myLogger.error(message=f"epsilon must be a str, quitting...")
+def compute_edge_data(epsilon: Union[int, float], Pe, C, weights, start_nodes, end_nodes, N, dataset_name, config):
+    if not isinstance(epsilon, int) and not isinstance(epsilon, float):
+        myLogger.error(message=f"epsilon must be one of the type: int, float")
         sys.exit(1)
-    q = round(N * np.log(N) * 9 * C ** 2 / (float(epsilon) ** 2))
+    q = round(N * np.log(N) * 9 * C ** 2 / (epsilon ** 2))
     results = np.random.choice(np.arange(np.shape(Pe)[0]), int(q), p=list(Pe))
     spin_counts = stats.itemfreq(results).astype(int)
 
@@ -81,8 +82,8 @@ def compute_edge_data(epsilon: str, Pe, C, weights, start_nodes, end_nodes, N, d
     print(f"Prune rate for epsilon={epsilon}: ", 1 - np.count_nonzero(new_weights) / np.size(new_weights))
     # convert into PyG's object
     edge_index, edge_weight = from_scipy_sparse_matrix(sparserW)
-    if epsilon in config[dataset_name]["er_epsilon_to_drop_rate_map"]:
-        prune_file_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][epsilon]), "edge_data.pt")
+    if str(epsilon) in config[dataset_name]["er_epsilon_to_drop_rate_map"]:
+        prune_file_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "edge_data.pt")
         os.makedirs(osp.dirname(prune_file_path), exist_ok=True)
         torch.save({"edge_index": edge_index, "edge_weight": edge_weight}, prune_file_path)
         myLogger.info(message=f"Saving edge_data.pt for future use")
@@ -92,7 +93,7 @@ def compute_edge_data(epsilon: str, Pe, C, weights, start_nodes, end_nodes, N, d
     return edge_index, edge_weight
     
     
-def stage3(dataset, dataset_name, epsilon: float | str | list[float] | list[str], config):
+def stage3(dataset, dataset_name, epsilon: Union[int, float, list], config):
     myLogger.info(message=f"Computing ER Stage 3")
     V_frame = pd.read_csv(csv_file_path, header=None)
     myLogger.info(message=f"Loaded V.csv")
@@ -131,9 +132,9 @@ def stage3(dataset, dataset_name, epsilon: float | str | list[float] | list[str]
     # Rudelson and Vershynin, 2007, Thm. 3.1
     C = 4 * C0
 
-    if isinstance(epsilon, float) or isinstance(epsilon, str):
-        edge_index, edge_weight = compute_edge_data(str(epsilon), Pe, C, weights, start_nodes, end_nodes, N, dataset_name, config)
-    elif isinstance(epsilon, list[float]) or isinstance(epsilon, list[str]):
+    if isinstance(epsilon, int) or isinstance(epsilon, float):
+        edge_index, edge_weight = compute_edge_data(epsilon, Pe, C, weights, start_nodes, end_nodes, N, dataset_name, config)
+    elif isinstance(epsilon, list):
         with ProcessPoolExecutor(max_workers=64) as executor:
             futures = {executor.submit(compute_edge_data, epsilon_, Pe, C, weights, start_nodes, end_nodes, N, dataset_name, config): epsilon_ for epsilon_ in epsilon}
             for future in futures:
@@ -141,18 +142,18 @@ def stage3(dataset, dataset_name, epsilon: float | str | list[float] | list[str]
                 future.result()
         edge_index, edge_weight = None, None
     else:
-        myLogger.error(message=f"epsilon must be one of the type: float, str, list[float], list[str]")
+        myLogger.error(message=f"epsilon must be one of the type: int, float, list")
         sys.exit(1)
     return  edge_index, edge_weight
 
 
-def er_sparsify(dataset, dataset_name, epsilon: float | str | list[float] | list[str], config):
+def er_sparsify(dataset, dataset_name, epsilon: Union[int, float, list], config):
     """
     Input:
         dataset: PygDataset
         dataset_name: str, name of the dataset
-        epsilon: float | str -> return edge_index, edge_weight
-                 list[float] | list[str] -> compute each epsilon, no return
+        epsilon: int | float -> return edge_index, edge_weight
+                 list -> compute each epsilon, no return
         config: config dict
     Output:
         data
@@ -164,8 +165,8 @@ def er_sparsify(dataset, dataset_name, epsilon: float | str | list[float] | list
     prune_file_dir = osp.join(osp.dirname(osp.abspath(__file__)), f'../data/{dataset_name}/pruned/er')
     os.makedirs(prune_file_dir, exist_ok=True)
     
-    if isinstance(epsilon, float) or isinstance(epsilon, str): 
-        prune_file_path = osp.join(prune_file_dir, str(epsilon), "edge_data.pt")
+    if isinstance(epsilon, int) or isinstance(epsilon, float): 
+        prune_file_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "edge_data.pt")
         if osp.exists(prune_file_path):
             myLogger.info(message=f"edge_data.pt already exists. Loading it...")
             edge_data = torch.load(prune_file_path)
@@ -177,15 +178,17 @@ def er_sparsify(dataset, dataset_name, epsilon: float | str | list[float] | list
             stage1(dataset)
             stage2()
             edge_index, edge_weight = stage3(dataset, dataset_name, epsilon, config)
-    elif isinstance(epsilon, list[float]) or isinstance(epsilon, list[str]):
+    elif isinstance(epsilon, list): 
         myLogger.info(message=f"edge_data.pt does not exist. Computing it...")
         stage1(dataset)
         stage2()
-        stage3(dataset, dataset_name, epsilon, config)
+        edge_index, edge_weight = stage3(dataset, dataset_name, epsilon, config)
     else:
-        myLogger.error(message=f"epsilon must be one of the type: float, str, list[float], list[str]")
+        myLogger.error(message=f"epsilon must be one of the type: int, float, list")
         sys.exit(1)
 
-    data.edge_index = edge_index
-    data.edge_weight = edge_weight
+    data = dataset.data
+    if edge_index is not None and edge_weight is not None:
+        data.edge_index = edge_index
+        data.edge_weight = edge_weight
     return data
