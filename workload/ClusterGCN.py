@@ -153,7 +153,7 @@ def test(
     return accs
 
 
-def ClusterGCN(dataset, dataset_name, edge_selection, **kwargs):
+def ClusterGCN(dataset, dataset_name, **kwargs):
     # Default parameters
     experiment_dir = None
     epochs = 50
