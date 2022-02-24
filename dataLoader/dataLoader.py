@@ -1,7 +1,7 @@
 import os.path as osp
 from ogb.nodeproppred import PygNodePropPredDataset
 import torch_geometric.datasets as PygDataset
-
+import torch
 
 def Reddit():
     path = osp.join(osp.dirname(osp.realpath(__file__)), '..', 'data', 'Reddit')
