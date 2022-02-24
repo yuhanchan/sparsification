@@ -79,7 +79,7 @@ def compute_edge_data(epsilon: Union[int, float], Pe, C, weights, start_nodes, e
         (np.squeeze(new_weights), (start_nodes, end_nodes)), shape=(N, N)
     )
     sparserW = sparserW + sparserW.T
-    print(f"Prune rate for epsilon={epsilon}: ", 1 - np.count_nonzero(new_weights) / np.size(new_weights))
+    print(f"Prune rate for epsilon={epsilon}: {1 - np.count_nonzero(new_weights) / np.size(new_weights)}, ({np.size(new_weights)} -> {np.count_nonzero(new_weights)})")
     # convert into PyG's object
     edge_index, edge_weight = from_scipy_sparse_matrix(sparserW)
     if str(epsilon) in config[dataset_name]["er_epsilon_to_drop_rate_map"]:
@@ -156,7 +156,7 @@ def er_sparsify(dataset, dataset_name, epsilon: Union[int, float, list], config)
                  list -> compute each epsilon, no return
         config: config dict
     Output:
-        datai: data with pruned edge index and edge weight
+        dataset: PygDataset with edge pruned
     """
     global npz_file_path, csv_file_path, pkl_file_path, prune_file_dir
     npz_file_path = osp.join(osp.dirname(osp.abspath(__file__)), f'../data/{dataset_name}/raw/V.npz')
@@ -191,4 +191,5 @@ def er_sparsify(dataset, dataset_name, epsilon: Union[int, float, list], config)
     if edge_index is not None and edge_weight is not None:
         data.edge_index = edge_index
         data.edge_weight = edge_weight
-    return data
+    dataset.data = data
+    return dataset

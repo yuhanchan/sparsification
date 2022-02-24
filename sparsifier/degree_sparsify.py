@@ -27,7 +27,7 @@ def degree_sparsify(dataset, dataset_name, in_or_out, degree_thres, config=None,
         degree_thres: int, threshold for in-degree
         config: loaded from config.json
     Output:
-        data: data with pruned edge index
+        dataset: PygDataset, with edges dropped
     """
     assert in_or_out in ['in', 'out'], 'in_or_out should be "in" or "out"'
     cwd = os.getcwd()
@@ -68,12 +68,13 @@ def degree_sparsify(dataset, dataset_name, in_or_out, degree_thres, config=None,
 
     data = dataset.data
     data.edge_index = data.edge_index[:, edge_selection]
-    return data
+    dataset.data = data
+    return dataset
 
 
 def in_degree_sparsify(dataset, dataset_name, degree_thres, config=None):
-    degree_sparsify(dataset, dataset_name, 'in', degree_thres, config=config)
+    return degree_sparsify(dataset, dataset_name, 'in', degree_thres, config=config)
 
 
 def out_degree_sparsify(dataset, dataset_name, degree_thres, config=None):
-    degree_sparsify(dataset, dataset_name, 'out', degree_thres, config=config)
+    return degree_sparsify(dataset, dataset_name, 'out', degree_thres, config=config)
