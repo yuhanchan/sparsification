@@ -20,6 +20,7 @@ def random_sparsify(dataset, dataset_name, drop_rate):
     """
     myLogger.info(f'Getting random prune file with prune rate {drop_rate} for {dataset_name}')
     prune_file_path = osp.join(osp.dirname(osp.abspath(__file__)), f'../data/{dataset_name}/pruned/random/{drop_rate}/edge_selection.npy')
+    edge_list_file_path = osp.join(osp.dirname(osp.abspath(__file__)), f'../data/{dataset_name}/pruned/random/{drop_rate}/edge_list.el')
     if osp.exists(prune_file_path):
         myLogger.info(message=f'Prune file already exists, loading edge selection')
         edge_selection = torch.load(prune_file_path)
@@ -37,5 +38,7 @@ def random_sparsify(dataset, dataset_name, drop_rate):
         
     data = dataset.data
     data.edge_index = data.edge_index[:, edge_selection]
+    if not osp.exists(edge_list_file_path):
+        np.savetxt(edge_list_file_path, data.edge_index.numpy().transpose().astype(int), fmt='%i')
     dataset.data = data
     return dataset

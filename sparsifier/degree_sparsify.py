@@ -37,11 +37,16 @@ def degree_sparsify(dataset, dataset_name, in_or_out, degree_thres, config=None,
     if config == None or str(degree_thres) not in config[dataset_name]['degree_thres_to_drop_rate_map']:
         myLogger.info(message=f'No config found for {dataset_name} with threshold {degree_thres}, edge_selection will be generated, but will not be saved to file')
         prune_file_path = None
+        edge_list_file_path = None
     else:
         prune_file_path = os.path.join(current_file_dir, 
                                        f'../data/{dataset_name}/pruned/{in_or_out}_degree/', 
                                        str(config[dataset_name]['degree_thres_to_drop_rate_map'][str(degree_thres)]), 
                                        'edge_selection.npy')
+        edge_list_file_path = os.path.join(current_file_dir, 
+                                           f'../data/{dataset_name}/pruned/{in_or_out}_degree/', 
+                                           str(config[dataset_name]['degree_thres_to_drop_rate_map'][str(degree_thres)]), 
+                                           'edge_list.el')
 
     if prune_file_path is not None and osp.exists(prune_file_path):
         myLogger.info(message=f'Prune file already exists, loading edge selection')
@@ -68,6 +73,8 @@ def degree_sparsify(dataset, dataset_name, in_or_out, degree_thres, config=None,
 
     data = dataset.data
     data.edge_index = data.edge_index[:, edge_selection]
+    if edge_list_file_path is not None and not osp.exists(edge_list_file_path):
+        np.savetxt(edge_list_file_path, data.edge_index.numpy().transpose().astype(int), fmt='%i')
     dataset.data = data
     return dataset
 
