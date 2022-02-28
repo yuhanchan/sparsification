@@ -4,3 +4,5 @@ data/*
 .vscode
 bin/
 experiments/
+tmp.py
+run.sh
