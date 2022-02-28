@@ -31,7 +31,15 @@ def init_data():
     """
     This function generates all pruned dataset files with parameters specified in config.json.
     This function need only run once on new machine.
-    """
+    """    
+    # setup logger
+    myLogger.set_level('INFO')
+    myLogger.get_logger(__name__)
+    
+    # Load config file
+    myLogger.info(f'Loading config')
+    config = json.load(open('config.json'))
+    
     reddit = dataLoader.Reddit()
     reddit2 = dataLoader.Reddit2()
     ogbn_products = dataLoader.ogbn_products()
