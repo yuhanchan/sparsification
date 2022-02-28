@@ -211,23 +211,21 @@ def main():
         
         # Invoke workload
         if args.workload == 'bc':
-            pass
+            workload.bc(**{"-f": edge_list_path, "-n": "1", "-v": "", "-a": "", "-z": osp.join(experiment_dir, 'analysis.txt'), ">": osp.join(experiment_dir, "stdout.txt")})
         elif args.workload == 'bfs':
-            pass
+            workload.bfs(**{"-f": edge_list_path, "-n": "1", "-v": "", "-a": "", "-z": osp.join(experiment_dir, 'analysis.txt'), ">": osp.join(experiment_dir, "stdout.txt")})
         elif args.workload == 'cc':
-            pass
+            workload.cc(**{"-f": edge_list_path, "-n": "1", "-v": "", "-a": "", "-z": osp.join(experiment_dir, 'analysis.txt'), ">": osp.join(experiment_dir, "stdout.txt")})
         elif args.workload == 'cc_sv':
-            pass
+            workload.cc_sv(**{"-f": edge_list_path, "-n": "1", "-v": "", "-a": "", "-z": osp.join(experiment_dir, 'analysis.txt'), ">": osp.join(experiment_dir, "stdout.txt")})
         elif args.workload == 'pr':
             workload.pr(**{"-f": edge_list_path, "-n": "1", "-v": "", "-a": "", "-z": osp.join(experiment_dir, 'analysis.txt'), ">": osp.join(experiment_dir, "stdout.txt")})
         elif args.workload == 'pr_spmv':
-            pass
+            workload.pr_spmv(**{"-f": edge_list_path, "-n": "1", "-v": "", "-a": "", "-z": osp.join(experiment_dir, 'analysis.txt'), ">": osp.join(experiment_dir, "stdout.txt")})
         elif args.workload == 'sssp':
-            pass
+            workload.sssp(**{"-f": edge_list_path, "-n": "1", "-v": "", "-a": "", "-z": osp.join(experiment_dir, 'analysis.txt'), ">": osp.join(experiment_dir, "stdout.txt")})
         elif args.workload == 'tc':
-            pass
-        elif args.workload == 'ClusterGCN':
-            pass
+            workload.tc(**{"-f": undirected_edge_list_path, "-n": "1", "-v": "", "-a": "", "-s": "", "-z": osp.join(experiment_dir, 'analysis.txt'), ">": osp.join(experiment_dir, "stdout.txt")})
         
         
 if __name__ == '__main__':
