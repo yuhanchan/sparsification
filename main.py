@@ -180,12 +180,14 @@ def main():
         # set dataset path
         if args.sparsifier == 'baseline':
             edge_list_path = osp.join(current_file_dir, 'data', args.dataset, 'raw', 'edge_list.el')
+            undirected_edge_list_path = osp.join(current_file_dir, 'data', args.dataset, 'raw', 'undirected_edge_list.el')
             experiment_dir = osp.join(experiment_dir_root, f"{args.workload}/{args.dataset}/{args.sparsifier}")
         elif args.sparsifier == 'random':
             if args.prune not in config[args.dataset]['drop_rate']:
                 myLogger.error(f"Prune rate {args.prune} for random prune for {args.workload} not found in config.json. Exiting...")
                 sys.exit(1)
             edge_list_path = osp.join(current_file_dir, 'data', args.dataset, 'pruned', args.sparsifier, str(args.prune), 'edge_list.el')
+            undirected_edge_list_path = osp.join(current_file_dir, 'data', args.dataset, 'pruned', args.sparsifier, str(args.prune), 'undirected_edge_list.el')
             experiment_dir = osp.join(experiment_dir_root, f"{args.workload}/{args.dataset}/{args.sparsifier}/{args.prune}")
         elif args.sparsifier == 'in_degree' or args.sparsifier == 'out_degree':
             if args.prune not in config[args.dataset]['degree_thres']:
@@ -193,6 +195,7 @@ def main():
                 sys.exit(1)
             drop_rate = config[args.dataset]['degree_thres_to_drop_rate_map'][str(args.prune)]
             edge_list_path = osp.join(current_file_dir, 'data', args.dataset, 'pruned', args.sparsifier, str(drop_rate), 'edge_list.el')
+            undirected_edge_list_path = osp.join(current_file_dir, 'data', args.dataset, 'pruned', args.sparsifier, str(drop_rate), 'undirected_edge_list.el')
             experiment_dir = osp.join(experiment_dir_root, f"{args.workload}/{args.dataset}/{args.sparsifier}/{drop_rate}")
         elif args.sparsifier == 'er':
             if args.prune not in config[args.dataset]['er_epsilon']:
@@ -200,11 +203,10 @@ def main():
                 sys.exit(1)
             drop_rate = config[args.dataset]['er_epsilon_to_drop_rate_map'][str(args.prune)]
             edge_list_path = osp.join(current_file_dir, 'data', args.dataset, 'pruned', args.sparsifier, str(drop_rate), 'edge_list.wel')
+            undirected_edge_list_path = osp.join(current_file_dir, 'data', args.dataset, 'pruned', args.sparsifier, str(drop_rate), 'undirected_edge_list.wel')
             experiment_dir = osp.join(experiment_dir_root, f"{args.workload}/{args.dataset}/{args.sparsifier}/{drop_rate}")
 
-        print(f"Experiment dir: {experiment_dir}")
         os.makedirs(experiment_dir, exist_ok=True)
-        print(f"edge_list_path: {edge_list_path}")
         assert osp.exists(edge_list_path), f"Edge list file {edge_list_path} not found."
         
         # Invoke workload
