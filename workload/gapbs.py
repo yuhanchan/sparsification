@@ -15,7 +15,7 @@ def bfs(**kwargs):
 
     cmd = [bin_path]
     for key, value in kwargs.items():
-        if key in ['-h', '-f', '-s', '-g', '-u', '-k', '-m', '-a', '-n', '-r', '-v']:
+        if key in ['-h', '-f', '-s', '-g', '-u', '-k', '-m', '-a', '-n', '-r', '-v', '-z', '>']:
             cmd.append(key)
             cmd.append(str(value)) if value else None
         else:
@@ -36,7 +36,7 @@ def bc(**kwargs):
 
     cmd = [bin_path]
     for key, value in kwargs.items():
-        if key in ['-h', '-f', '-s', '-g', '-u', '-k', '-m', '-a', '-n', '-r', '-v', '-i']:
+        if key in ['-h', '-f', '-s', '-g', '-u', '-k', '-m', '-a', '-n', '-r', '-v', '-i', '-z', '>']:
             cmd.append(key)
             cmd.append(str(value)) if value else None
         else:
@@ -57,7 +57,7 @@ def cc(**kwargs):
 
     cmd = [bin_path]
     for key, value in kwargs.items():
-        if key in ['-h', '-f', '-s', '-g', '-u', '-k', '-m', '-a', '-n', '-r', '-v']:
+        if key in ['-h', '-f', '-s', '-g', '-u', '-k', '-m', '-a', '-n', '-r', '-v', '-z', '>']:
             cmd.append(key)
             cmd.append(str(value)) if value else None
         else:
@@ -78,7 +78,7 @@ def cc_sv(**kwargs):
 
     cmd = [bin_path]
     for key, value in kwargs.items():
-        if key in ['-h', '-f', '-s', '-g', '-u', '-k', '-m', '-a', '-n', '-r', '-v']:
+        if key in ['-h', '-f', '-s', '-g', '-u', '-k', '-m', '-a', '-n', '-r', '-v', '-z', '>']:
             cmd.append(key)
             cmd.append(str(value)) if value else None
         else:
@@ -99,7 +99,7 @@ def pr(**kwargs):
 
     cmd = [bin_path]
     for key, value in kwargs.items():
-        if key in ['-h', '-f', '-s', '-g', '-u', '-k', '-m', '-a', '-n', '-r', '-v', '-i', '-t']:
+        if key in ['-h', '-f', '-s', '-g', '-u', '-k', '-m', '-a', '-n', '-r', '-v', '-i', '-t', '-z', '>']:
             cmd.append(key)
             cmd.append(str(value)) if value else None
         else:
@@ -120,7 +120,7 @@ def pr_spmv(**kwargs):
 
     cmd = [bin_path]
     for key, value in kwargs.items():
-        if key in ['-h', '-f', '-s', '-g', '-u', '-k', '-m', '-a', '-n', '-r', '-v', '-i', '-t']:
+        if key in ['-h', '-f', '-s', '-g', '-u', '-k', '-m', '-a', '-n', '-r', '-v', '-i', '-t', '-z', '>']:
             cmd.append(key)
             cmd.append(str(value)) if value else None
         else:
@@ -141,7 +141,7 @@ def sssp(**kwargs):
 
     cmd = [bin_path]
     for key, value in kwargs.items():
-        if key in ['-h', '-f', '-s', '-g', '-u', '-k', '-m', '-a', '-n', '-r', '-v', '-d']:
+        if key in ['-h', '-f', '-s', '-g', '-u', '-k', '-m', '-a', '-n', '-r', '-v', '-d', '-z', '>']:
             cmd.append(key)
             cmd.append(str(value)) if value else None
         else:
@@ -162,7 +162,7 @@ def tc(**kwargs):
 
     cmd = [bin_path]
     for key, value in kwargs.items():
-        if key in ['-h', '-f', '-s', '-g', '-u', '-k', '-m', '-a', '-n', '-r', '-v']:
+        if key in ['-h', '-f', '-s', '-g', '-u', '-k', '-m', '-a', '-n', '-r', '-v', '-z', '>']:
             cmd.append(key)
             cmd.append(str(value)) if value else None
         else:
