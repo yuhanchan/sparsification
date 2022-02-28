@@ -87,6 +87,7 @@ def compute_edge_data(epsilon: Union[int, float], Pe, C, weights, start_nodes, e
     if str(epsilon) in config[dataset_name]["er_epsilon_to_drop_rate_map"]:
         prune_file_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "edge_data.pt")
         edge_list_file_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "edge_list.wel")
+        undirected_edge_list_file_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "undirected_edge_list.wel")
         os.makedirs(osp.dirname(prune_file_path), exist_ok=True)
         torch.save({"edge_index": edge_index, "edge_weight": edge_weight}, prune_file_path)
         myLogger.info(message=f"Saving edge_data.pt for future use")
@@ -100,6 +101,13 @@ def compute_edge_data(epsilon: Union[int, float], Pe, C, weights, start_nodes, e
                 f.write(f"{int(line[0])} {int(line[1])} {line[2]}\n")
         myLogger.info(message=f"Saved edge list in {edge_list_file_path}")
 
+    if undirected_edge_list_file_path is not None and not osp.exists(undirected_edge_list_file_path):
+        to_save = torch.cat((edge_index, edge_weight.reshape(1, -1)), 0).numpy().transpose()
+        with open(undirected_edge_list_file_path, 'w') as f:
+            for line in to_save:
+                f.write(f"{int(line[0])} {int(line[1])} {line[2]}\n") if line[0] < line[1] else None
+        myLogger.info(message=f"Saved edge list in {undirected_edge_list_file_path}")
+        
     return edge_index, edge_weight
     
     

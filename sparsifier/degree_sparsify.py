@@ -38,6 +38,7 @@ def degree_sparsify(dataset, dataset_name, in_or_out, degree_thres, config=None,
         myLogger.info(message=f'No config found for {dataset_name} with threshold {degree_thres}, edge_selection will be generated, but will not be saved to file')
         prune_file_path = None
         edge_list_file_path = None
+        undirected_edge_list_file_path = None
     else:
         prune_file_path = os.path.join(current_file_dir, 
                                        f'../data/{dataset_name}/pruned/{in_or_out}_degree/', 
@@ -47,6 +48,10 @@ def degree_sparsify(dataset, dataset_name, in_or_out, degree_thres, config=None,
                                            f'../data/{dataset_name}/pruned/{in_or_out}_degree/', 
                                            str(config[dataset_name]['degree_thres_to_drop_rate_map'][str(degree_thres)]), 
                                            'edge_list.el')
+        undirected_edge_list_file_path = os.path.join(current_file_dir, 
+                                                      f'../data/{dataset_name}/pruned/{in_or_out}_degree/', 
+                                                      str(config[dataset_name]['degree_thres_to_drop_rate_map'][str(degree_thres)]), 
+                                                      'undirected_edge_list.el')
 
     if prune_file_path is not None and osp.exists(prune_file_path):
         myLogger.info(message=f'Prune file already exists, loading edge selection')
@@ -75,6 +80,11 @@ def degree_sparsify(dataset, dataset_name, in_or_out, degree_thres, config=None,
     data.edge_index = data.edge_index[:, edge_selection]
     if edge_list_file_path is not None and not osp.exists(edge_list_file_path):
         np.savetxt(edge_list_file_path, data.edge_index.numpy().transpose().astype(int), fmt='%i')
+    if undirected_edge_list_file_path is not None and not osp.exists(undirected_edge_list_file_path):
+        to_save = data.edge_index.numpy().transpose().astype(int)
+        with open(undirected_edge_list_file_path, 'w') as f:
+            for line in to_save:
+                f.write(f'{line[0]} {line[1]}\n') if line[0] < line[1] else None
     dataset.data = data
     return dataset
 
