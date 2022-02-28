@@ -86,27 +86,43 @@ def compute_edge_data(epsilon: Union[int, float], Pe, C, weights, start_nodes, e
     edge_index, edge_weight = from_scipy_sparse_matrix(sparserW)
     if str(epsilon) in config[dataset_name]["er_epsilon_to_drop_rate_map"]:
         prune_file_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "edge_data.pt")
-        edge_list_file_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "edge_list.wel")
-        undirected_edge_list_file_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "undirected_edge_list.wel")
+        unweighted_edge_list_file_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "edge_list.el")
+        weighted_edge_list_file_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "edge_list.wel")
+        undirected_unweighted_edge_list_file_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "undirected_edge_list.el")
+        undirected_weighted_edge_list_file_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "undirected_edge_list.wel")
         os.makedirs(osp.dirname(prune_file_path), exist_ok=True)
         torch.save({"edge_index": edge_index, "edge_weight": edge_weight}, prune_file_path)
         myLogger.info(message=f"Saving edge_data.pt for future use")
     else:
         myLogger.info(message=f"Drop rate for epsilon={epsilon} not found in config, edge_data.pt not saved")
         
-    if edge_list_file_path is not None and not osp.exists(edge_list_file_path):
+    if unweighted_edge_list_file_path is not None and not osp.exists(unweighted_edge_list_file_path):
         to_save = torch.cat((edge_index, edge_weight.reshape(1, -1)), 0).numpy().transpose()
-        with open(edge_list_file_path, 'w') as f:
+        with open(unweighted_edge_list_file_path, 'w') as f:
+            for line in to_save:
+                f.write(f"{int(line[0])} {int(line[1])}\n")
+        myLogger.info(message=f"Saved edge list in {unweighted_edge_list_file_path}")
+        
+    if weighted_edge_list_file_path is not None and not osp.exists(weighted_edge_list_file_path):
+        to_save = torch.cat((edge_index, edge_weight.reshape(1, -1)), 0).numpy().transpose()
+        with open(weighted_edge_list_file_path, 'w') as f:
             for line in to_save:
                 f.write(f"{int(line[0])} {int(line[1])} {line[2]}\n")
-        myLogger.info(message=f"Saved edge list in {edge_list_file_path}")
+        myLogger.info(message=f"Saved edge list in {weighted_edge_list_file_path}")
 
-    if undirected_edge_list_file_path is not None and not osp.exists(undirected_edge_list_file_path):
+    if undirected_unweighted_edge_list_file_path is not None and not osp.exists(undirected_unweighted_edge_list_file_path):
         to_save = torch.cat((edge_index, edge_weight.reshape(1, -1)), 0).numpy().transpose()
-        with open(undirected_edge_list_file_path, 'w') as f:
+        with open(undirected_unweighted_edge_list_file_path, 'w') as f:
+            for line in to_save:
+                f.write(f"{int(line[0])} {int(line[1])}\n") if line[0] < line[1] else None
+        myLogger.info(message=f"Saved edge list in {undirected_unweighted_edge_list_file_path}")
+
+    if undirected_weighted_edge_list_file_path is not None and not osp.exists(undirected_weighted_edge_list_file_path):
+        to_save = torch.cat((edge_index, edge_weight.reshape(1, -1)), 0).numpy().transpose()
+        with open(undirected_weighted_edge_list_file_path, 'w') as f:
             for line in to_save:
                 f.write(f"{int(line[0])} {int(line[1])} {line[2]}\n") if line[0] < line[1] else None
-        myLogger.info(message=f"Saved edge list in {undirected_edge_list_file_path}")
+        myLogger.info(message=f"Saved edge list in {undirected_weighted_edge_list_file_path}")
         
     return edge_index, edge_weight
     
