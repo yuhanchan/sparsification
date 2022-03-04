@@ -258,7 +258,7 @@ def main():
             elif args.workload == 'tc':
                 input_file_path = unweighted_undirected_edge_list_path if args.sparsifier == 'er' else undirected_edge_list_path
                 assert osp.exists(input_file_path), f"Input file {input_file_path} does not exist. Exiting..."
-                workload.tc(**{"-f": input_file_path, "-n": "10", "-v": "", "-a": "", "-s": "", "-z": osp.join(experiment_dir, 'analysis.txt'), ">": osp.join(experiment_dir, "stdout.txt")})
+                workload.tc(**{"-f": input_file_path, "-n": "10", "-a": "", "-s": "", "-z": osp.join(experiment_dir, 'analysis.txt'), ">": osp.join(experiment_dir, "stdout.txt")})
         
         
 if __name__ == '__main__':
