@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import os.path as osp
+import numpy as np
 
 import shlex
 import subprocess
@@ -195,68 +196,68 @@ def main():
         else:
             # set dataset path
             if args.sparsifier == 'baseline':
-                directed_edge_list_path = osp.join(current_file_dir, 'data', args.dataset, 'raw', 'edge_list.el')
-                undirected_edge_list_path = osp.join(current_file_dir, 'data', args.dataset, 'raw', 'undirected_edge_list.el')
+                duw_el_path = osp.join(current_file_dir, 'data', args.dataset, 'raw', 'duw.el')
+                uduw_el_path = osp.join(current_file_dir, 'data', args.dataset, 'raw', 'uduw.el')
                 experiment_dir = osp.join(experiment_dir_root, f"{args.workload}/{args.dataset}/{args.sparsifier}")
             elif args.sparsifier == 'random':
                 if prune_level not in config[args.dataset]['drop_rate']:
                     myLogger.error(f"Prune rate {prune_level} for random prune for {args.workload} not found in config.json. Exiting...")
                     sys.exit(1)
-                directed_edge_list_path = osp.join(current_file_dir, 'data', args.dataset, 'pruned', args.sparsifier, str(prune_level), 'edge_list.el')
-                undirected_edge_list_path = osp.join(current_file_dir, 'data', args.dataset, 'pruned', args.sparsifier, str(prune_level), 'undirected_edge_list.el')
+                duw_el_path = osp.join(current_file_dir, 'data', args.dataset, 'pruned', args.sparsifier, str(prune_level), 'duw.el')
+                uduw_el_path = osp.join(current_file_dir, 'data', args.dataset, 'pruned', args.sparsifier, str(prune_level), 'uduw.el')
                 experiment_dir = osp.join(experiment_dir_root, f"{args.workload}/{args.dataset}/{args.sparsifier}/{prune_level}")
             elif args.sparsifier == 'in_degree' or args.sparsifier == 'out_degree':
                 if prune_level not in config[args.dataset]['degree_thres']:
                     myLogger.error(f"Degree threshold {prune_level} for in_degree/out_degree prune for {args.workload} not found in config.json. Exiting...")
                     sys.exit(1)
                 drop_rate = config[args.dataset]['degree_thres_to_drop_rate_map'][str(prune_level)]
-                directed_edge_list_path = osp.join(current_file_dir, 'data', args.dataset, 'pruned', args.sparsifier, str(drop_rate), 'edge_list.el')
-                undirected_edge_list_path = osp.join(current_file_dir, 'data', args.dataset, 'pruned', args.sparsifier, str(drop_rate), 'undirected_edge_list.el')
+                duw_el_path = osp.join(current_file_dir, 'data', args.dataset, 'pruned', args.sparsifier, str(drop_rate), 'duw.el')
+                uduw_el_path = osp.join(current_file_dir, 'data', args.dataset, 'pruned', args.sparsifier, str(drop_rate), 'uduw.el')
                 experiment_dir = osp.join(experiment_dir_root, f"{args.workload}/{args.dataset}/{args.sparsifier}/{drop_rate}")
             elif args.sparsifier == 'er':
                 if prune_level not in config[args.dataset]['er_epsilon']:
                     myLogger.error(f"Epsilon {prune_level} for er prune for {args.workload} not found in config.json. Exiting...")
                     sys.exit(1)
                 drop_rate = config[args.dataset]['er_epsilon_to_drop_rate_map'][str(prune_level)]
-                weighted_directed_edge_list_path = osp.join(current_file_dir, 'data', args.dataset, 'pruned', args.sparsifier, str(drop_rate), 'edge_list.wel')
-                weighted_undirected_edge_list_path = osp.join(current_file_dir, 'data', args.dataset, 'pruned', args.sparsifier, str(drop_rate), 'undirected_edge_list.wel')
-                unweighted_directed_edge_list_path = osp.join(current_file_dir, 'data', args.dataset, 'pruned', args.sparsifier, str(drop_rate), 'edge_list.el')
-                unweighted_undirected_edge_list_path = osp.join(current_file_dir, 'data', args.dataset, 'pruned', args.sparsifier, str(drop_rate), 'undirected_edge_list.el')
+                dw_el_path = osp.join(current_file_dir, 'data', args.dataset, 'pruned', args.sparsifier, str(drop_rate), 'dw.wel')
+                udw_el_path = osp.join(current_file_dir, 'data', args.dataset, 'pruned', args.sparsifier, str(drop_rate), 'udw.wel')
+                duw_el_path = osp.join(current_file_dir, 'data', args.dataset, 'pruned', args.sparsifier, str(drop_rate), 'duw.el')
+                uduw_el_path = osp.join(current_file_dir, 'data', args.dataset, 'pruned', args.sparsifier, str(drop_rate), 'uduw.el')
                 experiment_dir = osp.join(experiment_dir_root, f"{args.workload}/{args.dataset}/{args.sparsifier}/{drop_rate}")
 
             os.makedirs(experiment_dir, exist_ok=True)
             
             # Invoke workload
             if args.workload == 'bc':
-                input_file_path = unweighted_directed_edge_list_path if args.sparsifier == 'er' else directed_edge_list_path
+                input_file_path = duw_el_path
                 assert osp.exists(input_file_path), f"Input file {input_file_path} does not exist. Exiting..."
                 workload.bc(**{"-f": input_file_path, "-n": "10", "-v": "", "-a": "", "-z": osp.join(experiment_dir, 'analysis.txt'), ">": osp.join(experiment_dir, "stdout.txt")})
             elif args.workload == 'bfs':
-                input_file_path = unweighted_directed_edge_list_path if args.sparsifier == 'er' else directed_edge_list_path
+                input_file_path = duw_el_path
                 assert osp.exists(input_file_path), f"Input file {input_file_path} does not exist. Exiting..."
                 workload.bfs(**{"-f": input_file_path, "-n": "10", "-v": "", "-a": "", "-z": osp.join(experiment_dir, 'analysis.txt'), ">": osp.join(experiment_dir, "stdout.txt")})
             elif args.workload == 'cc':
-                input_file_path = unweighted_undirected_edge_list_path if args.sparsifier == 'er' else undirected_edge_list_path
+                input_file_path = uduw_el_path
                 assert osp.exists(input_file_path), f"Input file {input_file_path} does not exist. Exiting..."
                 workload.cc(**{"-f": input_file_path, "-n": "10", "-v": "", "-a": "", "-z": osp.join(experiment_dir, 'analysis.txt'), ">": osp.join(experiment_dir, "stdout.txt")})
             elif args.workload == 'cc_sv':
-                input_file_path = unweighted_undirected_edge_list_path if args.sparsifier == 'er' else undirected_edge_list_path
+                input_file_path = uduw_el_path
                 assert osp.exists(input_file_path), f"Input file {input_file_path} does not exist. Exiting..."
                 workload.cc_sv(**{"-f": input_file_path, "-n": "10", "-v": "", "-a": "", "-z": osp.join(experiment_dir, 'analysis.txt'), ">": osp.join(experiment_dir, "stdout.txt")})
             elif args.workload == 'pr':
-                input_file_path = unweighted_directed_edge_list_path if args.sparsifier == 'er' else directed_edge_list_path
+                input_file_path = dw_el_path if args.sparsifier == 'er' else duw_el_path
                 assert osp.exists(input_file_path), f"Input file {input_file_path} does not exist. Exiting..."
                 workload.pr(**{"-f": input_file_path, "-n": "10", "-v": "", "-a": "", "-z": osp.join(experiment_dir, 'analysis.txt'), ">": osp.join(experiment_dir, "stdout.txt")})
             elif args.workload == 'pr_spmv':
-                input_file_path = unweighted_directed_edge_list_path if args.sparsifier == 'er' else directed_edge_list_path
+                input_file_path = dw_el_path if args.sparsifier == 'er' else duw_el_path
                 assert osp.exists(input_file_path), f"Input file {input_file_path} does not exist. Exiting..."
                 workload.pr_spmv(**{"-f": input_file_path, "-n": "10", "-v": "", "-a": "", "-z": osp.join(experiment_dir, 'analysis.txt'), ">": osp.join(experiment_dir, "stdout.txt")})
             elif args.workload == 'sssp':
-                input_file_path = weighted_directed_edge_list_path if args.sparsifier == 'er' else directed_edge_list_path
+                input_file_path = dw_el_path if args.sparsifier == 'er' else duw_el_path
                 assert osp.exists(input_file_path), f"Input file {input_file_path} does not exist. Exiting..."
                 workload.sssp(**{"-f": input_file_path, "-n": "10", "-v": "", "-a": "", "-z": osp.join(experiment_dir, 'analysis.txt'), ">": osp.join(experiment_dir, "stdout.txt")})
             elif args.workload == 'tc':
-                input_file_path = unweighted_undirected_edge_list_path if args.sparsifier == 'er' else undirected_edge_list_path
+                input_file_path = uduw_el_path
                 assert osp.exists(input_file_path), f"Input file {input_file_path} does not exist. Exiting..."
                 workload.tc(**{"-f": input_file_path, "-n": "10", "-a": "", "-s": "", "-z": osp.join(experiment_dir, 'analysis.txt'), ">": osp.join(experiment_dir, "stdout.txt")})
         

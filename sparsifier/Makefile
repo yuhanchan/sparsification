@@ -14,7 +14,7 @@ ifneq ($(SERIAL), 1)
 	CXX_FLAGS += $(PAR_FLAG)
 endif
 
-KERNELS = degree_prune
+KERNELS = prune
 SUITE = $(KERNELS) 
 
 .PHONY: all

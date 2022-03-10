@@ -21,7 +21,6 @@ npz_file_path = None
 csv_file_path = None
 pkl_file_path = None
 prune_file_path = None
-edge_list_file_path = None
 prune_file_dir = None
 
 def compute_reff(W, V):
@@ -86,43 +85,43 @@ def compute_edge_data(epsilon: Union[int, float], Pe, C, weights, start_nodes, e
     edge_index, edge_weight = from_scipy_sparse_matrix(sparserW)
     if str(epsilon) in config[dataset_name]["er_epsilon_to_drop_rate_map"]:
         prune_file_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "edge_data.pt")
-        unweighted_edge_list_file_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "edge_list.el")
-        weighted_edge_list_file_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "edge_list.wel")
-        undirected_unweighted_edge_list_file_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "undirected_edge_list.el")
-        undirected_weighted_edge_list_file_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "undirected_edge_list.wel")
+        duw_el_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "duw.el")
+        dw_el_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "dw.wel")
+        uduw_el_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "uduw.el")
+        udw_el_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "udw.wel")
         os.makedirs(osp.dirname(prune_file_path), exist_ok=True)
         torch.save({"edge_index": edge_index, "edge_weight": edge_weight}, prune_file_path)
         myLogger.info(message=f"Saving edge_data.pt for future use")
     else:
         myLogger.info(message=f"Drop rate for epsilon={epsilon} not found in config, edge_data.pt not saved")
         
-    if unweighted_edge_list_file_path is not None and not osp.exists(unweighted_edge_list_file_path):
+    if duw_el_path is not None and not osp.exists(duw_el_path):
         to_save = torch.cat((edge_index, edge_weight.reshape(1, -1)), 0).numpy().transpose()
-        with open(unweighted_edge_list_file_path, 'w') as f:
+        with open(duw_el_path, 'w') as f:
             for line in to_save:
                 f.write(f"{int(line[0])} {int(line[1])}\n")
-        myLogger.info(message=f"Saved edge list in {unweighted_edge_list_file_path}")
+        myLogger.info(message=f"Saved edge list in {duw_el_path}")
         
-    if weighted_edge_list_file_path is not None and not osp.exists(weighted_edge_list_file_path):
+    if dw_el_path is not None and not osp.exists(dw_el_path):
         to_save = torch.cat((edge_index, edge_weight.reshape(1, -1)), 0).numpy().transpose()
-        with open(weighted_edge_list_file_path, 'w') as f:
+        with open(dw_el_path, 'w') as f:
             for line in to_save:
                 f.write(f"{int(line[0])} {int(line[1])} {line[2]}\n")
-        myLogger.info(message=f"Saved edge list in {weighted_edge_list_file_path}")
+        myLogger.info(message=f"Saved edge list in {dw_el_path}")
 
-    if undirected_unweighted_edge_list_file_path is not None and not osp.exists(undirected_unweighted_edge_list_file_path):
+    if uduw_el_path is not None and not osp.exists(uduw_el_path):
         to_save = torch.cat((edge_index, edge_weight.reshape(1, -1)), 0).numpy().transpose()
-        with open(undirected_unweighted_edge_list_file_path, 'w') as f:
+        with open(uduw_el_path, 'w') as f:
             for line in to_save:
                 f.write(f"{int(line[0])} {int(line[1])}\n") if line[0] < line[1] else None
-        myLogger.info(message=f"Saved edge list in {undirected_unweighted_edge_list_file_path}")
+        myLogger.info(message=f"Saved edge list in {uduw_el_path}")
 
-    if undirected_weighted_edge_list_file_path is not None and not osp.exists(undirected_weighted_edge_list_file_path):
+    if udw_el_path is not None and not osp.exists(udw_el_path):
         to_save = torch.cat((edge_index, edge_weight.reshape(1, -1)), 0).numpy().transpose()
-        with open(undirected_weighted_edge_list_file_path, 'w') as f:
+        with open(udw_el_path, 'w') as f:
             for line in to_save:
                 f.write(f"{int(line[0])} {int(line[1])} {line[2]}\n") if line[0] < line[1] else None
-        myLogger.info(message=f"Saved edge list in {undirected_weighted_edge_list_file_path}")
+        myLogger.info(message=f"Saved edge list in {udw_el_path}")
         
     return edge_index, edge_weight
     
@@ -192,7 +191,7 @@ def er_sparsify(dataset, dataset_name, epsilon: Union[int, float, list], config)
     Output:
         dataset: PygDataset with edge pruned
     """
-    global npz_file_path, csv_file_path, pkl_file_path, prune_file_path, edge_list_file_path, prune_file_dir
+    global npz_file_path, csv_file_path, pkl_file_path, prune_file_path, prune_file_dir
     npz_file_path = osp.join(osp.dirname(osp.abspath(__file__)), f'../data/{dataset_name}/raw/V.npz')
     csv_file_path = osp.join(osp.dirname(osp.abspath(__file__)), f'../data/{dataset_name}/raw/V.csv')
     pkl_file_path = osp.join(osp.dirname(osp.abspath(__file__)), f'../data/{dataset_name}/raw/Reff.pkl')
@@ -203,7 +202,6 @@ def er_sparsify(dataset, dataset_name, epsilon: Union[int, float, list], config)
     if isinstance(epsilon, int) or isinstance(epsilon, float): 
         if str(epsilon) in config[dataset_name]["er_epsilon_to_drop_rate_map"]:
             prune_file_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "edge_data.pt")
-            edge_list_file_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "edge_list.wel")
         if prune_file_path and osp.exists(prune_file_path):
             myLogger.info(message=f"edge_data.pt already exists. Loading it...")
             edge_data = torch.load(prune_file_path)

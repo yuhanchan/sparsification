@@ -37,21 +37,21 @@ def degree_sparsify(dataset, dataset_name, in_or_out, degree_thres, config=None,
     if config == None or str(degree_thres) not in config[dataset_name]['degree_thres_to_drop_rate_map']:
         myLogger.info(message=f'No config found for {dataset_name} with threshold {degree_thres}, edge_selection will be generated, but will not be saved to file')
         prune_file_path = None
-        edge_list_file_path = None
-        undirected_edge_list_file_path = None
+        duw_el_path = None
+        uduw_el_path = None
     else:
         prune_file_path = os.path.join(current_file_dir, 
                                        f'../data/{dataset_name}/pruned/{in_or_out}_degree/', 
                                        str(config[dataset_name]['degree_thres_to_drop_rate_map'][str(degree_thres)]), 
                                        'edge_selection.npy')
-        edge_list_file_path = os.path.join(current_file_dir, 
+        duw_el_path = os.path.join(current_file_dir, 
                                            f'../data/{dataset_name}/pruned/{in_or_out}_degree/', 
                                            str(config[dataset_name]['degree_thres_to_drop_rate_map'][str(degree_thres)]), 
-                                           'edge_list.el')
-        undirected_edge_list_file_path = os.path.join(current_file_dir, 
+                                           'duw.el')
+        uduw_el_path = os.path.join(current_file_dir, 
                                                       f'../data/{dataset_name}/pruned/{in_or_out}_degree/', 
                                                       str(config[dataset_name]['degree_thres_to_drop_rate_map'][str(degree_thres)]), 
-                                                      'undirected_edge_list.el')
+                                                      'uduw.el')
 
     if prune_file_path is not None and osp.exists(prune_file_path):
         myLogger.info(message=f'Prune file already exists, loading edge selection')
@@ -60,10 +60,10 @@ def degree_sparsify(dataset, dataset_name, in_or_out, degree_thres, config=None,
         myLogger.info(message=f'Prune file not exist, generating {in_or_out}_degree prune file with threshold {degree_thres}')
         if recompile:
             compile_degree_pruner()
-        edge_list_path = os.path.join(current_file_dir, f'../data/{dataset_name}/raw/edge_list.el')  
+        input_duw_el_path = os.path.join(current_file_dir, f'../data/{dataset_name}/raw/duw.el')  
         tmpfile = tempfile.NamedTemporaryFile(mode='w+', delete=True)
         os.chdir(current_file_dir)
-        os.system(f'./bin/prune -f {edge_list_path} -q {in_or_out}_threshold -x {degree_thres} -o {tmpfile.name}')
+        os.system(f'./bin/prune -f {input_duw_el_path} -q {in_or_out}_threshold -x {degree_thres} -o {tmpfile.name}')
         os.chdir(cwd)
         if dataset_name in ['Reddit', 'Reddit2', 'ogbn_products']:
             edge_selection = torch.ones(dataset.data.edge_index.shape[1]).type(torch.bool)
@@ -78,11 +78,11 @@ def degree_sparsify(dataset, dataset_name, in_or_out, degree_thres, config=None,
 
     data = dataset.data
     data.edge_index = data.edge_index[:, edge_selection]
-    if edge_list_file_path is not None and not osp.exists(edge_list_file_path):
-        np.savetxt(edge_list_file_path, data.edge_index.numpy().transpose().astype(int), fmt='%i')
-    if undirected_edge_list_file_path is not None and not osp.exists(undirected_edge_list_file_path):
+    if duw_el_path is not None and not osp.exists(duw_el_path):
+        np.savetxt(duw_el_path, data.edge_index.numpy().transpose().astype(int), fmt='%i')
+    if uduw_el_file_path is not None and not osp.exists(uduw_el_path):
         to_save = data.edge_index.numpy().transpose().astype(int)
-        with open(undirected_edge_list_file_path, 'w') as f:
+        with open(uduw_el_path, 'w') as f:
             for line in to_save:
                 f.write(f'{line[0]} {line[1]}\n') if line[0] < line[1] else None
     dataset.data = data
