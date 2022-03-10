@@ -63,7 +63,7 @@ def degree_sparsify(dataset, dataset_name, in_or_out, degree_thres, config=None,
         edge_list_path = os.path.join(current_file_dir, f'../data/{dataset_name}/raw/edge_list.el')  
         tmpfile = tempfile.NamedTemporaryFile(mode='w+', delete=True)
         os.chdir(current_file_dir)
-        os.system(f'./bin/degree_prune -f {edge_list_path} -q {in_or_out}_threshold -x {degree_thres} -o {tmpfile.name}')
+        os.system(f'./bin/prune -f {edge_list_path} -q {in_or_out}_threshold -x {degree_thres} -o {tmpfile.name}')
         os.chdir(cwd)
         if dataset_name in ['Reddit', 'Reddit2', 'ogbn_products']:
             edge_selection = torch.ones(dataset.data.edge_index.shape[1]).type(torch.bool)
