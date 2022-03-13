@@ -1,0 +1,31 @@
+# CMake files
+Testing
+CMakeFiles
+cmake_install.cmake
+CTestTestfile.cmake
+CMakeLists.txt.user
+CMakeCache.txt
+
+# Build files:
+Debug
+Release
+Build/
+*.a
+*.o
+
+# IDE files:
+*.swp
+.idea
+.vscode
+
+# Visual Studio files:
+*.vcxproj
+*.filters
+*.dir
+*.sln
+*.opensdf
+*.sdf
+*.suo
+
+# Mac OSX:
+.DS_Store

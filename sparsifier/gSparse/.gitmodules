@@ -1,0 +1,3 @@
+[submodule "Examples/spectra"]
+	path = Examples/spectra
+	url = https://github.com/yixuan/spectra/
