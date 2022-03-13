@@ -35,14 +35,26 @@ void random_pruning(
 
     srand(SEED);
 
-    std::set<int64_t> prune_indices;
-    while((int64_t)prune_indices.size() < num_edges_to_prune) {
-        int64_t ind = rand() % (num_edges);
-        prune_indices.insert(ind);
+    std::vector<int64_t> edges_to_prune;
+    edges_to_prune.reserve(num_edges);
+    for (int64_t i = 0; i < num_edges; i++) {
+        edges_to_prune.push_back(i);
+    }
+    std::random_shuffle(edges_to_prune.begin(), edges_to_prune.end());
+
+    for (int64_t i = 0; i < num_edges_to_prune; i++) {
+        // std::cout<<"Pruning edge "<<edges_to_prune[i]<<"\n";
+        g->SetIthIndex(edges_to_prune[i]);
     }
 
-    for(auto it : prune_indices)
-        g->SetIthIndex(it);
+    // std::set<int64_t> prune_indices;
+    // while((int64_t)prune_indices.size() < num_edges_to_prune) {
+        // int64_t ind = rand() % (num_edges);
+        // prune_indices.insert(ind);
+    // }
+
+    // for(auto it : prune_indices)
+        // g->SetIthIndex(it);
 
 }
 
@@ -206,8 +218,8 @@ int main(int argc, char* argv[]) {
     }
 
     // Print a pruned graph to a file
-    // write_el_to_file(&g, pruned_graph_file);
-    write_edge_index_to_file(&g, pruned_graph_file, num_edges_to_prune);
+    write_el_to_file(&g, pruned_graph_file);
+    // write_edge_index_to_file(&g, pruned_graph_file, num_edges_to_prune);
     t_overall.Stop();
     PrintStep("[TimingStat] Time to prune and write to file (s):", t_overall.Seconds());
     std::cout << "Pruned percentage for " << pruning_threshold << " is: " << num_edges_to_prune * 100.0 / num_edges << std::endl;
