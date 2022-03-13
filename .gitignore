@@ -4,5 +4,6 @@ data/*
 .vscode
 bin/
 experiments/
+experiments_openmp/
 tmp.py
 run.sh
