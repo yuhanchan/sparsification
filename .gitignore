@@ -7,3 +7,4 @@ experiments/
 experiments_openmp/
 tmp.py
 run.sh
+swap-pane
