@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
 {   
     if(argc != 6)
     {
-        std::cout<<"Usage: "<<argv[0]<<" <er> <input el path> <output el path> <output weight path> <er save path>"<<std::endl;
+        std::cout<<"Usage: "<<argv[0]<<" <epsilon> <input el path> <output el path> <output weight path> <er save path>"<<std::endl;
         return -1;
     }
     // Create a CSV Reader and specify the file location
