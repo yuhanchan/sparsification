@@ -11,6 +11,7 @@
 
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
+#include <iostream>
 namespace gSparse 
 {
     namespace ER 
@@ -40,12 +41,14 @@ namespace gSparse
                     int maxIter = 300
                     )
                 {
+                    std::cout<<"AproxERSLMJacobiCG::_calculateER "<<eps<<" "<<JLTol<<" " <<maxIter<<std::endl;
                     er = gSparse::PrecisionRowMatrix::Zero(graph->GetEdgeCount(), 1);
 
                     std::size_t scale = static_cast<size_t>(
                                 std::ceil(
                                 std::log2(
                                 static_cast<double>(graph->GetIncidentMatrix().cols()) / eps)));
+                    std::cout<<"scale "<<scale<<std::endl;
 
                     for (int i = 1; i != scale + 1; ++i)
                     {

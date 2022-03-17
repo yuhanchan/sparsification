@@ -84,6 +84,25 @@ namespace gSparse
                 _computeInfo = _erCalculator->CalculateER(_er, _graph);
                 return _computeInfo;
             }
+
+            // Load er if it is already computed
+            virtual inline gSparse::COMPUTE_INFO LoadER(std::ifstream & ifs)
+            {
+                size_t edge_count = _graph->GetEdgeCount();
+                _er = gSparse::PrecisionRowMatrix::Zero(edge_count, 1);
+                for (std::size_t i = 0; i < edge_count; ++i)
+                {
+                    ifs >> _er(i);
+                }
+                _computeInfo = gSparse::SUCCESSFUL;
+                return gSparse::SUCCESSFUL;
+            }
+
+            // Save er to file
+            virtual inline void SaveER(std::ofstream & ofs)
+            {
+                ofs << _er;
+            }
             ///
             /// Sampling a sparsifier from a dense graph based on calculate effective weight.
             /// As this is a random algorithm, it may need several attempts to get an acceptable graph.
