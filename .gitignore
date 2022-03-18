@@ -8,3 +8,12 @@ experiments_openmp/
 tmp.py
 run.sh
 swap-pane
+analysis/bc
+analysis/bfs
+analysis/cc
+analysis/cc_sv
+analysis/pr
+analysis/sssp
+analysis/tc
+analysis/openmp
+
