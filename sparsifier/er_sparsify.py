@@ -64,13 +64,19 @@ def stage2():
     """
     Stage 2: Run the Julia script that loads the npz file and generates the V matrix
     """
-    myLogger.info(message=f"Computing ER Stage 2")
-    if not osp.exists(csv_file_path):
+    myLogger.info(message=f"Stage 2: invoking julia script to generate V.csv matrix (Z in the paper)")
+    if osp.exists(csv_file_path):
+        myLogger.info(message=f"csv file already exists. Skipping...")
+    else:
+        myLogger.info(message=f"csv file not exist. Computing...")
+        t_s = time.time()
         cwd = os.getcwd()
         current_file_dir = osp.dirname(osp.realpath(__file__))
         os.chdir(current_file_dir)
         os.system(f"julia compute_V.jl --filepath={npz_file_path}")
         os.chdir(cwd)
+        t_e = time.time()
+        myLogger.info(message=f"Stage 2 took {t_e - t_s} seconds.")
 
 def compute_edge_data(epsilon: Union[int, float], Pe, C, weights, start_nodes, end_nodes, N, dataset_name, config):
     if not isinstance(epsilon, int) and not isinstance(epsilon, float):
