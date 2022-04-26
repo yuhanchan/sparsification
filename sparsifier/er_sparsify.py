@@ -1,6 +1,7 @@
 import os
 import os.path as osp
 import sys
+from time import time
 import pickle
 from typing import Union
 
@@ -33,21 +34,31 @@ def compute_reff(W, V):
     print("Finished computing effective resistances!")
     return Reff
 
-
-def stage1(dataset):
+def stage1(dataset, isPygDataset=False):
     """
     Stage 1: Read the Dataset from pytorch geometric and write it into an .npz file
     Input:
-        dataset: PygDataset
+        dataset: PygDataset or simple numpy array
+        isPygDataset: True if dataset is a PygDataset
     """
-    myLogger.info(message=f"Computing ER Stage 1")
-    if not osp.exists(npz_file_path):
-        sparse_transform = ToSparseTensor()
-        sparse_t_data = sparse_transform(dataset.data)
-        scipy_data = sparse_t_data.adj_t.to_scipy(layout="csc")
-        sparse.save_npz(npz_file_path, scipy_data)
-        myLogger.info(message=f"Generated the npz file. Now run compute_V.jl.")
-
+    myLogger.info(message=f"Stage 1: converting pytorch dataset to npz file")
+    if osp.exists(npz_file_path):
+        myLogger.info(message=f"npz file already exists. Skipping...")
+    else:
+        myLogger.info(message=f"npz file not exist. Computing...")
+        t_s = time.time()
+        if isPygDataset:
+            sparse_transform = ToSparseTensor()
+            sparse_t_data = sparse_transform(dataset.data)
+            scipy_data = sparse_t_data.adj_t.to_scipy(layout="csc")
+            sparse.save_npz(npz_file_path, scipy_data)
+            myLogger.info(message=f"npz file generated.")
+        else:
+            scipy_data = sparse.csc_matrix((np.ones(dataset.shape[0], int), (dataset[:, 0], dataset[:, 1])))
+            sparse.save_npz(npz_file_path, scipy_data)
+            myLogger.info(message=f"npz file generated.")
+        t_e = time.time()
+        myLogger.info(message=f"Stage 1 took {t_e - t_s} seconds.")
 
 def stage2():
     """
