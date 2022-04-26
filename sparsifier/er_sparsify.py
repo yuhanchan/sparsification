@@ -25,13 +25,28 @@ prune_file_path = None
 prune_file_dir = None
 
 def compute_reff(W, V):
-    print("Started computing effective resistances.")
-    start_nodes, end_nodes, weights = sparse.find(sparse.tril(W))
-    n = np.shape(W)[0]
-    Reff = sparse.lil_matrix((n, n))
-    for orig, end in zip(start_nodes, end_nodes):
-        Reff[orig, end] = np.linalg.norm(V[orig, :] - V[end, :]) ** 2
-    print("Finished computing effective resistances!")
+    """
+    This uses the V from julia script Compute_V.jl to calculate the Reff
+    V here is the Z in paper [Graph sparsification by effective resistances]
+    """
+    myLogger.info("Stage 3a: computing Reff")
+    if osp.exists(pkl_file_path):
+        myLogger.info(message=f"Reff already exists, loading...")
+        with open(pkl_file_path, "rb") as f:
+            R_eff = pickle.load(f)
+    else:
+        myLogger.info(message=f"Reff not exist, computing...")
+        t_s = time.time()
+        start_nodes, end_nodes, weights = sparse.find(sparse.tril(W))
+        n = np.shape(W)[0]
+        Reff = sparse.lil_matrix((n, n))
+        for orig, end in zip(start_nodes, end_nodes):
+            Reff[orig, end] = np.linalg.norm(V[orig, :] - V[end, :]) ** 2
+        with open(pkl_file_path, "wb") as f:
+            pickle.dump(R_eff, f)
+            myLogger.info(message=f"Reff.pkl saved.")
+        t_e = time.time()
+        myLogger.info(message=f"Stage 3a took {t_e - t_s} seconds.")
     return Reff
 
 def stage1(dataset, isPygDataset=False):
@@ -143,37 +158,49 @@ def compute_edge_data(epsilon: Union[int, float], Pe, C, weights, start_nodes, e
     return edge_index, edge_weight
     
     
-def stage3(dataset, dataset_name, epsilon: Union[int, float, list], config):
-    myLogger.info(message=f"Computing ER Stage 3")
-    V_frame = pd.read_csv(csv_file_path, header=None)
-    myLogger.info(message=f"Loaded V.csv")
-    V = V_frame.to_numpy()
-    N = V.shape[0]
+    return edge_index, edge_weight
     
-    L_edge_idx, L_edge_attr = get_laplacian(dataset.data.edge_index)
-    L = SparseTensor(row=L_edge_idx[0], col=L_edge_idx[1], value=L_edge_attr)
-    L_scipy = L.to_scipy(layout="csc")
-    L_diag = csc_matrix(
-        (L_scipy.diagonal(), (np.arange(N), np.arange(N))), shape=(N, N)
-    )
-    W_scipy = L_diag - L_scipy
-    if not osp.exists(pkl_file_path):
-        R_eff = compute_reff(W_scipy, V)
-        with open(pkl_file_path, "wb") as f:
-            pickle.dump(R_eff, f)
-            myLogger.info(message=f"Saved effective resistances in Reff.pkl for future use.")
-            f.close()
+def stage3(dataset, dataset_name, epsilon: Union[int, float, list], config, isPygDataset=False):
+    myLogger.info(message=f"Stage 3: Pruning edges")
+    if osp.exists(stage3_file_path):
+        myLogger.info(message="stage3.npz already exists, loading")
+        stage3_var = np.load(stage3_file_path)
+        Pe = stage3_var["Pe"]
+        weights = stage3_var["weights"]
+        start_nodes = stage3_var["start_nodes"]
+        end_nodes = stage3_var["end_nodes"]
+        N = stage3_var["N"]
     else:
-        with open(pkl_file_path, "rb") as f:
-            R_eff = pickle.load(f)
+        V_frame = pd.read_csv(csv_file_path, header=None)
+        V = V_frame.to_numpy()
+        N = V.shape[0]
 
-    start_nodes, end_nodes, weights = sparse.find(sparse.tril(W_scipy))
+        if isPygDataset:
+            L_edge_idx, L_edge_attr = get_laplacian(dataset.data.edge_index)
+        else:
+            L_edge_idx, L_edge_attr = get_laplacian(torch.tensor(np.transpose(dataset)))
+        L = SparseTensor(row=L_edge_idx[0], col=L_edge_idx[1], value=L_edge_attr) # Lapacian, nxn
+        L_scipy = L.to_scipy(layout="csc")
+        L_diag = csc_matrix(
+            (L_scipy.diagonal(), (np.arange(N), np.arange(N))), shape=(N, N)
+        )
+        W_scipy = L_diag - L_scipy # Weight matrix, nxn
+        
+        # compute Reff 
+        R_eff = compute_reff(W_scipy, V)
 
-    weights = np.maximum(0, weights)
-    Re = np.maximum(0, R_eff[start_nodes, end_nodes].toarray())
-    Pe = weights * Re
-    Pe = Pe / np.sum(Pe)
-    Pe = np.squeeze(Pe)
+        # only taking the lower triangle of the W_nxn as it is symmetric
+        start_nodes, end_nodes, weights = sparse.find(sparse.tril(W_scipy))
+
+        weights = np.maximum(0, weights) # 1xm
+        Re = np.maximum(0, R_eff[start_nodes, end_nodes].toarray()) # 1xm
+        Pe = weights * Re # element-wise multiplication, 1xm
+        Pe = Pe / np.sum(Pe) # normalize, 1xm
+        Pe = np.squeeze(Pe) # 1xm
+
+        np.savez(stage3_file_path, Pe=Pe, weights=weights, start_nodes=start_nodes, end_nodes=end_nodes, N=N)
+        myLogger.info(message=f"stage3.npz saved")
+    
 
     # Rudelson, 1996 Random Vectors in the Isotropic Position
     # (too hard to figure out actual C0)
