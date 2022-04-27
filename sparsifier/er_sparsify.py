@@ -220,8 +220,9 @@ def compute_edge_data(epsilon: Union[int, float], Pe, C, weights, start_nodes, e
     return edge_index, edge_weight
     
 def stage3(dataset, dataset_name, epsilon: Union[int, float, list], config, isPygDataset=False):
+def stage3(dataset, dataset_name, epsilon: Union[int, float, list], config, isPygDataset=False, max_workers=64, reuse=True):
     myLogger.info(message=f"Stage 3: Pruning edges")
-    if osp.exists(stage3_file_path):
+    if reuse and osp.exists(stage3_file_path):
         myLogger.info(message="stage3.npz already exists, loading")
         stage3_var = np.load(stage3_file_path)
         Pe = stage3_var["Pe"]
@@ -246,7 +247,7 @@ def stage3(dataset, dataset_name, epsilon: Union[int, float, list], config, isPy
         W_scipy = L_diag - L_scipy # Weight matrix, nxn
         
         # compute Reff 
-        R_eff = compute_reff(W_scipy, V)
+        R_eff = compute_reff(W_scipy, V, parallel=True, reuse=reuse)
 
         # only taking the lower triangle of the W_nxn as it is symmetric
         start_nodes, end_nodes, weights = sparse.find(sparse.tril(W_scipy))
@@ -261,17 +262,17 @@ def stage3(dataset, dataset_name, epsilon: Union[int, float, list], config, isPy
         myLogger.info(message=f"stage3.npz saved")
     
 
+    # Sampling
     # Rudelson, 1996 Random Vectors in the Isotropic Position
     # (too hard to figure out actual C0)
     C0 = 1 / 30.0
-
     # Rudelson and Vershynin, 2007, Thm. 3.1
     C = 4 * C0
 
     if isinstance(epsilon, int) or isinstance(epsilon, float):
         edge_index, edge_weight = compute_edge_data(epsilon, Pe, C, weights, start_nodes, end_nodes, N, dataset_name, config)
     elif isinstance(epsilon, list):
-        with ProcessPoolExecutor(max_workers=64) as executor:
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
             futures = {executor.submit(compute_edge_data, epsilon_, Pe, C, weights, start_nodes, end_nodes, N, dataset_name, config): epsilon_ for epsilon_ in epsilon}
             for future in futures:
                 print(f"Epsilon: {futures[future]}")
