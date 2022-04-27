@@ -134,9 +134,14 @@ def stage2(reuse=True):
         myLogger.info(message=f"Stage 2 took {t_e - t_s} seconds.")
 
 def compute_edge_data(epsilon: Union[int, float], Pe, C, weights, start_nodes, end_nodes, N, dataset_name, config):
+    """ This function is called from stage3. This function is doing the final sampling based on Reff.  
+        This function is seperated to be able to use future.concurrent
+    """
     if not isinstance(epsilon, int) and not isinstance(epsilon, float):
         myLogger.error(message=f"epsilon must be one of the type: int, float")
         sys.exit(1)
+    myLogger.info(message=f"Stage 3b: sampling edges based on Reff")
+    t_s = time()
     q = round(N * np.log(N) * 9 * C ** 2 / (epsilon ** 2))
     results = np.random.choice(np.arange(np.shape(Pe)[0]), int(q), p=list(Pe))
     spin_counts = stats.itemfreq(results).astype(int)
@@ -151,19 +156,33 @@ def compute_edge_data(epsilon: Union[int, float], Pe, C, weights, start_nodes, e
     sparserW = sparse.csc_matrix(
         (np.squeeze(new_weights), (start_nodes, end_nodes)), shape=(N, N)
     )
-    sparserW = sparserW + sparserW.T
-    print(f"Prune rate for epsilon={epsilon}: {1 - np.count_nonzero(new_weights) / np.size(new_weights)}, ({np.size(new_weights)} -> {np.count_nonzero(new_weights)})")
+    sparserW = sparserW + sparserW.T # make it symmetric
+    t_e = time()
+    myLogger.info(message=f"Stage 3b took {t_e - t_s} seconds.")
+    myLogger.info(f"Prune rate for epsilon={epsilon}: {1 - np.count_nonzero(new_weights) / np.size(new_weights)}, ({np.size(new_weights)} -> {np.count_nonzero(new_weights)})")
+
     # convert into PyG's object
     edge_index, edge_weight = from_scipy_sparse_matrix(sparserW)
-    if str(epsilon) in config[dataset_name]["er_epsilon_to_drop_rate_map"]:
-        prune_file_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "edge_data.pt")
-        duw_el_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "duw.el")
-        dw_el_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "dw.wel")
-        uduw_el_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "uduw.el")
-        udw_el_path = osp.join(prune_file_dir, str(config[dataset_name]["er_epsilon_to_drop_rate_map"][str(epsilon)]), "udw.wel")
-        os.makedirs(osp.dirname(prune_file_path), exist_ok=True)
-        torch.save({"edge_index": edge_index, "edge_weight": edge_weight}, prune_file_path)
-        myLogger.info(message=f"Saving edge_data.pt for future use")
+    if str(epsilon) in config[dataset_name]["python_er_epsilon_to_drop_rate_map"]:
+        prune_file_path = osp.join(prune_file_dir, str(config[dataset_name]["python_er_epsilon_to_drop_rate_map"][str(epsilon)]), "edge_data.pt")
+        npy_path = osp.join(prune_file_dir, str(config[dataset_name]["python_er_epsilon_to_drop_rate_map"][str(epsilon)]), "dw.npy")
+        duw_el_path = osp.join(prune_file_dir, str(config[dataset_name]["python_er_epsilon_to_drop_rate_map"][str(epsilon)]), "duw.el")
+        dw_el_path = osp.join(prune_file_dir, str(config[dataset_name]["python_er_epsilon_to_drop_rate_map"][str(epsilon)]), "dw.wel")
+        uduw_el_path = osp.join(prune_file_dir, str(config[dataset_name]["python_er_epsilon_to_drop_rate_map"][str(epsilon)]), "uduw.el")
+        udw_el_path = osp.join(prune_file_dir, str(config[dataset_name]["python_er_epsilon_to_drop_rate_map"][str(epsilon)]), "udw.wel")
+
+        t_s = time()
+        os.makedirs(osp.dirname(npy_path), exist_ok=True)
+        to_save = torch.cat((edge_index, edge_weight.reshape(1, -1)), 0).numpy().transpose()
+        np.save(npy_path, to_save)
+        myLogger.info(message=f"Saved edge_data.pt in {time() - t_s} seconds")
+
+        # t_s = time()
+        # os.makedirs(osp.dirname(npy_path), exist_ok=True)
+        # to_save = torch.cat((edge_index, edge_weight.reshape(1, -1)), 0).numpy().transpose()
+        # np.save(npy_path, to_save)
+        # myLogger.info(message=f"Saved edge_data.pt in {time() - t_s} seconds")
+
     else:
         myLogger.info(message=f"Drop rate for epsilon={epsilon} not found in config, edge_data.pt not saved")
         
