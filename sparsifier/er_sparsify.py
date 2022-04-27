@@ -89,6 +89,7 @@ def compute_reff(W, V, parallel=True, reuse=True):
         myLogger.info(message=f"Stage 3a took {t_e - t_s} seconds.")
     return R_eff
 
+def stage1(dataset, isPygDataset=False, reuse=True):
     """
     Stage 1: Read the Dataset from pytorch geometric and write it into an .npz file
     Input:
@@ -96,11 +97,11 @@ def compute_reff(W, V, parallel=True, reuse=True):
         isPygDataset: True if dataset is a PygDataset
     """
     myLogger.info(message=f"Stage 1: converting pytorch dataset to npz file")
-    if osp.exists(npz_file_path):
+    if reuse and  osp.exists(npz_file_path):
         myLogger.info(message=f"npz file already exists. Skipping...")
     else:
         myLogger.info(message=f"npz file not exist. Computing...")
-        t_s = time.time()
+        t_s = time()
         if isPygDataset:
             sparse_transform = ToSparseTensor()
             sparse_t_data = sparse_transform(dataset.data)
@@ -111,25 +112,25 @@ def compute_reff(W, V, parallel=True, reuse=True):
             scipy_data = sparse.csc_matrix((np.ones(dataset.shape[0], int), (dataset[:, 0], dataset[:, 1])))
             sparse.save_npz(npz_file_path, scipy_data)
             myLogger.info(message=f"npz file generated.")
-        t_e = time.time()
+        t_e = time()
         myLogger.info(message=f"Stage 1 took {t_e - t_s} seconds.")
 
-def stage2():
+def stage2(reuse=True):
     """
     Stage 2: Run the Julia script that loads the npz file and generates the V matrix
     """
     myLogger.info(message=f"Stage 2: invoking julia script to generate V.csv matrix (Z in the paper)")
-    if osp.exists(csv_file_path):
+    if reuse and osp.exists(csv_file_path):
         myLogger.info(message=f"csv file already exists. Skipping...")
     else:
         myLogger.info(message=f"csv file not exist. Computing...")
-        t_s = time.time()
+        t_s = time()
         cwd = os.getcwd()
         current_file_dir = osp.dirname(osp.realpath(__file__))
         os.chdir(current_file_dir)
-        os.system(f"julia compute_V.jl --filepath={npz_file_path}")
+        os.system(f"julia -t 64 compute_V.jl --filepath={npz_file_path}")
         os.chdir(cwd)
-        t_e = time.time()
+        t_e = time()
         myLogger.info(message=f"Stage 2 took {t_e - t_s} seconds.")
 
 def compute_edge_data(epsilon: Union[int, float], Pe, C, weights, start_nodes, end_nodes, N, dataset_name, config):
