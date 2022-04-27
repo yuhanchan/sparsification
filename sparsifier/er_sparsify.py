@@ -50,16 +50,17 @@ def compute_reff(W, V, parallel=True, reuse=True):
         n = np.shape(W)[0]
 
         if not parallel:
+            t_ss = time()
             R_eff = sparse.lil_matrix((n, n))
             for orig, end in zip(start_nodes, end_nodes):
                 R_eff[orig, end] = np.linalg.norm(V[orig, :] - V[end, :]) ** 2
+            myLogger.info(message=f"Computation took {time() - t_ss} seconds.")
 
         else:
             # make V and R_eff shared_memory to avoid copying in multiprocessing
             t_ss = time()
             R_eff = sparse.lil_matrix((n, n))
 
-            # with SharedMemoryManager() as smm:
             shm1 = shared_memory.SharedMemory(create=True, size=V.nbytes)
             V_shared = np.ndarray(V.shape, dtype=V.dtype, buffer=shm1.buf)
             V_shared[:] = V[:]
@@ -80,11 +81,12 @@ def compute_reff(W, V, parallel=True, reuse=True):
                     R_eff[orig, end] = reff
             myLogger.info(message=f"Collecting results took {time() - t_ss} seconds.")
 
-            with open(pkl_file_path, "wb") as f:
-                pickle.dump(R_eff, f)
-                myLogger.info(message=f"Reff.pkl saved.")
-            t_e = time()
-            myLogger.info(message=f"Stage 3a took {t_e - t_s} seconds.")
+        t_ss = time()
+        with open(pkl_file_path, "wb") as f:
+            pickle.dump(R_eff, f)
+            myLogger.info(message=f"Reff.pkl saved. Took {time() - t_ss} seconds.")
+        t_e = time()
+        myLogger.info(message=f"Stage 3a took {t_e - t_s} seconds.")
     return R_eff
 
     """
