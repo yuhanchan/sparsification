@@ -24,32 +24,69 @@ pkl_file_path = None
 prune_file_path = None
 prune_file_dir = None
 
-def compute_reff(W, V):
+def compute_single_reff(i, V_shared, start_nodes, end_nodes):
+    t_s = time()
+    res = []
+    for orig, end in zip(start_nodes, end_nodes):
+        res.append((orig, end, np.linalg.norm(V_shared[orig, :] - V_shared[end, :]) ** 2))
+    print(f"worker {i} finished in {time() - t_s} seconds.")
+    return res
+
+def compute_reff(W, V, parallel=True, reuse=True):
     """
     This uses the V from julia script Compute_V.jl to calculate the Reff
     V here is the Z in paper [Graph sparsification by effective resistances]
     """
     myLogger.info("Stage 3a: computing Reff")
-    if osp.exists(pkl_file_path):
+    if reuse and osp.exists(pkl_file_path):
         myLogger.info(message=f"Reff already exists, loading...")
         with open(pkl_file_path, "rb") as f:
             R_eff = pickle.load(f)
     else:
         myLogger.info(message=f"Reff not exist, computing...")
-        t_s = time.time()
+        t_s = time()
         start_nodes, end_nodes, weights = sparse.find(sparse.tril(W))
+        myLogger.info(message=f"Sparse.find took {time() - t_s} seconds.")
         n = np.shape(W)[0]
-        Reff = sparse.lil_matrix((n, n))
-        for orig, end in zip(start_nodes, end_nodes):
-            Reff[orig, end] = np.linalg.norm(V[orig, :] - V[end, :]) ** 2
-        with open(pkl_file_path, "wb") as f:
-            pickle.dump(R_eff, f)
-            myLogger.info(message=f"Reff.pkl saved.")
-        t_e = time.time()
-        myLogger.info(message=f"Stage 3a took {t_e - t_s} seconds.")
-    return Reff
 
-def stage1(dataset, isPygDataset=False):
+        if not parallel:
+            R_eff = sparse.lil_matrix((n, n))
+            for orig, end in zip(start_nodes, end_nodes):
+                R_eff[orig, end] = np.linalg.norm(V[orig, :] - V[end, :]) ** 2
+
+        else:
+            # make V and R_eff shared_memory to avoid copying in multiprocessing
+            t_ss = time()
+            R_eff = sparse.lil_matrix((n, n))
+
+            # with SharedMemoryManager() as smm:
+            shm1 = shared_memory.SharedMemory(create=True, size=V.nbytes)
+            V_shared = np.ndarray(V.shape, dtype=V.dtype, buffer=shm1.buf)
+            V_shared[:] = V[:]
+
+            num_processes = 64
+            with Pool(num_processes) as p:
+                results = p.starmap(compute_single_reff, [(i, V_shared, start_nodes_part, end_nodes_part)
+                            for i, start_nodes_part, end_nodes_part
+                            in zip(np.arange(num_processes)+1, np.array_split(start_nodes, num_processes), np.array_split(end_nodes, num_processes))])
+            myLogger.info(message=f"Parallel computation took {time() - t_ss} seconds.")
+            shm1.close()
+            shm1.unlink()
+
+            # collect results
+            t_ss = time()
+            for res in results:
+                for orig, end, reff in res:
+                    R_eff[orig, end] = reff
+            myLogger.info(message=f"Collecting results took {time() - t_ss} seconds.")
+
+            with open(pkl_file_path, "wb") as f:
+                pickle.dump(R_eff, f)
+                myLogger.info(message=f"Reff.pkl saved.")
+            t_e = time()
+            myLogger.info(message=f"Stage 3a took {t_e - t_s} seconds.")
+    return R_eff
+
     """
     Stage 1: Read the Dataset from pytorch geometric and write it into an .npz file
     Input:
