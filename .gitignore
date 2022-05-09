@@ -17,3 +17,4 @@ analysis/sssp
 analysis/tc
 analysis/openmp
 
+.ccls-cache
