@@ -383,7 +383,7 @@ SparseMatrixCSC lap(SparseMatrixCSC& a){
     return res;
 }
 
-vector<double> pcg(SparseMatrixCSC& mat, vector<double> b, LDLinv_t& ldli, bool verbose=false, double tol=1e-6, int maxits=1000, int stag_test=5){
+vector<double> pcg(SparseMatrixCSC& mat, vector<double> b, LDLinv_t& ldli, bool verbose=false, double tol=0.01, int maxits=1000, int stag_test=5){
     double al = 0;
 
     int n = mat.n;
