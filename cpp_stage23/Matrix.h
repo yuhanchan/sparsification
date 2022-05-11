@@ -298,6 +298,27 @@ struct LLp {
         os << &p <<  ", (" << p.row << ", " << p.val << ")" << ", next -> " << p.next << ", reverse -> " << p.reverse;
         return os;
     }
+    
+    // for debugging
+    void print_until_selfloop() {
+        int count = 0;
+        LLp* lastptr = this;
+        while(lastptr->next != lastptr) {
+            cout << lastptr->row << "(" << lastptr->reverse->row << ")->";
+            lastptr = lastptr->next;
+            if (++count > 50) {
+                break;
+            }
+        }
+        count += 1;
+        cout << lastptr->row << "(" << lastptr->reverse->row << ")";
+        if (lastptr->next != lastptr) {
+            cout << "... (chain longer than 50)";
+        } else {
+            cout << " (" << count << ")";
+        }
+        cout << endl;
+    }
 };
 
 struct LDLinv_t{
@@ -540,6 +561,14 @@ struct LLmatp_t{
         sort(colspace.begin(), colspace.begin() + ptr + 1, [](LLp* a, LLp* b) { return a->row < b->row; });
 
         return ptr + 1;
+    }
+    
+    // for debugging
+    void print_cols_until_selfloop() {
+        for (int i = 0; i < this->cols.size(); i++) {
+            cout << "" << i << ": ";
+            this->cols[i]->print_until_selfloop();
+        }
     }
 };
 
