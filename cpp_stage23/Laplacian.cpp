@@ -170,6 +170,7 @@ LDLinv_t approxchol(LLmatp_t& a){
         #ifdef DEBUG
         cout << "len: " << len << endl;
         #endif
+
         #ifdef DEBUG
         cout << "pq3: " << pq << endl;
         #endif
@@ -201,6 +202,10 @@ LDLinv_t approxchol(LLmatp_t& a){
             #else
             double r = static_cast<double>(rand()) / RAND_MAX * (csum - csumspace[joffset]) + csumspace[joffset];
             #endif
+
+
+            int koff = lower_bound(csumspace.begin(), csumspace.begin()+len, r) - csumspace.begin(); // csumspace is assumed to be sorted
+            // int koff = searchsortedfirst(csumspace, r, len) - csumspace.begin(); // csumspace is assumed to be sorted
 
             int k = colspace[koff]->row;
 
@@ -278,11 +283,11 @@ void forwardSubstitution(LDLinv_t& ldli, vector<double>& y){
         int i = ldli.col[ii];
 
         int j0 = ldli.colptr[ii];
-        int j1 = ldli.colptr[ii+1];
+        int j1 = ldli.colptr[ii+1] - 1;
 
         double yi = y[i];
 
-        for(int jj=j0; jj<j1-1; jj++){
+        for(int jj=j0; jj<j1; jj++){
             int j = ldli.row_ind[jj];
             y[j] += ldli.val[jj] * yi;
             yi *= (1.0 - ldli.val[jj]);
@@ -298,13 +303,13 @@ void backwardSubstitution(LDLinv_t& ldli, vector<double>& y){
         int i = ldli.col[ii];
 
         int j0 = ldli.colptr[ii];
-        int j1 = ldli.colptr[ii+1];
+        int j1 = ldli.colptr[ii+1] - 1;
 
         int j = ldli.row_ind[j1];
         double yi = y[i];
         yi += y[j];
 
-        for(int jj=j1-2; jj>=j0; jj--){
+        for(int jj=j1-1; jj>=j0; jj--){
             int j = ldli.row_ind[jj];
             yi = yi * (1.0 - ldli.val[jj]) + y[j] * ldli.val[jj];
         }
