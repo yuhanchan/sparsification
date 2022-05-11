@@ -552,13 +552,13 @@ struct LLmatp_t{
                 colspace[ptr] = colspace[i];
             } else {
                 colspace[ptr]->val += colspace[i]->val;
-                colspace[ptr]->reverse->val = 0;
+                colspace[i]->reverse->val = 0;
                 
                 pq.Dec(currow);
             }
         }
         
-        sort(colspace.begin(), colspace.begin() + ptr + 1, [](LLp* a, LLp* b) { return a->row < b->row; });
+        sort(colspace.begin(), colspace.begin() + ptr + 1, [](LLp* a, LLp* b) { return a->val < b->val; });
 
         return ptr + 1;
     }
