@@ -112,6 +112,10 @@ ApproxCholPQ_t ApproxCholPQ(vector<int>& degs){
 }
 
 LDLinv_t approxchol(LLmatp_t& a){
+    #ifdef PSUEDO_RANDOM
+    ifstream fin("uniform_random.txt");
+    #endif
+
     int n = a.n;
 
     LDLinv_t ldli = LDLinv_t(n);
@@ -190,8 +194,13 @@ LDLinv_t approxchol(LLmatp_t& a){
             
             vals[joffset] = 0;
 
+            #ifdef PSUEDO_RANDOM
+            double random_number;
+            fin >> random_number;
+            double r = random_number * (csum - csumspace[joffset]) + csumspace[joffset];
+            #else
             double r = static_cast<double>(rand()) / RAND_MAX * (csum - csumspace[joffset]) + csumspace[joffset];
-            int koff = upper_bound(csumspace.begin(), csumspace.begin()+len, r) - csumspace.begin(); // csumspace is assumed to be sorted
+            #endif
 
             int k = colspace[koff]->row;
 
@@ -256,6 +265,10 @@ LDLinv_t approxchol(LLmatp_t& a){
     ldli.colptr[it] = ldli_row_ptr;
 
     ldli.d = d;
+
+    #ifdef PSUEDO_RANDOM
+    fin.close();
+    #endif
 
     return ldli;
 }
