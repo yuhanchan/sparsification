@@ -13,6 +13,7 @@
 
 // #define DEBUG
 // #define PRINT_MATRIX
+// #define PSEUDO_RANDOM
 
 using namespace std;
 
@@ -171,6 +172,7 @@ void compute_reff(vector<vector<double>>& Z, SparseMatrixCSC& mat){
             // cout << mat.row_ind[j] << "->" << i << ": " << pow(norm(diff), 2) << endl;
         }
     }
+
     //sort res first by 1st column, then by 2nd column
     sort(res.begin(), res.end(), [](const vector<double>& a, const vector<double>& b) {
         return a[0] < b[0] || (a[0] == b[0] && a[1] < b[1]);
@@ -228,14 +230,22 @@ int main (int argc, char* argv[]) {
     mt19937 gen{rd()};
     normal_distribution<double> dist{0, 1};
 
+    #ifdef PSEUDO_RANDOM
+    ifstream fin("normal_random.txt");
+    #endif
     // #pragma omp parallel for num_threads(16)
     for (int i = 0; i < k; i++) {
         for (int j = 0; j < m; j++) {
-            // R[i][j] = static_cast<double>(rand()) / RAND_MAX; // uniform distribution
-            // R[i][j] = 0.05 * (j+1) + 0.01 * (i+1) // fake random, for debug
+            #ifdef PSEUDO_RANDOM
+            fin >> R[i][j];
+            #else
             R[i][j] = dist(gen); // make noraml distribution with mean 0 and std 1
+            #endif
         }
     }
+    #ifdef PSEUDO_RANDOM
+    fin.close();
+    #endif
     end = chrono::high_resolution_clock::now();
     cout << "generate random projection matrix time: " << chrono::duration_cast<chrono::seconds>(end - start).count() << " s" << endl;
 
