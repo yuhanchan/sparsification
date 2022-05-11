@@ -200,7 +200,7 @@ int main (int argc, char* argv[]) {
     // SparseMatrixCSC mat = read_file(argv[1], false, false, true);
     SparseMatrixCSC mat = read_file(argv[1], true, true, false);
     auto end = chrono::high_resolution_clock::now();
-    cout << "read_file time: " << chrono::duration_cast<chrono::seconds>(end - start).count() << " s" << endl;
+    cout << "read_file time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms" << endl;
 
     #ifdef PRINT_MATRIX
     mat.print_dense();
@@ -214,7 +214,7 @@ int main (int argc, char* argv[]) {
     start = chrono::high_resolution_clock::now();
     SparseMatrixCSC U = mat.wtedEdgeVertexMat(); // U is nxm
     end = chrono::high_resolution_clock::now();
-    cout << "generate incidence matrix time: " << chrono::duration_cast<chrono::seconds>(end - start).count() << " s" << endl;
+    cout << "generate incidence matrix time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms" << endl;
 
     #ifdef PRINT_MATRIX
     cout<< "U: " << endl;
@@ -247,10 +247,10 @@ int main (int argc, char* argv[]) {
     fin.close();
     #endif
     end = chrono::high_resolution_clock::now();
-    cout << "generate random projection matrix time: " << chrono::duration_cast<chrono::seconds>(end - start).count() << " s" << endl;
+    cout << "generate random projection matrix time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms" << endl;
 
     #ifdef PRINT_MATRIX
-    //print R
+    // print R
     cout << "R: " << endl;
     for (int i = 0; i < k; i++) {
         for (int j = 0; j < m; j++) {
@@ -267,7 +267,7 @@ int main (int argc, char* argv[]) {
         UR[i] = U.mul(R[i]);
     }
     end = chrono::high_resolution_clock::now();
-    cout << "multiply U and R time: " << chrono::duration_cast<chrono::seconds>(end - start).count() << " s" << endl;
+    cout << "multiply U and R time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms" << endl;
 
     #ifdef PRINT_MATRIX
     // print UR
@@ -284,7 +284,7 @@ int main (int argc, char* argv[]) {
     start = chrono::high_resolution_clock::now();
     vector<vector<double>> Z = approxchol_lapGreedy(mat, UR);
     end = chrono::high_resolution_clock::now();
-    cout << "approxchol_lapGreedy time: " << chrono::duration_cast<chrono::seconds>(end - start).count() << " s" << endl;
+    cout << "approxchol_lapGreedy time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms" << endl;
 
     #ifdef PRINT_MATRIX
     cout << "Z: " << endl;
@@ -300,7 +300,7 @@ int main (int argc, char* argv[]) {
     start = chrono::high_resolution_clock::now();
     compute_reff(Z, mat);
     end = chrono::high_resolution_clock::now();
-    cout << "compute_reff time: " << chrono::duration_cast<chrono::seconds>(end - start).count() << " s" << endl;
+    cout << "compute_reff time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms" << endl;
 
     return 0;
 }
