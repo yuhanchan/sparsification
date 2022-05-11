@@ -139,6 +139,7 @@ LDLinv_t approxchol(LLmatp_t& a){
 
     while(it < n-1){
         #ifdef DEBUG
+        a.print_cols_until_selfloop();
         cout << "------------------------------------------------------------" << endl;
         cout << "pq1: " << pq << endl;
         #endif
@@ -146,7 +147,7 @@ LDLinv_t approxchol(LLmatp_t& a){
         int i = pq.pop();
 
         #ifdef DEBUG
-        cout << "it: " << it << ", i: " << i << endl;
+        cout << "it: " << it << ", i: " << i << endl << flush;
         #endif
 
         #ifdef DEBUG
@@ -162,6 +163,9 @@ LDLinv_t approxchol(LLmatp_t& a){
 
         len = a.compressCol(colspace, len, pq);
 
+        #ifdef DEBUG
+        cout << "len: " << len << endl;
+        #endif
         #ifdef DEBUG
         cout << "pq3: " << pq << endl;
         #endif
@@ -203,6 +207,10 @@ LDLinv_t approxchol(LLmatp_t& a){
             revj->val = newEdgeVal;
             revj->reverse = ll;
 
+            #ifdef DEBUG
+            // insert to head of a.cols[k]
+            cout << "insert to head of a.cols[" << k << "]" << endl;
+            #endif
             LLp* khead = a.cols[k];
             a.cols[k] = ll;
             ll->next = khead;
