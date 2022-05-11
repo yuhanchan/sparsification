@@ -498,17 +498,17 @@ vector<vector<double>> approxchol_lapGreedy(SparseMatrixCSC& a, vector<vector<do
     auto start = std::chrono::high_resolution_clock::now();
     SparseMatrixCSC la = lap(a);
     auto end = std::chrono::high_resolution_clock::now();
-    cout << "Build laplacian: " << std::chrono::duration_cast<std::chrono::seconds>(end-start).count() << " s" << endl;
+    cout << "Build laplacian: " << std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count() << " ms" << endl << flush;
     
     start = std::chrono::high_resolution_clock::now();
     LLmatp_t llmat = LLmatp(a);
     end = std::chrono::high_resolution_clock::now();
-    cout << "LLmatp: " << std::chrono::duration_cast<std::chrono::seconds>(end-start).count() << " s" << endl;
+    cout << "LLmatp: " << std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count() << " ms" << endl;
 
     start = std::chrono::high_resolution_clock::now();
     LDLinv_t ldli = approxchol(llmat);
     end = std::chrono::high_resolution_clock::now();
-    cout << "LDL: " << std::chrono::duration_cast<std::chrono::seconds>(end-start).count() << " s" << endl;
+    cout << "LDL: " << std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count() << " ms" << endl;
     
     vector<vector<double>> res(bs.size());
 
@@ -520,10 +520,13 @@ vector<vector<double>> approxchol_lapGreedy(SparseMatrixCSC& a, vector<vector<do
             b[j] -= b_mean;
         }
         
+        start = chrono::high_resolution_clock::now();
         res[i] = pcg(la, b, ldli);
-        
         end = chrono::high_resolution_clock::now();
-        // cout << "PCG " << i << "/" << bs.size() << " time: " << chrono::duration_cast<chrono::seconds>(end - start).count() << " s" << endl;
+        cout << "PCG: " << chrono::duration_cast<chrono::milliseconds>(end-start).count() << " ms" << endl;
+
+        end = chrono::high_resolution_clock::now();
+        cout << "PCG " << i << "/" << bs.size() << " time: " << chrono::duration_cast<chrono::seconds>(end - start).count() << " s" << endl;
     }
     
     return res;
