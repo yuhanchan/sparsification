@@ -46,7 +46,7 @@ CmdArgs::CmdArgs(int argc, char **argv)
 		continue;
 	    }
 	    _mode = argv[i];
-		assert (_mode == "duw2uduw" || _mode == "uduw2duw" || _mode == "dw2udw" || _mode == "udw2dw");
+		// assert (_mode == "duw2uduw" || _mode == "uduw2duw" || _mode == "dw2udw" || _mode == "udw2dw");
     } else
 	{
 	    cout << "Unknown command line argument: " << arg << endl;
