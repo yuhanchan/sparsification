@@ -1,2 +1,19 @@
-all:
-	g++ -o bin/utils utils.cpp CmdArgs.cpp -O3
+CC = g++
+# FLAGS = -O3 -s -fPIC -fopenmp
+FLAGS = -O3
+
+all: graphgen randomgen utils
+
+
+graphgen:
+	$(CC) $(FLAGS) graphgen.cpp -o bin/graphgen
+
+randomgen:
+	$(CC) $(FLAGS) randomgen.cpp -o bin/randomgen
+
+utils:
+	$(CC) $(FLAGS) utils.cpp CmdArgs.cpp -o bin/utils
+
+clean:
+	rm -f graphgen randomgen utils
+
