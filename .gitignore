@@ -16,5 +16,7 @@ analysis/pr
 analysis/sssp
 analysis/tc
 analysis/openmp
+utils/normal_random.txt
+utils/uniform_random.txt
 
 .ccls-cache
