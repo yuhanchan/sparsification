@@ -20,3 +20,6 @@ utils/normal_random.txt
 utils/uniform_random.txt
 
 .ccls-cache
+*.out
+*.png
+*.txt
