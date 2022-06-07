@@ -5,3 +5,8 @@ viz.png
 *.in
 *.txt
 Z.csv
+callgrind.out.*
+*.svg
+*.png
+*.out
+test_graphs/
