@@ -80,6 +80,10 @@ struct SparseMatrixCSC {
     vector<int> row_ind; // row_ind[i] is the row index of the i-th element
     vector<double> val; // val[i] is the value of the i-th element
     
+    long size_in_bytes() {
+        return sizeof(int) * (col_ptr.size() + row_ind.size()) + sizeof(double) * val.size();
+    }
+
     SparseMatrixCSC Transpose() {
         SparseMatrixCSC B(this->m, this->n, this->nnz);
         B.col_ptr.resize(this->n + 2);
@@ -283,6 +287,16 @@ struct SparseMatrixCSC {
         B.col_ptr.pop_back();
         return B;
     }
+
+    void clear() { // clear to save memory
+        n = 0;
+        m = 0;
+        nnz = 0;
+        col_ptr.clear();
+        row_ind.clear();
+        val.clear();
+    }
+
 };
 
 struct LLp {

@@ -210,15 +210,22 @@ void compute_reff(vector<vector<double>>& Z, SparseMatrixCSC& mat){
 
 
 int main (int argc, char* argv[]) {
+    auto total_start = chrono::high_resolution_clock::now();
     auto start = chrono::high_resolution_clock::now();
     // SparseMatrixCSC mat = read_file(argv[1], true, true, false);
-    SparseMatrixCSC mat = read_file(argv[1], false, false, true);
+    SparseMatrixCSC mat = read_file(argv[1], /*weights=*/false, /*header=*/false, /*exchange_row_col=*/true);
     // SparseMatrixCSC mat = read_file(argv[1], false, false, false);
-    #ifdef READ_LA
-    SparseMatrixCSC la = read_la(argv[1]);
-    #endif
     auto end = chrono::high_resolution_clock::now();
-    cout << "read_file time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms" << endl;
+    cout << "read edge list time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms" << endl;
+    cout << "input mat size: " << mat.size_in_bytes() << " Byte" << endl;
+
+    #ifdef READ_LA
+    start = chrono::high_resolution_clock::now();
+    SparseMatrixCSC la = read_la(argv[1]);
+    end = chrono::high_resolution_clock::now();
+    cout << "read laplacian time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms" << endl;
+    cout << "laplacian mat size: " << la.size_in_bytes() << " Byte" << endl;
+    #endif
 
     // // save mat.col_ptr to filename
     // string col_ptr_file =  "a.rowind.cpp";
@@ -269,6 +276,7 @@ int main (int argc, char* argv[]) {
     SparseMatrixCSC U = mat.wtedEdgeVertexMat(); // U is nxm
     end = chrono::high_resolution_clock::now();
     cout << "generate incidence matrix time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms" << endl;
+    cout << "incidence mat size: " << U.size_in_bytes() << " Byte" << endl;
 
     #ifdef PRINT_MATRIX
     cout<< "U: " << endl;
@@ -319,6 +327,7 @@ int main (int argc, char* argv[]) {
 
     end = chrono::high_resolution_clock::now();
     cout << "generate random projection matrix time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms" << endl;
+    cout << "random projection mat size: " << R.size()*R[0].size()*sizeof(int) << " Byte" << endl;
 
     #ifdef PRINT_MATRIX
     // print R
@@ -352,6 +361,11 @@ int main (int argc, char* argv[]) {
     cout << endl;
     #endif
 
+    // delete U and R to save memory
+    U.clear();
+    R.clear();
+
+
     start = chrono::high_resolution_clock::now();
     #ifdef READ_LA
     vector<vector<double>> Z = approxchol_lapGreedy(mat, la, UR);
@@ -377,5 +391,7 @@ int main (int argc, char* argv[]) {
     end = chrono::high_resolution_clock::now();
     cout << "compute_reff time: " << chrono::duration_cast<chrono::milliseconds>(end - start).count() << " ms" << endl;
 
+    auto total_end = chrono::high_resolution_clock::now();
+    cout << endl << "total time: " << chrono::duration_cast<chrono::seconds>(total_end - total_start).count() << " s" << endl;
     return 0;
 }
