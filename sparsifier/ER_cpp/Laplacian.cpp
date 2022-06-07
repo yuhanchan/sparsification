@@ -518,11 +518,14 @@ vector<vector<double>> approxchol_lapGreedy(SparseMatrixCSC& a, SparseMatrixCSC&
 vector<vector<double>> approxchol_lapGreedy(SparseMatrixCSC& a, vector<vector<double>>& bs){
 #endif
     auto start = std::chrono::high_resolution_clock::now();
-    #ifndef READ_LA
-    SparseMatrixCSC la = lap(a);
-    #endif
     auto end = std::chrono::high_resolution_clock::now();
+
+    #ifndef READ_LA
+    start = std::chrono::high_resolution_clock::now();
+    SparseMatrixCSC la = lap(a);
+    end = std::chrono::high_resolution_clock::now();
     cout << "Build laplacian: " << std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count() << " ms" << endl << flush;
+    #endif
     
     // auto start = std::chrono::high_resolution_clock::now();
     start = std::chrono::high_resolution_clock::now();
@@ -534,7 +537,7 @@ vector<vector<double>> approxchol_lapGreedy(SparseMatrixCSC& a, vector<vector<do
     start = std::chrono::high_resolution_clock::now();
     LDLinv_t ldli = approxchol(llmat);
     end = std::chrono::high_resolution_clock::now();
-    cout << "LDL: " << std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count() << " ms" << endl;
+    cout << "approxchol: " << std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count() << " ms" << endl;
     
     vector<vector<double>> res(bs.size());
 
