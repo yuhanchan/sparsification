@@ -35,7 +35,7 @@ def cpu_time(folder, dataset="Reddit"):
         y.append(np.mean(cpu_time)) 
         plot_dict['baseline'] = [x, y]
     
-    for prune_algo in ["random", "in_degree", "out_degree", "er"]:
+    for prune_algo in ["random", "in_degree", "out_degree", "old_er", "er"]:
         outfile.write(f"------------------{prune_algo}--------------------\n")
         x = []
         y = []
@@ -168,14 +168,15 @@ def precision_k(folder, percent, dataset='Reddit', prune_algo='random'):
 if __name__ == "__main__":
     cpu_time('../experiments/pr/', dataset='Reddit')
     cpu_time('../experiments/pr/', dataset='Reddit2')
-    cpu_time('../experiments/pr/', dataset='ogbn_products')
+    # cpu_time('../experiments/pr/', dataset='ogbn_products')
     
     # relative_score_error(folder='../experiments/pr/', dataset='Reddit', prune_algo='random')
     with ProcessPoolExecutor(max_workers=16) as executor:
         futures = {}
         # create jobs
-        for ds in ['Reddit', 'Reddit2', 'ogbn_products']:
-            for pa in ['random', 'in_degree', 'out_degree', 'er']:
+        # for ds in ['Reddit', 'Reddit2', 'ogbn_products']:
+        for ds in ['Reddit', 'Reddit2']:
+            for pa in ['random', 'in_degree', 'out_degree', 'old_er', 'er']:
                 
                 # futures[executor.submit(relative_score_error, '../experiments/pr', ds, pa)] = f"dataset={ds}, prune_algo={pa}, metric=relative_score_error"
                 futures[executor.submit(precision_k, '../experiments/pr', [0.01, 0.05, 0.1, 0.5, 1, 2, 5], ds, pa)] = f"dataset={ds}, prune_algo={pa}, metric=precision_k"
