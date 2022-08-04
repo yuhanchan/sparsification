@@ -14,12 +14,14 @@ public:
     CmdArgs(int argc, char **argv);
     const std::string &inFname() const { return _inFname; }
     const std::string &outFname() const { return _outFname; }
+    const std::string &mapFname() const { return _mapFname; }
     const std::string &mode() const { return _mode; }
     bool success() const { return _success; }
     void dispHelp() const;
 private:
     std::string _inFname; 
     std::string _outFname; 
+    std::string _mapFname; 
     std::string _mode;
     bool _success;
 };

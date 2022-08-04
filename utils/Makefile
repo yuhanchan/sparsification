@@ -1,6 +1,6 @@
 CC = g++
 # FLAGS = -O3 -s -fPIC -fopenmp
-FLAGS = -O3
+FLAGS = -O3 -std=c++11
 
 all: graphgen randomgen utils
 
