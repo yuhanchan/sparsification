@@ -23,3 +23,5 @@ utils/uniform_random.txt
 *.out
 *.png
 *.txt
+*.svg
+node_modules/
