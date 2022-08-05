@@ -34,7 +34,6 @@ Given arguements from the command line (cli), returns a built graph
  - Common case: BuilderBase typedef'd (w/ params) to be Builder (benchmark.h)
 */
 
-
 template <typename NodeID_, typename DestID_ = NodeID_,
           typename WeightT_ = NodeID_, bool invert = true>
 class BuilderBase {
@@ -47,11 +46,12 @@ class BuilderBase {
   bool in_place_ = false;
   int64_t num_nodes_ = -1;
 
- public:
+public:
   explicit BuilderBase(const CLBase &cli) : cli_(cli) {
     symmetrize_ = cli_.symmetrize();
     needs_weights_ = !std::is_same<NodeID_, DestID_>::value;
-    std::cout << "From builder.h: needs_weights_ = " << needs_weights_ << std::endl;
+    std::cout << "From builder.h: needs_weights_ = " << needs_weights_
+              << std::endl;
     in_place_ = cli_.in_place();
     if (in_place_ && needs_weights_) {
       std::cout << "In-place building (-m) does not support weighted graphs"
@@ -60,9 +60,7 @@ class BuilderBase {
     }
   }
 
-  DestID_ GetSource(EdgePair<NodeID_, NodeID_> e) {
-    return e.u;
-  }
+  DestID_ GetSource(EdgePair<NodeID_, NodeID_> e) { return e.u; }
 
   DestID_ GetSource(EdgePair<NodeID_, NodeWeight<NodeID_, WeightT_>> e) {
     return NodeWeight<NodeID_, WeightT_>(e.u, e.v.w);
@@ -70,33 +68,32 @@ class BuilderBase {
 
   NodeID_ FindMaxNodeID(const EdgeList &el) {
     NodeID_ max_seen = 0;
-    #pragma omp parallel for reduction(max : max_seen)
+#pragma omp parallel for reduction(max : max_seen)
     for (auto it = el.begin(); it < el.end(); it++) {
       Edge e = *it;
       max_seen = std::max(max_seen, e.u);
-      max_seen = std::max(max_seen, (NodeID_) e.v);
+      max_seen = std::max(max_seen, (NodeID_)e.v);
     }
     return max_seen;
   }
 
   pvector<NodeID_> CountDegrees(const EdgeList &el, bool transpose) {
     pvector<NodeID_> degrees(num_nodes_, 0);
-    #pragma omp parallel for
+#pragma omp parallel for
     for (auto it = el.begin(); it < el.end(); it++) {
       Edge e = *it;
       if (symmetrize_ || (!symmetrize_ && !transpose))
         fetch_and_add(degrees[e.u], 1);
       if ((symmetrize_ && !in_place_) || (!symmetrize_ && transpose))
-        fetch_and_add(degrees[(NodeID_) e.v], 1);
+        fetch_and_add(degrees[(NodeID_)e.v], 1);
     }
     return degrees;
   }
 
-  static
-  pvector<SGOffset> PrefixSum(const pvector<NodeID_> &degrees) {
+  static pvector<SGOffset> PrefixSum(const pvector<NodeID_> &degrees) {
     pvector<SGOffset> sums(degrees.size() + 1);
     SGOffset total = 0;
-    for (size_t n=0; n < degrees.size(); n++) {
+    for (size_t n = 0; n < degrees.size(); n++) {
       sums[n] = total;
       total += degrees[n];
     }
@@ -104,32 +101,31 @@ class BuilderBase {
     return sums;
   }
 
-  static
-  pvector<SGOffset> ParallelPrefixSum(const pvector<NodeID_> &degrees) {
-    const size_t block_size = 1<<20;
+  static pvector<SGOffset> ParallelPrefixSum(const pvector<NodeID_> &degrees) {
+    const size_t block_size = 1 << 20;
     const size_t num_blocks = (degrees.size() + block_size - 1) / block_size;
     pvector<SGOffset> local_sums(num_blocks);
-    #pragma omp parallel for
-    for (size_t block=0; block < num_blocks; block++) {
+#pragma omp parallel for
+    for (size_t block = 0; block < num_blocks; block++) {
       SGOffset lsum = 0;
       size_t block_end = std::min((block + 1) * block_size, degrees.size());
-      for (size_t i=block * block_size; i < block_end; i++)
+      for (size_t i = block * block_size; i < block_end; i++)
         lsum += degrees[i];
       local_sums[block] = lsum;
     }
-    pvector<SGOffset> bulk_prefix(num_blocks+1);
+    pvector<SGOffset> bulk_prefix(num_blocks + 1);
     SGOffset total = 0;
-    for (size_t block=0; block < num_blocks; block++) {
+    for (size_t block = 0; block < num_blocks; block++) {
       bulk_prefix[block] = total;
       total += local_sums[block];
     }
     bulk_prefix[num_blocks] = total;
     pvector<SGOffset> prefix(degrees.size() + 1);
-    #pragma omp parallel for
-    for (size_t block=0; block < num_blocks; block++) {
+#pragma omp parallel for
+    for (size_t block = 0; block < num_blocks; block++) {
       SGOffset local_total = bulk_prefix[block];
       size_t block_end = std::min((block + 1) * block_size, degrees.size());
-      for (size_t i=block * block_size; i < block_end; i++) {
+      for (size_t i = block * block_size; i < block_end; i++) {
         prefix[i] = local_total;
         local_total += degrees[i];
       }
@@ -141,11 +137,11 @@ class BuilderBase {
   // Removes self-loops and redundant edges
   // Side effect: neighbor IDs will be sorted
   void SquishCSR(const CSRGraph<NodeID_, DestID_, invert> &g, bool transpose,
-                 DestID_*** sq_index, DestID_** sq_neighs) {
+                 DestID_ ***sq_index, DestID_ **sq_neighs) {
     pvector<NodeID_> diffs(g.num_nodes());
     DestID_ *n_start, *n_end;
-    #pragma omp parallel for private(n_start, n_end)
-    for (NodeID_ n=0; n < g.num_nodes(); n++) {
+#pragma omp parallel for private(n_start, n_end)
+    for (NodeID_ n = 0; n < g.num_nodes(); n++) {
       if (transpose) {
         n_start = g.in_neigh(n).begin();
         n_end = g.in_neigh(n).end();
@@ -161,26 +157,25 @@ class BuilderBase {
     pvector<SGOffset> sq_offsets = ParallelPrefixSum(diffs);
     *sq_neighs = new DestID_[sq_offsets[g.num_nodes()]];
     *sq_index = CSRGraph<NodeID_, DestID_>::GenIndex(sq_offsets, *sq_neighs);
-    #pragma omp parallel for private(n_start)
-    for (NodeID_ n=0; n < g.num_nodes(); n++) {
+#pragma omp parallel for private(n_start)
+    for (NodeID_ n = 0; n < g.num_nodes(); n++) {
       if (transpose)
         n_start = g.in_neigh(n).begin();
       else
         n_start = g.out_neigh(n).begin();
-      std::copy(n_start, n_start+diffs[n], (*sq_index)[n]);
+      std::copy(n_start, n_start + diffs[n], (*sq_index)[n]);
     }
   }
 
-  CSRGraph<NodeID_, DestID_, invert> SquishGraph(
-      const CSRGraph<NodeID_, DestID_, invert> &g) {
+  CSRGraph<NodeID_, DestID_, invert>
+  SquishGraph(const CSRGraph<NodeID_, DestID_, invert> &g) {
     DestID_ **out_index, *out_neighs, **in_index, *in_neighs;
     SquishCSR(g, false, &out_index, &out_neighs);
     if (g.directed()) {
       if (invert)
         SquishCSR(g, true, &in_index, &in_neighs);
-      return CSRGraph<NodeID_, DestID_, invert>(g.num_nodes(), out_index,
-                                                out_neighs, in_index,
-                                                in_neighs);
+      return CSRGraph<NodeID_, DestID_, invert>(
+          g.num_nodes(), out_index, out_neighs, in_index, in_neighs);
     } else {
       return CSRGraph<NodeID_, DestID_, invert>(g.num_nodes(), out_index,
                                                 out_neighs);
@@ -196,53 +191,53 @@ class BuilderBase {
     - if being symmetrized
       - search for needed inverses, make room for them, add them in place
   */
-  void MakeCSRInPlace(EdgeList &el, DestID_*** index, DestID_** neighs,
-                      DestID_*** inv_index, DestID_** inv_neighs) {
+  void MakeCSRInPlace(EdgeList &el, DestID_ ***index, DestID_ **neighs,
+                      DestID_ ***inv_index, DestID_ **inv_neighs) {
     // preprocess EdgeList - sort & squish in place
     std::sort(el.begin(), el.end());
     auto new_end = std::unique(el.begin(), el.end());
     el.resize(new_end - el.begin());
-    auto self_loop = [](Edge e){ return e.u == e.v; };
+    auto self_loop = [](Edge e) { return e.u == e.v; };
     new_end = std::remove_if(el.begin(), el.end(), self_loop);
     el.resize(new_end - el.begin());
     // analyze EdgeList and repurpose it for outgoing edges
     pvector<NodeID_> degrees = CountDegrees(el, false);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
     pvector<NodeID_> indegrees = CountDegrees(el, true);
-    *neighs = reinterpret_cast<DestID_*>(el.data());
+    *neighs = reinterpret_cast<DestID_ *>(el.data());
     for (Edge e : el)
       (*neighs)[offsets[e.u]++] = e.v;
     size_t num_edges = el.size();
     el.leak();
     // revert offsets by shifting them down
     for (NodeID_ n = num_nodes_; n >= 0; n--)
-      offsets[n] = n != 0 ? offsets[n-1] : 0;
-    if (!symmetrize_) {   // not going to symmetrize so no need to add edges
+      offsets[n] = n != 0 ? offsets[n - 1] : 0;
+    if (!symmetrize_) { // not going to symmetrize so no need to add edges
       size_t new_size = num_edges * sizeof(DestID_);
-      *neighs = static_cast<DestID_*>(std::realloc(*neighs, new_size));
+      *neighs = static_cast<DestID_ *>(std::realloc(*neighs, new_size));
       *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
-      if (invert) {       // create inv_neighs & inv_index for incoming edges
+      if (invert) { // create inv_neighs & inv_index for incoming edges
         pvector<SGOffset> inoffsets = ParallelPrefixSum(indegrees);
         *inv_neighs = new DestID_[inoffsets[num_nodes_]];
-        *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets,
-                                                          *inv_neighs);
+        *inv_index =
+            CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
         for (NodeID_ u = 0; u < num_nodes_; u++) {
-          for (DestID_* it = (*index)[u]; it < (*index)[u+1]; it++) {
+          for (DestID_ *it = (*index)[u]; it < (*index)[u + 1]; it++) {
             NodeID_ v = static_cast<NodeID_>(*it);
             (*inv_neighs)[inoffsets[v]] = u;
             inoffsets[v]++;
           }
         }
       }
-    } else {              // symmetrize graph by adding missing inverse edges
+    } else { // symmetrize graph by adding missing inverse edges
       // Step 1 - count number of needed inverses
       pvector<NodeID_> invs_needed(num_nodes_, 0);
       for (NodeID_ u = 0; u < num_nodes_; u++) {
-        for (SGOffset i = offsets[u]; i < offsets[u+1]; i++) {
+        for (SGOffset i = offsets[u]; i < offsets[u + 1]; i++) {
           DestID_ v = (*neighs)[i];
-          bool inv_found = std::binary_search(*neighs + offsets[v],
-                                              *neighs + offsets[v+1],
-                                              static_cast<DestID_>(u));
+          bool inv_found =
+              std::binary_search(*neighs + offsets[v], *neighs + offsets[v + 1],
+                                 static_cast<DestID_>(u));
           if (!inv_found)
             invs_needed[v]++;
         }
@@ -254,7 +249,7 @@ class BuilderBase {
         total_missing_inv += invs_needed[n];
       }
       size_t newsize = (offsets[num_nodes_] * sizeof(DestID_));
-      *neighs = static_cast<DestID_*>(std::realloc(*neighs, newsize));
+      *neighs = static_cast<DestID_ *>(std::realloc(*neighs, newsize));
       if (*neighs == nullptr) {
         std::cout << "Call to realloc() failed" << std::endl;
         exit(-33);
@@ -264,7 +259,7 @@ class BuilderBase {
       SGOffset tail_index = offsets[num_nodes_] - 1;
       for (NodeID_ n = num_nodes_ - 1; n >= 0; n--) {
         SGOffset new_start = offsets[n] + invs_needed[n];
-        for (SGOffset i = offsets[n+1]-1; i >= new_start; i--) {
+        for (SGOffset i = offsets[n + 1] - 1; i >= new_start; i--) {
           (*neighs)[tail_index] = (*neighs)[i - total_missing_inv];
           tail_index--;
         }
@@ -273,20 +268,21 @@ class BuilderBase {
       }
       // Step 3 - add missing inverse edges into free spaces from Step 2
       for (NodeID_ u = 0; u < num_nodes_; u++) {
-        for (SGOffset i = offsets[u] + invs_needed[u]; i < offsets[u+1]; i++) {
+        for (SGOffset i = offsets[u] + invs_needed[u]; i < offsets[u + 1];
+             i++) {
           DestID_ v = (*neighs)[i];
           bool inv_found = std::binary_search(
-                             *neighs + offsets[v] + invs_needed[v],
-                             *neighs + offsets[v+1],
-                             static_cast<DestID_>(u));
+              *neighs + offsets[v] + invs_needed[v], *neighs + offsets[v + 1],
+              static_cast<DestID_>(u));
           if (!inv_found) {
-            (*neighs)[offsets[v] + invs_needed[v] -1] = static_cast<DestID_>(u);
+            (*neighs)[offsets[v] + invs_needed[v] - 1] =
+                static_cast<DestID_>(u);
             invs_needed[v]--;
           }
         }
       }
       for (NodeID_ n = 0; n < num_nodes_; n++)
-        std::sort(*neighs + offsets[n], *neighs + offsets[n+1]);
+        std::sort(*neighs + offsets[n], *neighs + offsets[n + 1]);
       *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
     }
   }
@@ -298,13 +294,13 @@ class BuilderBase {
     - Allocate storage and set points according to offsets (GenIndex)
     - Copy edges into storage
   */
-  void MakeCSR(const EdgeList &el, bool transpose, DestID_*** index,
-               DestID_** neighs) {
+  void MakeCSR(const EdgeList &el, bool transpose, DestID_ ***index,
+               DestID_ **neighs) {
     pvector<NodeID_> degrees = CountDegrees(el, transpose);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
     *neighs = new DestID_[offsets[num_nodes_]];
     *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
-    #pragma omp parallel for
+#pragma omp parallel for
     for (auto it = el.begin(); it < el.end(); it++) {
       Edge e = *it;
       if (symmetrize_ || (!symmetrize_ && !transpose))
@@ -321,7 +317,7 @@ class BuilderBase {
     Timer t;
     t.Start();
     if (num_nodes_ == -1)
-      num_nodes_ = FindMaxNodeID(el)+1;
+      num_nodes_ = FindMaxNodeID(el) + 1;
     if (needs_weights_)
       Generator<NodeID_, DestID_, WeightT_>::InsertWeights(el);
     if (in_place_) {
@@ -343,14 +339,15 @@ class BuilderBase {
 
   CSRGraph<NodeID_, DestID_, invert> MakeGraph() {
     CSRGraph<NodeID_, DestID_, invert> g;
-    {  // extra scope to trigger earlier deletion of el (save memory)
+    { // extra scope to trigger earlier deletion of el (save memory)
       EdgeList el;
       if (cli_.filename() != "") {
         Reader<NodeID_, DestID_, WeightT_, invert> r(cli_.filename());
         if ((r.GetSuffix() == ".sg") || (r.GetSuffix() == ".wsg")) {
           return r.ReadSerializedGraph();
         } else {
-          std::cout<<"From MakeGraph: needs_weights_ = "<<needs_weights_<<std::endl;
+          std::cout << "From MakeGraph: needs_weights_ = " << needs_weights_
+                    << std::endl;
           el = r.ReadFile(needs_weights_);
         }
       } else if (cli_.scale() != -1) {
@@ -366,9 +363,8 @@ class BuilderBase {
   }
 
   // Relabels (and rebuilds) graph by order of decreasing degree
-  static
-  CSRGraph<NodeID_, DestID_, invert> RelabelByDegree(
-      const CSRGraph<NodeID_, DestID_, invert> &g) {
+  static CSRGraph<NodeID_, DestID_, invert>
+  RelabelByDegree(const CSRGraph<NodeID_, DestID_, invert> &g) {
     clock_t start = clock();
     if (g.directed()) {
       std::cout << "Cannot relabel directed graph" << std::endl;
@@ -378,32 +374,34 @@ class BuilderBase {
     t.Start();
     typedef std::pair<int64_t, NodeID_> degree_node_p;
     pvector<degree_node_p> degree_id_pairs(g.num_nodes());
-    #pragma omp parallel for
-    for (NodeID_ n=0; n < g.num_nodes(); n++)
+#pragma omp parallel for
+    for (NodeID_ n = 0; n < g.num_nodes(); n++)
       degree_id_pairs[n] = std::make_pair(g.out_degree(n), n);
     std::sort(degree_id_pairs.begin(), degree_id_pairs.end(),
               std::greater<degree_node_p>());
     pvector<NodeID_> degrees(g.num_nodes());
     pvector<NodeID_> new_ids(g.num_nodes());
-    #pragma omp parallel for
-    for (NodeID_ n=0; n < g.num_nodes(); n++) {
+#pragma omp parallel for
+    for (NodeID_ n = 0; n < g.num_nodes(); n++) {
       degrees[n] = degree_id_pairs[n].first;
       new_ids[degree_id_pairs[n].second] = n;
     }
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
-    DestID_* neighs = new DestID_[offsets[g.num_nodes()]];
-    DestID_** index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, neighs);
-    #pragma omp parallel for
-    for (NodeID_ u=0; u < g.num_nodes(); u++) {
+    DestID_ *neighs = new DestID_[offsets[g.num_nodes()]];
+    DestID_ **index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, neighs);
+#pragma omp parallel for
+    for (NodeID_ u = 0; u < g.num_nodes(); u++) {
       for (NodeID_ v : g.out_neigh(u))
         neighs[offsets[new_ids[u]]++] = new_ids[v];
-      std::sort(index[new_ids[u]], index[new_ids[u]+1]);
+      std::sort(index[new_ids[u]], index[new_ids[u] + 1]);
     }
     t.Stop();
     PrintTime("Relabel", t.Seconds());
-    std::cout<<"Relabel CPU Time: "<<(double)(clock() - start)/CLOCKS_PER_SEC<<" seconds"<<std::endl;
+    std::cout << "Relabel CPU Time: "
+              << (double)(clock() - start) / CLOCKS_PER_SEC << " seconds"
+              << std::endl;
     return CSRGraph<NodeID_, DestID_, invert>(g.num_nodes(), index, neighs);
   }
 };
 
-#endif  // BUILDER_H_
+#endif // BUILDER_H_

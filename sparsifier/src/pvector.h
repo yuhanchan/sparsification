@@ -6,7 +6,6 @@
 
 #include <algorithm>
 
-
 /*
 GAP Benchmark Suite
 Class:  pvector
@@ -18,11 +17,9 @@ Vector class with ability to not initialize or do initialize in parallel
  - Resizing is not thread-safe
 */
 
-
-template <typename T_>
-class pvector {
- public:
-  typedef T_* iterator;
+template <typename T_> class pvector {
+public:
+  typedef T_ *iterator;
 
   pvector() : start_(nullptr), end_size_(nullptr), end_capacity_(nullptr) {}
 
@@ -38,8 +35,8 @@ class pvector {
 
   pvector(iterator copy_begin, iterator copy_end)
       : pvector(copy_end - copy_begin) {
-    #pragma omp parallel for
-    for (size_t i=0; i < capacity(); i++)
+#pragma omp parallel for
+    for (size_t i = 0; i < capacity(); i++)
       start_[i] = copy_begin[i];
   }
 
@@ -56,7 +53,7 @@ class pvector {
   }
 
   // want move assignment
-  pvector& operator= (pvector &&other) {
+  pvector &operator=(pvector &&other) {
     if (this != &other) {
       ReleaseResources();
       start_ = other.start_;
@@ -69,22 +66,20 @@ class pvector {
     return *this;
   }
 
-  void ReleaseResources(){
+  void ReleaseResources() {
     if (start_ != nullptr) {
       delete[] start_;
     }
   }
 
-  ~pvector() {
-    ReleaseResources();
-  }
+  ~pvector() { ReleaseResources(); }
 
   // not thread-safe
   void reserve(size_t num_elements) {
     if (num_elements > capacity()) {
       T_ *new_range = new T_[num_elements];
-      #pragma omp parallel for
-      for (size_t i=0; i < size(); i++)
+#pragma omp parallel for
+      for (size_t i = 0; i < size(); i++)
         new_range[i] = start_[i];
       end_size_ = new_range + size();
       delete[] start_;
@@ -95,30 +90,20 @@ class pvector {
 
   // prevents internal storage from being freed when this pvector is desctructed
   // - used by Builder to reuse an EdgeList's space for in-place graph building
-  void leak() {
-    start_ = nullptr;
-  }
+  void leak() { start_ = nullptr; }
 
-  bool empty() {
-    return end_size_ == start_;
-  }
+  bool empty() { return end_size_ == start_; }
 
-  void clear() {
-    end_size_ = start_;
-  }
+  void clear() { end_size_ = start_; }
 
   void resize(size_t num_elements) {
     reserve(num_elements);
     end_size_ = start_ + num_elements;
   }
 
-  T_& operator[](size_t n) {
-    return start_[n];
-  }
+  T_ &operator[](size_t n) { return start_[n]; }
 
-  const T_& operator[](size_t n) const {
-    return start_[n];
-  }
+  const T_ &operator[](size_t n) const { return start_[n]; }
 
   void push_back(T_ val) {
     if (size() == capacity()) {
@@ -130,30 +115,20 @@ class pvector {
   }
 
   void fill(T_ init_val) {
-    #pragma omp parallel for
-    for (T_* ptr=start_; ptr < end_size_; ptr++)
+#pragma omp parallel for
+    for (T_ *ptr = start_; ptr < end_size_; ptr++)
       *ptr = init_val;
   }
 
-  size_t capacity() const {
-    return end_capacity_ - start_;
-  }
+  size_t capacity() const { return end_capacity_ - start_; }
 
-  size_t size() const {
-    return end_size_ - start_;
-  }
+  size_t size() const { return end_size_ - start_; }
 
-  iterator begin() const {
-    return start_;
-  }
+  iterator begin() const { return start_; }
 
-  iterator end() const {
-    return end_size_;
-  }
+  iterator end() const { return end_size_; }
 
-  T_* data() const {
-    return start_;
-  }
+  T_ *data() const { return start_; }
 
   void swap(pvector &other) {
     std::swap(start_, other.start_);
@@ -161,12 +136,11 @@ class pvector {
     std::swap(end_capacity_, other.end_capacity_);
   }
 
-
- private:
-  T_* start_;
-  T_* end_size_;
-  T_* end_capacity_;
+private:
+  T_ *start_;
+  T_ *end_size_;
+  T_ *end_capacity_;
   static const size_t growth_factor = 2;
 };
 
-#endif  // PVECTOR_H_
+#endif // PVECTOR_H_

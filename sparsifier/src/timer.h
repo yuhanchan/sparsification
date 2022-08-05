@@ -6,7 +6,6 @@
 
 #include <chrono>
 
-
 /*
 GAP Benchmark Suite
 Class:  Timer
@@ -16,34 +15,45 @@ Simple timer that wraps std::chrono
 */
 
 class Timer {
- public:
+public:
   Timer() {}
 
   void Start() {
     elapsed_time_ = start_time_ = std::chrono::high_resolution_clock::now();
   }
 
-  void Stop() {
-    elapsed_time_ = std::chrono::high_resolution_clock::now();
-  }
+  void Stop() { elapsed_time_ = std::chrono::high_resolution_clock::now(); }
 
   double Seconds() const {
-    return std::chrono::duration_cast<std::chrono::duration<double>>(elapsed_time_ - start_time_).count();
+    return std::chrono::duration_cast<std::chrono::duration<double>>(
+               elapsed_time_ - start_time_)
+        .count();
   }
 
   double Millisecs() const {
-    return std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(elapsed_time_ - start_time_).count();
+    return std::chrono::duration_cast<
+               std::chrono::duration<double, std::milli>>(elapsed_time_ -
+                                                          start_time_)
+        .count();
   }
 
   double Microsecs() const {
-    return std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(elapsed_time_ - start_time_).count();
+    return std::chrono::duration_cast<
+               std::chrono::duration<double, std::micro>>(elapsed_time_ -
+                                                          start_time_)
+        .count();
   }
 
- private:
+private:
   std::chrono::high_resolution_clock::time_point start_time_, elapsed_time_;
 };
 
 // Times op's execution using the timer t
-#define TIME_OP(t, op) { t.Start(); (op); t.Stop(); }
+#define TIME_OP(t, op)                                                         \
+  {                                                                            \
+    t.Start();                                                                 \
+    (op);                                                                      \
+    t.Stop();                                                                  \
+  }
 
-#endif  // TIMER_H_
+#endif // TIMER_H_

@@ -6,20 +6,19 @@
 
 #include <algorithm>
 #include <cinttypes>
+#include <fstream>
 #include <functional>
 #include <random>
+#include <streambuf>
+#include <string>
 #include <utility>
 #include <vector>
-#include <string>
-#include <streambuf>
-#include <fstream>
 
 #include "builder.h"
 #include "graph.h"
 #include "timer.h"
 #include "util.h"
 #include "writer.h"
-
 
 /*
 GAP Benchmark Suite
@@ -28,7 +27,6 @@ Author: Scott Beamer
 
 Various helper functions to ease writing of kernels
 */
-
 
 // Default type signatures for commonly used types
 typedef int64_t NodeID;
@@ -44,13 +42,11 @@ typedef BuilderBase<NodeID, WNode, WeightT> WeightedBuilder;
 typedef WriterBase<NodeID, NodeID> Writer;
 typedef WriterBase<NodeID, WNode> WeightedWriter;
 
-
 // Used to pick random non-zero degree starting points for search algorithms
-template<typename GraphT_>
-class SourcePicker {
- public:
+template <typename GraphT_> class SourcePicker {
+public:
   explicit SourcePicker(const GraphT_ &g, NodeID given_source = -1)
-      : given_source(given_source), rng(kRandSeed), udist(0, g.num_nodes()-1),
+      : given_source(given_source), rng(kRandSeed), udist(0, g.num_nodes() - 1),
         g_(g) {}
 
   NodeID PickNext() {
@@ -63,18 +59,17 @@ class SourcePicker {
     return source;
   }
 
- private:
+private:
   NodeID given_source;
   std::mt19937 rng;
   std::uniform_int_distribution<NodeID> udist;
   const GraphT_ &g_;
 };
 
-
 // Returns k pairs with largest values from list of key-value pairs
-template<typename KeyT, typename ValT>
-std::vector<std::pair<ValT, KeyT>> TopK(
-    const std::vector<std::pair<KeyT, ValT>> &to_sort, size_t k) {
+template <typename KeyT, typename ValT>
+std::vector<std::pair<ValT, KeyT>>
+TopK(const std::vector<std::pair<KeyT, ValT>> &to_sort, size_t k) {
   std::vector<std::pair<ValT, KeyT>> top_k;
   ValT min_so_far = 0;
   for (auto kvp : to_sort) {
@@ -90,37 +85,34 @@ std::vector<std::pair<ValT, KeyT>> TopK(
   return top_k;
 }
 
-
 bool VerifyUnimplemented(...) {
   std::cout << "** verify unimplemented **" << std::endl;
   return false;
 }
 
-
 // Calls (and times) kernel according to command line arguments
-template<typename GraphT_, typename GraphFunc, typename AnalysisFunc,
-         typename VerifierFunc>
-void BenchmarkKernel(const CLApp &cli, const GraphT_ &g,
-                     GraphFunc kernel, AnalysisFunc stats,
-                     VerifierFunc verify) {
+template <typename GraphT_, typename GraphFunc, typename AnalysisFunc,
+          typename VerifierFunc>
+void BenchmarkKernel(const CLApp &cli, const GraphT_ &g, GraphFunc kernel,
+                     AnalysisFunc stats, VerifierFunc verify) {
   g.PrintStats();
   double total_seconds = 0;
   Timer trial_timer;
-  for (int iter=0; iter < cli.num_trials(); iter++) {
+  for (int iter = 0; iter < cli.num_trials(); iter++) {
     trial_timer.Start();
     auto result = kernel(g);
     trial_timer.Stop();
     PrintTime("Trial Time", trial_timer.Seconds());
     total_seconds += trial_timer.Seconds();
-    if (cli.do_analysis() && (iter == (cli.num_trials()-1))){
+    if (cli.do_analysis() && (iter == (cli.num_trials() - 1))) {
       std::string analysis_filepath = cli.get_analysis_filepath();
-      if (!analysis_filepath.empty()){
+      if (!analysis_filepath.empty()) {
         std::streambuf *coutbuf = std::cout.rdbuf();
         std::ofstream outfile(analysis_filepath);
         std::cout.rdbuf(outfile.rdbuf());
         stats(g, result);
         std::cout.rdbuf(coutbuf);
-      } else{
+      } else {
         stats(g, result);
       }
     }
@@ -135,4 +127,4 @@ void BenchmarkKernel(const CLApp &cli, const GraphT_ &g,
   PrintTime("Average Time", total_seconds / cli.num_trials());
 }
 
-#endif  // BENCHMARK_H_
+#endif // BENCHMARK_H_
