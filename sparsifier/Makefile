@@ -1,4 +1,5 @@
-CXX_FLAGS += -std=c++11 -O3 -Wall -I../workload/gapbs/src -L../workload/gapbs/src
+CXX_FLAGS += -std=c++11 -O3 -Wall 
+#-I../workload/gapbs/src -L../workload/gapbs/src
 PAR_FLAG = -fopenmp
 
 ifneq (,$(findstring icpc,$(CXX)))
