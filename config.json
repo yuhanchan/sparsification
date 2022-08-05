@@ -1,12 +1,16 @@
 {
     "Reddit": {
         "num_nodes": 232965,
+        "num_edges": 114615892,
+        "directed": false,
+        "weighted": false,
         "num_layers": 2,
         "epochs": 50,
-        "drop_rate" : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.96, 0.97, 0.98, 0.99, 0.995, 0.998, 0.999],
+        "prune_rate" : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.96, 0.97, 0.98, 0.99, 0.995, 0.998, 0.999],
         "degree_thres" : [2180, 1290, 878, 627, 449, 315, 209, 125, 56, 27, 5, 4, 3, 2, 1],
-        "er_epsilon" : [0.035, 0.0459, 0.0566, 0.0683, 0.0823, 0.1, 0.125, 0.166, 0.254, 0.376, 0.424, 0.495, 0.61, 0.88, 1.26, 2, 2.8],
-        "degree_thres_to_drop_rate_map": {
+        "python_er_epsilon" : [0.035, 0.0459, 0.0566, 0.0683, 0.0823, 0.1, 0.125, 0.166, 0.254, 0.376, 0.424, 0.495, 0.61, 0.88, 1.26, 2, 2.8],
+        "cpp_er_epsilon" : [0.147, 0.176, 0.203, 0.232, 0.266, 0.308, 0.368, 0.465, 0.677, 0.973, 1.09, 1.27, 1.56, 2.22, 3.15, 5, 7.1],
+        "degree_thres_to_prune_rate_map": {
             "2180": 0.1 ,
             "1290": 0.2,
             "878": 0.3,
@@ -23,7 +27,7 @@
             "2": 0.996,
             "1": 0.998
         }, 
-        "er_epsilon_to_drop_rate_map": {
+        "python_er_epsilon_to_prune_rate_map": {
             "0.035": 0.1,
             "0.0459": 0.2,
             "0.0566": 0.3,
@@ -41,6 +45,25 @@
             "1.26": 0.995,
             "2": 0.998,
             "2.8": 0.999
+        },
+        "cpp_er_epsilon_to_prune_rate_map": {
+            "0.147": 0.1,
+            "0.176": 0.2,
+            "0.203": 0.3,
+            "0.232": 0.4,
+            "0.266": 0.5,
+            "0.308": 0.6,
+            "0.368": 0.7,
+            "0.465": 0.8,
+            "0.677": 0.9,
+            "0.973": 0.95,
+            "1.09": 0.96,
+            "1.27": 0.97,
+            "1.56": 0.98,
+            "2.22": 0.99,
+            "3.15": 0.995,
+            "5": 0.998,
+            "7.1": 0.999
         },
         "random_prune_inference_batch_size_dict1": {
             "0.0": 20000, 
@@ -85,12 +108,16 @@
 
     "Reddit2": {
         "num_nodes": 232965,
+        "num_edges": 23213838,
+        "directed": false,
+        "weighted": false,
         "num_layers": 2,
         "epochs": 150,
-        "drop_rate" : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.96, 0.97, 0.98, 0.99, 0.995],
+        "prune_rate" : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.96, 0.97, 0.98, 0.99, 0.995],
         "degree_thres" : [302, 177, 121, 87, 64, 48, 34, 22, 10, 5, 1],
-        "er_epsilon": [0.094, 0.122, 0.148, 0.176, 0.209, 0.25, 0.306, 0.395, 0.594, 0.87, 2],
-        "degree_thres_to_drop_rate_map": {
+        "python_er_epsilon": [0.094, 0.122, 0.148, 0.176, 0.209, 0.25, 0.306, 0.395, 0.594, 0.87, 2],
+        "cpp_er_epsilon" : [0.328, 0.392, 0.452, 0.518, 0.594, 0.691, 0.825, 1.04, 1.51, 2.18, 4.95],
+        "degree_thres_to_prune_rate_map": {
             "302": 0.1 ,
             "177": 0.2,
             "121": 0.3,
@@ -103,7 +130,7 @@
             "5": 0.951,
             "1": 0.99
         },
-        "er_epsilon_to_drop_rate_map": {
+        "python_er_epsilon_to_prune_rate_map": {
             "0.094": 0.1,
             "0.122": 0.2,
             "0.148": 0.3,
@@ -115,6 +142,19 @@
             "0.594": 0.9,
             "0.87": 0.95,
             "2": 0.99
+        },
+        "cpp_er_epsilon_to_prune_rate_map": {
+            "0.328": 0.1,
+            "0.392": 0.2,
+            "0.452": 0.3,
+            "0.518": 0.4,
+            "0.594": 0.5,
+            "0.691": 0.6,
+            "0.825": 0.7,
+            "1.04": 0.8,
+            "1.51": 0.9,
+            "2.18": 0.95,
+            "4.95": 0.99
         },
         "random_prune_inference_batch_size_dict1": {
             "0.0": 115000, 
@@ -153,12 +193,16 @@
 
     "ogbn_products": {
         "num_nodes": 2449029,
+        "num_edges": 123718280,
+        "directed": false,
+        "weighted": false,
         "num_layers": 3,
         "epochs": 50,
-        "drop_rate" : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.96, 0.97, 0.98],
+        "prune_rate" : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.96, 0.97, 0.98],
         "degree_thres" : [244, 127, 84, 60, 44, 31, 21, 13, 9, 6, 3, 2, 1],
-        "er_epsilon": [0.132, 0.17, 0.206, 0.246, 0.294, 0.356, 0.442, 0.581, 0.885, 1.3, 1.47, 1.71, 2.1],
-        "degree_thres_to_drop_rate_map": {
+        "python_er_epsilon": [0.132, 0.17, 0.206, 0.246, 0.294, 0.356, 0.442, 0.581, 0.885, 1.3, 1.47, 1.71, 2.1],
+        "cpp_er_epsilon": [],
+        "degree_thres_to_prune_rate_map": {
             "244": 0.1 ,
             "127": 0.2,
             "84": 0.3,
@@ -173,7 +217,7 @@
             "2": 0.962,
             "1": 0.981
         },
-        "er_epsilon_to_drop_rate_map": {
+        "python_er_epsilon_to_prune_rate_map": {
             "0.132": 0.1,
             "0.17": 0.2,
             "0.206": 0.3,
@@ -187,6 +231,8 @@
             "1.47": 0.96,
             "1.71": 0.97,
             "2.1": 0.98
+        },
+        "cpp_er_epsilon_to_prune_rate_map": {
         },
         "random_prune_inference_batch_size_dict1": {
             "0.0": 64000, 
@@ -225,14 +271,20 @@
 
     "sk_2005": {
         "num_nodes": 50636152,
+        "num_edges": 1949412601,
+        "directed": true,
+        "weighted": false,
         "num_layers": 3,
         "epochs": 50,
-        "drop_rate" : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.96, 0.97, 0.98, 0.99, 0.995, 0.999],
+        "prune_rate" : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.96, 0.97, 0.98, 0.99, 0.995, 0.999],
         "degree_thres" : [],
-        "er_epsilon": [],
-        "degree_thres_to_drop_rate_map": {
+        "python_er_epsilon": [],
+        "cpp_er_epsilon": [],
+        "degree_thres_to_prune_rate_map": {
         },
-        "er_epsilon_to_drop_rate_map": {
+        "python_er_epsilon_to_prune_rate_map": {
+        },
+        "cpp_er_epsilon_to_prune_rate_map": {
         },
         "random_prune_inference_batch_size_dict1": {
         },
@@ -242,14 +294,129 @@
 
     "AGATHA_2015": {
         "num_nodes": 183964078,
+        "num_edges": 11588725964,
+        "directed": false,
+        "weighted": false,
         "num_layers": 3,
         "epochs": 50,
-        "drop_rate" : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.96, 0.97, 0.98, 0.99, 0.995, 0.999],
+        "prune_rate" : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.96, 0.97, 0.98, 0.99, 0.995, 0.999],
         "degree_thres" : [],
-        "er_epsilon": [],
-        "degree_thres_to_drop_rate_map": {
+        "python_er_epsilon": [],
+        "cpp_er_epsilon": [],
+        "degree_thres_to_prune_rate_map": {
         },
-        "er_epsilon_to_drop_rate_map": {
+        "python_er_epsilon_to_prune_rate_map": {
+        },
+        "cpp_er_epsilon_to_prune_rate_map": {
+        },
+        "random_prune_inference_batch_size_dict1": {
+        },
+        "degree_prune_inference_batch_size_dict1": {
+        }
+    },
+
+    "uk-2005": {
+        "num_nodes": 39459925,
+        "num_edges": 936364282,
+        "directed": true,
+        "weighted": false,
+        "num_layers": 3,
+        "epochs": 50,
+        "prune_rate" : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.96, 0.97, 0.98, 0.99, 0.995, 0.999],
+        "degree_thres" : [],
+        "python_er_epsilon": [],
+        "cpp_er_epsilon": [],
+        "degree_thres_to_prune_rate_map": {
+        },
+        "python_er_epsilon_to_prune_rate_map": {
+        },
+        "cpp_er_epsilon_to_prune_rate_map": {
+        },
+        "random_prune_inference_batch_size_dict1": {
+        },
+        "degree_prune_inference_batch_size_dict1": {
+        }
+    },
+
+    "orkut": {
+        "num_nodes": 3072441,
+        "num_edges": 117185083,
+        "directed": false,
+        "weighted": false,
+        "num_layers": 3,
+        "epochs": 50,
+        "prune_rate" : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.96, 0.97, 0.98, 0.99, 0.995, 0.999],
+        "degree_thres" : [],
+        "python_er_epsilon": [],
+        "cpp_er_epsilon": [0.41, 0.49, 0.565, 0.646, 0.742, 0.863, 1.031, 1.302, 1.9, 2.73, 3.06, 3.55, 4.37, 6.21, 8.8, 14, 19.8],
+        "degree_thres_to_prune_rate_map": {
+        },
+        "python_er_epsilon_to_prune_rate_map": {
+        },
+        "cpp_er_epsilon_to_prune_rate_map": {
+            "0.41": 0.1,
+            "0.49": 0.2,
+            "0.565": 0.3,
+            "0.646": 0.4,
+            "0.742": 0.5,
+            "0.863": 0.6,
+            "1.031": 0.7,
+            "1.302": 0.8,
+            "1.9": 0.9,
+            "2.73": 0.95,
+            "3.06": 0.96,
+            "3.55": 0.97,
+            "4.37": 0.98,
+            "6.21": 0.99,
+            "8.8": 0.995,
+            "14": 0.998,
+            "19.8": 0.999
+        },
+        "random_prune_inference_batch_size_dict1": {
+        },
+        "degree_prune_inference_batch_size_dict1": {
+        }
+    },
+
+    "friendster": {
+        "num_nodes": 65608366,
+        "num_edges": 1806067135,
+        "directed": false,
+        "weighted": false,
+        "num_layers": 3,
+        "epochs": 50,
+        "prune_rate" : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.96, 0.97, 0.98, 0.99, 0.995, 0.999],
+        "degree_thres" : [],
+        "python_er_epsilon": [],
+        "cpp_er_epsilon": [],
+        "degree_thres_to_prune_rate_map": {
+        },
+        "python_er_epsilon_to_prune_rate_map": {
+        },
+        "cpp_er_epsilon_to_prune_rate_map": {
+        },
+        "random_prune_inference_batch_size_dict1": {
+        },
+        "degree_prune_inference_batch_size_dict1": {
+        }
+    },
+
+    "road_usa": {
+        "num_nodes": 23947347,
+        "num_edges": 28854312,
+        "directed": false,
+        "weighted": false,
+        "num_layers": 3,
+        "epochs": 50,
+        "prune_rate" : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.96, 0.97, 0.98, 0.99, 0.995, 0.999],
+        "degree_thres" : [],
+        "python_er_epsilon": [],
+        "cpp_er_epsilon": [],
+        "degree_thres_to_prune_rate_map": {
+        },
+        "python_er_epsilon_to_prune_rate_map": {
+        },
+        "cpp_er_epsilon_to_prune_rate_map": {
         },
         "random_prune_inference_batch_size_dict1": {
         },
