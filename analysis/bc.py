@@ -58,12 +58,15 @@ def cpu_time(folder, dataset="Reddit"):
                         num_trail += 1
                 cpu_time_mean = np.mean(cpu_time)
                 cpu_time_std = np.std(cpu_time)
+
+                # eliminate outliers, defined as 1.5 * std away from mean
                 cpu_time = [
                     x
                     for x in cpu_time
                     if x < cpu_time_mean + 1.5 * cpu_time_std
                     and x > cpu_time_mean - 1.5 * cpu_time_std
                 ]
+
                 outfile.write(
                     f"{subdir}: {np.mean(cpu_time) :.2f} ({num_trail - len(cpu_time)} Outliers)\n"
                 )
@@ -134,14 +137,28 @@ def relative_score_error(folder, dataset="Reddit", prune_algo="random"):
     plt.savefig(save_path)
 
 
-def precision_k(folder, percent, dataset="Reddit", prune_algo="random"):
+def precision_k(folder, l, percent=False, dataset="Reddit", prune_algo="random"):
+    """
+    Parameters: 
+        folder: folder containing the results of the experiments
+        l: a list of N or percentage
+        percent: if True, l is a list of percentage, otherwise l is a list of N
+        dataset: name of the dataset
+        prune_algo: name of the pruning algorithm, if "all", will plot all pruning algorithms
+
+    Returns: None 
+        Will save to precision_k.png
+    """
+
     baseline_score = []
+    print(f"{dataset} {prune_algo}")
     with open(osp.join(folder, dataset, "baseline/analysis.txt")) as f:
         for line in f:
             line = line.strip().split(":")
             node_id, score = line[0], float(line[1])
             baseline_score.append((node_id, score))
 
+    # sort baseline_score by score
     baseline_score = [
         i for i, v in sorted(baseline_score, key=operator.itemgetter(1), reverse=True)
     ]
@@ -160,8 +177,12 @@ def precision_k(folder, percent, dataset="Reddit", prune_algo="random"):
         score_dict[float(subdir)] = score_tmp
 
     fig, ax = plt.subplots(figsize=(5, 5))
-    for p in percent:
-        N = int(len(baseline_score) * p / 100)
+
+    for p in l:
+        if percent:
+            N = int(len(baseline_score) * p / 100)
+        else:
+            N = int(p)
         baseline_topN = sorted(baseline_score[:N], reverse=False)
         x = []
         y = []
@@ -180,7 +201,12 @@ def precision_k(folder, percent, dataset="Reddit", prune_algo="random"):
                     j += 1
             x.append(key)
             y.append(num_in_topN / N)
-        ax.plot(x, y, label=f"Top {p}% ({N})")
+
+        if percent:
+            ax.plot(x, y, marker='o', label=f"Top {p}% ({N})")
+        else:
+            ax.plot(x, y, marker='o', label=f"Top {N}")
+
     ax.legend()
     ax.set_xlabel("prune_rate")
     ax.set_ylabel("precision")
@@ -197,33 +223,131 @@ def precision_k(folder, percent, dataset="Reddit", prune_algo="random"):
     os.makedirs(osp.dirname(save_path), exist_ok=True)
     fig.savefig(save_path)
 
+def precision_k_2(folder, l, percent=False, dataset="Reddit"):
+    """
+    Similar to precision_k, but plot all pruning algorithms in one figure
 
-if __name__ == "__main__":
-    cpu_time("../experiments/bc/", dataset="Reddit")
-    cpu_time("../experiments/bc/", dataset="Reddit2")
+    Parameters: 
+        folder: folder containing the results of the experiments
+        l: a list of N or percentage
+        percent: if True, l is a list of percentage, otherwise l is a list of N
+        dataset: name of the dataset
+
+    Returns: None 
+        Will save to precision_k.png
+    """
+
+    baseline_score = []
+    with open(osp.join(folder, dataset, "baseline/analysis.txt")) as f:
+        for line in f:
+            line = line.strip().split(":")
+            node_id, score = line[0], float(line[1])
+            baseline_score.append((node_id, score))
+
+    # sort baseline_score by score
+    baseline_score = [
+        i for i, v in sorted(baseline_score, key=operator.itemgetter(1), reverse=True)
+    ]
+
+    for p in l:
+        fig, ax = plt.subplots(figsize=(5, 5))
+
+        for prune_algo in ["random", "in_degree", "out_degree", "old_er"]:
+            score_dict = {}
+            for subdir in sorted(os.listdir(osp.join(folder, dataset, prune_algo))):
+                score_tmp = []
+                with open(osp.join(folder, dataset, prune_algo, subdir, "analysis.txt")) as f:
+                    for line in f:
+                        line = line.strip().split(":")
+                        node_id, score = line[0], float(line[1])
+                        score_tmp.append((node_id, score))
+                score_tmp = [
+                    i for i, v in sorted(score_tmp, key=operator.itemgetter(1), reverse=True)
+                ]
+                score_dict[float(subdir)] = score_tmp
+
+
+            if percent:
+                N = int(len(baseline_score) * p / 100)
+            else:
+                N = int(p)
+            baseline_topN = sorted(baseline_score[:N], reverse=False)
+            x = []
+            y = []
+            for key in score_dict.keys():
+                topN = sorted(score_dict[key][:N], reverse=False)
+                num_in_topN = 0
+                i, j = 0, 0
+                while i < N and j < N:
+                    if baseline_topN[i] == topN[j]:
+                        num_in_topN += 1
+                        i += 1
+                        j += 1
+                    elif baseline_topN[i] < topN[j]:
+                        i += 1
+                    else:
+                        j += 1
+                x.append(key)
+                y.append(num_in_topN / N)
+
+            ax.plot(x, y, marker='o', label=f"{prune_algo}")
+
+        ax.legend()
+        ax.set_xlabel("prune_rate")
+        ax.set_ylabel("precision")
+        if percent:
+            ax.set_title(f"Top {p}% ({N}) Precision K for {dataset} {prune_algo}")
+        else:
+            ax.set_title(f"Top {N} Precision K for {dataset} {prune_algo}")
+        ax.set_ylim(0, 1)
+
+        save_path = osp.join(
+            osp.dirname(osp.realpath(__file__)),
+            "bc",
+            dataset,
+            f"top_{N}_precision_k.png",
+        )
+        os.makedirs(osp.dirname(save_path), exist_ok=True)
+        fig.savefig(save_path)
+
+def main():
+    # cpu_time("../experiments/bc/", dataset="Reddit")
+    # cpu_time("../experiments/bc/", dataset="Reddit2")
     # cpu_time('../experiments/bc/', dataset='ogbn_products')
 
-    with ProcessPoolExecutor(max_workers=16) as executor:
-        futures = {}
-        # create jobs
-        # for ds in ['Reddit', 'Reddit2', 'ogbn_products']:
-        for ds in ["Reddit", "Reddit2"]:
-            for pa in ["random", "in_degree", "out_degree", "old_er", "er"]:
-                # futures[executor.submit(relative_score_error, '../experiments/bc', ds, pa)] = f"dataset={ds}, prune_algo={pa}, metric=relative_score_error"
-                futures[
-                    executor.submit(
-                        precision_k,
-                        "../experiments/bc",
-                        [0.01, 0.05, 0.1, 0.5, 1, 2, 5],
-                        ds,
-                        pa,
-                    )
-                ] = f"dataset={ds}, prune_algo={pa}, metric=precision_k"
-        # run jobs
-        for future in futures:
-            print(futures[future])
-            try:
-                future.result()
-            except Exception as e:
-                print(futures[future], e)
-                sys.exit(1)
+    # with ProcessPoolExecutor(max_workers=16) as executor:
+    #     futures = {}
+    #     # create jobs
+    #     # for ds in ['Reddit', 'Reddit2', 'ogbn_products']:
+    #     # for ds in ["Reddit", "Reddit2"]:
+    #     for ds in ["Reddit"]:
+    #         for pa in ["random", "in_degree", "out_degree", "old_er", "er"]:
+    #         # for pa in ["random"]:
+    #             futures[
+    #                 executor.submit(
+    #                     precision_k,
+    #                     "../experiments/bc",
+    #                     # [0.01, 0.05, 0.1, 0.5, 1, 2, 5],
+    #                     # [1, 2, 3, 5, 8, 10, 15, 20],
+    #                     [10],
+    #                     False,
+    #                     ds,
+    #                     pa,
+    #                 )
+    #             ] = f"dataset={ds}, prune_algo={pa}, metric=precision_k"
+    #     # run jobs
+    #     for future in futures:
+    #         print(futures[future])
+    #         try:
+    #             future.result()
+    #         except Exception as e:
+    #             print(futures[future], e)
+    #             sys.exit(1)
+
+    precision_k_2("../experiments/bc", [3, 5, 10, 15, 20], percent=False, dataset="Reddit")
+    precision_k_2("../experiments/bc", [3, 5, 10, 15, 20], percent=False, dataset="Reddit2")
+    # precision_k_2("../experiments/bc", [3, 5, 10, 15, 20], percent=False, dataset="ogbn_products")
+
+
+if __name__ == "__main__":
+    main()

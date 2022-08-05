@@ -241,24 +241,98 @@ def relative_score_error(folder, dataset="Reddit", prune_algo="random"):
     plt.savefig(save_path)
 
 
-if __name__ == "__main__":
-    cpu_time("../experiments/sssp/", dataset="Reddit")
-    cpu_time("../experiments/sssp/", dataset="Reddit2")
+def relative_score_error_hist(folder, dataset="Reddit", prune_algo="random"):
+    baseline_score = []
+    with open(osp.join(folder, dataset, "baseline/analysis.txt")) as f:
+        for line in f:
+            line = line.strip().split(":")
+            node_id, score = line[0], float(line[1])
+            baseline_score.append(score)
+
+    error_dict = {}
+    for subdir in os.listdir(osp.join(folder, dataset, prune_algo)):
+        score_tmp = []
+        with open(osp.join(folder, dataset, prune_algo, subdir, "analysis.txt")) as f:
+            for line in f:
+                line = line.strip().split(":")
+                node_id, score = line[0], float(line[1])
+                score_tmp.append(score)
+
+            error_tmp = []
+            for i in range(len(score_tmp)):
+                if baseline_score[i] == 0:
+                    error_tmp.append(0)
+                elif score_tmp[i] == -1:
+                    error_tmp.append(-1)
+                else:
+                    error = (score_tmp[i] - baseline_score[i]) / baseline_score[i]
+                    error_tmp.append(error)
+            error_dict[float(subdir)] = error_tmp
+            # print(subdir, sum(score_tmp))
+
+    fig, ax = plt.subplots(figsize=(5, 5))
+    ax.set_xlabel("relative score error")
+    ax.set_ylabel("frequency")
+    ax.set_title(f"{dataset} {prune_algo}")
+    ax.set_xlim(-1, 14)
+
+    # for key in [0.8, 0.7, 0.5, 0.3, 0.1]:
+    for key in [0.8]:
+        ax.hist(error_dict[key], bins=20, label=f"Prune rate {key}")
+        print(key, np.mean(error_dict[key]))
+    ax.legend()
+
+    save_path = osp.join(
+        osp.dirname(osp.realpath(__file__)),
+        "sssp",
+        dataset,
+        prune_algo,
+        "relative_score_error_hist.png",
+    )
+    os.makedirs(osp.dirname(save_path), exist_ok=True)
+    plt.savefig(save_path)
+
+
+def main():
+    # cpu_time("../experiments/sssp/", dataset="Reddit")
+    # cpu_time("../experiments/sssp/", dataset="Reddit2")
     # cpu_time('../experiments/sssp/', dataset='ogbn_products')
 
     # reachability('../experiments/sssp/', dataset='Reddit')
     # reachability('../experiments/sssp/', dataset='Reddit2')
     # reachability('../experiments/sssp/', dataset='ogbn_products')
 
+    # with ProcessPoolExecutor(max_workers=1) as executor:
+    #     futures = {}
+    #     # create jobs
+    #     for ds in ["Reddit", "Reddit2", "ogbn_products"]:
+    #         for pa in ["random", "in_degree", "out_degree", "old_er", "er"]:
+
+    #             # futures[executor.submit(relative_score_error, '../experiments/pr', ds, pa)] = f"dataset={ds}, prune_algo={pa}, metric=relative_score_error"
+    #             futures[
+    #                 executor.submit(relative_score_error, "../experiments/sssp", ds, pa)
+    #             ] = f"dataset={ds}, prune_algo={pa}, metric=relative_score_error"
+    #     # run jobs
+    #     for future in futures:
+    #         print(futures[future])
+    #         try:
+    #             future.result()
+    #         except Exception as e:
+    #             print(futures[future], e)
+    #             sys.exit(1)
+
     with ProcessPoolExecutor(max_workers=1) as executor:
         futures = {}
         # create jobs
-        for ds in ["Reddit", "Reddit2", "ogbn_products"]:
+        # for ds in ["Reddit", "Reddit2", "ogbn_products"]:
+        for ds in ["ogbn_products"]:
             for pa in ["random", "in_degree", "out_degree", "old_er", "er"]:
 
                 # futures[executor.submit(relative_score_error, '../experiments/pr', ds, pa)] = f"dataset={ds}, prune_algo={pa}, metric=relative_score_error"
                 futures[
-                    executor.submit(relative_score_error, "../experiments/sssp", ds, pa)
+                    executor.submit(
+                        relative_score_error_hist, "../experiments/sssp", ds, pa
+                    )
                 ] = f"dataset={ds}, prune_algo={pa}, metric=relative_score_error"
         # run jobs
         for future in futures:
@@ -268,3 +342,7 @@ if __name__ == "__main__":
             except Exception as e:
                 print(futures[future], e)
                 sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
