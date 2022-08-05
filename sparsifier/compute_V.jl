@@ -40,22 +40,31 @@ end
 
 function compute_V(a, JLfac=4.0)
 
-  f = approxchol_lap(a,tol=1e-2);
+  print("Preparing approxchol_lap...")
+  f = @time approxchol_lap(a,tol=1e-2); # a is the weight matrix loaded from file, nxn
 
   n = size(a,1)
-  k = round(Int, JLfac*log(n)) # number of dims for JL
-  U = wtedEdgeVertexMat(a)
+  k = round(Int, JLfac*log(n)) # number of dims for JL, natrual log
+  println("k = ", k)
+  U = wtedEdgeVertexMat(a) # equal to W, mxn
+  println("dim of U: ", size(U))
   m = size(U,1)
-  R = randn(Float64, m,k)
-  UR = U'*R;
+
+  println("Generate R (Q): ")
+  R = @time randn(Float64, m,k) # equal to Q, JL projection matrix, mxk
+
+  print("Computing QW: ")
+  UR = @time U'*R; # nxk
+
   V = zeros(n,k)
-  for i in 1:k
-    V[:,i] = f(UR[:,i])
+  @time Threads.@threads for i in 1:k
+    print(i, "/", k)
+    V[:,i] = @time f(UR[:,i]) # f is the linear solver, solve for x in Ax=b
   end
-  return V
-
-
+  
+  return V # V here is the Z in paper
 end
+
 
 # filenames = ["Cora","Citeseer","Pubmed","Phy","CS","Photo","Computers"]
 # filenames=["Cora","Pubmed","Phy","CS"]
@@ -72,13 +81,13 @@ function main()
   parsed_args = parse_commandline()
 
   println("Loading file:... ")
-  data = scipy.sparse.load_npz(parsed_args["filepath"]);
+  data = @time scipy.sparse.load_npz(parsed_args["filepath"]);
   println("Finished loading file, ")
 
 
   println("Converting into Julia format")
-  B = mysparse(data);
-  B = convert(SparseMatrixCSC{Float64,Int64},B);
+  B = @time mysparse(data);
+  B = @time convert(SparseMatrixCSC{Float64,Int64},B);
   println("Finished converting into Julia format")
 
   println("Computing V matrix..")
@@ -89,7 +98,8 @@ function main()
   println(size(V))
   println("saving V matrix:...")
   filename=string(rsplit(parsed_args["filepath"], ".", limit=2)[1], ".csv");
-  writedlm(filename,  V, ',')
+  print("Saving to file... ")
+  @time writedlm(filename,  V, ',')
 end
 
 main()
