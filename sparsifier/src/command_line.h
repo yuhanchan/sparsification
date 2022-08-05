@@ -36,6 +36,7 @@ protected:
   int degree_ = 16;
   std::string filename_ = "";
   bool symmetrize_ = false;
+  bool post_symmetrize_ = false;
   bool uniform_ = false;
   bool in_place_ = false;
 
@@ -58,6 +59,7 @@ public:
     AddHelpLine('h', "", "print this help message");
     AddHelpLine('f', "file", "load graph from file");
     AddHelpLine('s', "", "symmetrize input edge list", "false");
+    AddHelpLine('b', "", "post symmetrize after pruning", "false");
     AddHelpLine('g', "scale", "generate 2^scale kronecker graph");
     AddHelpLine('u', "scale", "generate 2^scale uniform-random graph");
     AddHelpLine('k', "degree", "average degree for synthetic graph",
@@ -97,6 +99,9 @@ public:
     case 's':
       symmetrize_ = true;
       break;
+    case 'b':
+      post_symmetrize_ = true;
+      break;
     case 'u':
       uniform_ = true;
       scale_ = atoi(opt_arg);
@@ -119,6 +124,7 @@ public:
   int degree() const { return degree_; }
   std::string filename() const { return filename_; }
   bool symmetrize() const { return symmetrize_; }
+  bool post_symmetrize() const { return post_symmetrize_; }
   bool uniform() const { return uniform_; }
   bool in_place() const { return in_place_; }
 };
