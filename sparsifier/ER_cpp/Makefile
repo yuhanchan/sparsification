@@ -1,6 +1,7 @@
 CC = g++
 # FLAGS = -O3 -s -fPIC -fopenmp
 FLAGS = -g -fopenmp
+# FLAGS = -O3 -fopenmp
 
 all: main
 

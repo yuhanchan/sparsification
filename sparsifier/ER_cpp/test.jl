@@ -16,7 +16,7 @@ Base.show(io::IO, f::Float64) = @printf io "%1.5f" f
 
 const PRINT_MATRIX = false
 const FILE_TYPE = 2 # 1: with weight and headings, 2: without weight and headings
-const PSEUDO_RANDOM = true
+const PSEUDO_RANDOM = false
 
 function parse_commandline()
   s = ArgParseSettings()
@@ -32,36 +32,42 @@ end
 
 function compute_V(a, JLfac=4.0)
 
-    print("Computing V")
-    f = approxchol_lap(a,tol=1e-2); # a is the weight matrix loaded from file, nxn
-    print("Computing V done")
+    print("approxchol: ")
+    f = @time approxchol_lap(a,tol=1e-2); # a is the weight matrix loaded from file, nxn
 
     n = size(a,1)
     k = round(Int, JLfac*log(n)) # number of dims for JL, natrual log
-    println("k = ", k)
-    U = wtedEdgeVertexMat(a) # equal to W, mxn
+    # println("k = ", k)
+    print("generate incidence matrix: ")
+    U = @time wtedEdgeVertexMat(a) # equal to W, mxn
     m = size(U,1)
 
     # R = randn(Float64, m,k) # equal to Q, JL projection matrix, mxk
-    if PSEUDO_RANDOM
-        fin = open("/data3/chenyh/sparsification/utils/normal_random.txt", "r")
-        R = zeros(Float64, m,k)
-        for j=1:k
-            for i=1:m
-                # R[i,j] = 0.05 * i + 0.01 * j
-                R[i, j] = parse(Float64, readline(fin))
-                # if reaching end of file, rewind
-                if eof(fin)
-                    seekstart(fin)
+
+    print("generate random matrix: ")
+
+    @time begin
+        if PSEUDO_RANDOM
+            fin = open("/data3/chenyh/sparsification/utils/normal_random.txt", "r")
+            R = zeros(Float64, m,k)
+            for j=1:k
+                for i=1:m
+                    # R[i,j] = 0.05 * i + 0.01 * j
+                    R[i, j] = parse(Float64, readline(fin))
+                    # if reaching end of file, rewind
+                    if eof(fin)
+                        seekstart(fin)
+                    end
                 end
             end
+            close(fin)
+        else
+            R = randn(Float64, m,k)
         end
-        close(fin)
-    else
-        R = randn(Float64, m,k)
     end
 
-    UR = U'*R; # nxk
+    print("multiply U and R: ")
+    @time UR = U'*R; # nxk
 
     if PRINT_MATRIX
         println("U' = ")
@@ -84,7 +90,9 @@ function compute_V(a, JLfac=4.0)
     end
 
     V = zeros(n,k)
+    println("linear solver: ")
     @time for i in 1:k
+        print("PCG: ", i, "/", k, ": ")
         @time V[:,i] = f(UR[:,i]) # f is the linear solver, solve for x in Ax=b
     end
 
