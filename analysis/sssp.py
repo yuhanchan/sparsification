@@ -321,18 +321,16 @@ def main():
     #             print(futures[future], e)
     #             sys.exit(1)
 
-    with ProcessPoolExecutor(max_workers=1) as executor:
+    with ProcessPoolExecutor(max_workers=10) as executor:
         futures = {}
         # create jobs
         # for ds in ["Reddit", "Reddit2", "ogbn_products"]:
         for ds in ["ogbn_products"]:
-            for pa in ["random", "in_degree", "out_degree", "old_er", "er"]:
+            for pa in ["random", "sym_degree", "er"]:
 
                 # futures[executor.submit(relative_score_error, '../experiments/pr', ds, pa)] = f"dataset={ds}, prune_algo={pa}, metric=relative_score_error"
                 futures[
-                    executor.submit(
-                        relative_score_error_hist, "../experiments/sssp", ds, pa
-                    )
+                    executor.submit(relative_score_error, "../experiments/sssp", ds, pa)
                 ] = f"dataset={ds}, prune_algo={pa}, metric=relative_score_error"
         # run jobs
         for future in futures:

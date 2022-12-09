@@ -252,7 +252,7 @@ def precision_k_2(folder, l, percent=False, dataset="Reddit"):
     for p in l:
         fig, ax = plt.subplots(figsize=(5, 5))
 
-        for prune_algo in ["random", "in_degree", "out_degree", "old_er"]:
+        for prune_algo in ["random", "sym_degree", "er"]:
             score_dict = {}
             for subdir in sorted(os.listdir(osp.join(folder, dataset, prune_algo))):
                 score_tmp = []
@@ -344,9 +344,9 @@ def main():
     #             print(futures[future], e)
     #             sys.exit(1)
 
-    precision_k_2("../experiments/bc", [3, 5, 10, 15, 20], percent=False, dataset="Reddit")
-    precision_k_2("../experiments/bc", [3, 5, 10, 15, 20], percent=False, dataset="Reddit2")
-    # precision_k_2("../experiments/bc", [3, 5, 10, 15, 20], percent=False, dataset="ogbn_products")
+    # precision_k_2("../experiments/bc", [3, 5, 10, 15, 20], percent=False, dataset="Reddit")
+    # precision_k_2("../experiments/bc", [3, 5, 10, 15, 20], percent=False, dataset="Reddit2")
+    precision_k_2("../experiments/bc", [3, 5, 10, 15, 20], percent=False, dataset="ogbn_products")
 
 
 if __name__ == "__main__":

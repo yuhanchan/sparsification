@@ -204,17 +204,23 @@ def precision_k(folder, percent, dataset="Reddit", prune_algo="random"):
     fig.savefig(save_path)
 
 
-def precision_k_2(folder, l, percent=False, dataset="Reddit"):
+def precision_k_2(
+    folder,
+    dataset,
+    prune_algos,
+    l,
+    percent=False,
+):
     """
     Similar to precision_k, but plot all pruning algorithms in one figure
 
-    Parameters: 
+    Parameters:
         folder: folder containing the results of the experiments
         l: a list of N or percentage
-        percent: if True, l is a list of percentage, otherwise l is a list of N
         dataset: name of the dataset
+        percent: if True, l is a list of percentage, otherwise l is a list of N
 
-    Returns: None 
+    Returns: None
         Will save to precision_k.png
     """
 
@@ -233,20 +239,24 @@ def precision_k_2(folder, l, percent=False, dataset="Reddit"):
     for p in l:
         fig, ax = plt.subplots(figsize=(5, 5))
 
-        for prune_algo in ["random", "in_degree", "out_degree", "er"]:
+        for prune_algo in prune_algos:
             score_dict = {}
             for subdir in sorted(os.listdir(osp.join(folder, dataset, prune_algo))):
                 score_tmp = []
-                with open(osp.join(folder, dataset, prune_algo, subdir, "analysis.txt")) as f:
+                with open(
+                    osp.join(folder, dataset, prune_algo, subdir, "analysis.txt")
+                ) as f:
                     for line in f:
                         line = line.strip().split(":")
                         node_id, score = line[0], float(line[1])
                         score_tmp.append((node_id, score))
                 score_tmp = [
-                    i for i, v in sorted(score_tmp, key=operator.itemgetter(1), reverse=True)
+                    i
+                    for i, v in sorted(
+                        score_tmp, key=operator.itemgetter(1), reverse=True
+                    )
                 ]
                 score_dict[float(subdir)] = score_tmp
-
 
             if percent:
                 N = int(len(baseline_score) * p / 100)
@@ -271,7 +281,7 @@ def precision_k_2(folder, l, percent=False, dataset="Reddit"):
                 x.append(key)
                 y.append(num_in_topN / N)
 
-            ax.plot(x, y, marker='o', label=f"{prune_algo}")
+            ax.plot(x, y, marker="o", label=f"{prune_algo}")
 
         ax.legend()
         ax.set_xlabel("prune_rate")
@@ -289,6 +299,7 @@ def precision_k_2(folder, l, percent=False, dataset="Reddit"):
             f"top_{N}_precision_k.png",
         )
         os.makedirs(osp.dirname(save_path), exist_ok=True)
+        print(f"Saving to {save_path}")
         fig.savefig(save_path)
 
 
@@ -326,7 +337,14 @@ def main():
 
     # precision_k_2("../experiments/pr", [3, 5, 10, 15, 20], percent=False, dataset="Reddit")
     # precision_k_2("../experiments/pr", [3, 5, 10, 15, 20], percent=False, dataset="Reddit2")
-    precision_k_2("../experiments/bc", [3, 5, 10, 15, 20], percent=False, dataset="ogbn_products")
+    precision_k_2(
+        folder="../experiments/pr",
+        dataset="ogbn_products",
+        prune_algos=["random", "sym_degree", "er"],
+        l=[3, 5, 10, 15, 20, 50, 100],
+        percent=False,
+    )
+
 
 if __name__ == "__main__":
     main()

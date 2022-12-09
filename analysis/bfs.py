@@ -124,7 +124,7 @@ def reachability(folder, dataset="Reddit"):
     y.append(reachable_num_nodes / total_num_nodes * 100)
     plot_dict["baseline"] = [x, y]
 
-    for prune_algo in ["random", "in_degree", "out_degree", "old_er", "er"]:
+    for prune_algo in ["random", "sym_degree", "er"]:
         outfile.write(f"------------------{prune_algo}--------------------\n")
         x = []
         y = []
@@ -165,10 +165,10 @@ def reachability(folder, dataset="Reddit"):
 
 
 if __name__ == "__main__":
-    cpu_time("../experiments/bfs/", dataset="Reddit")
-    cpu_time("../experiments/bfs/", dataset="Reddit2")
+    # cpu_time("../experiments/bfs/", dataset="Reddit")
+    # cpu_time("../experiments/bfs/", dataset="Reddit2")
     # cpu_time('../experiments/bfs/', dataset='ogbn_products')
 
-    reachability("../experiments/bfs/", dataset="Reddit")
-    reachability("../experiments/bfs/", dataset="Reddit2")
-    # reachability('../experiments/bfs/', dataset='ogbn_products')
+    # reachability("../experiments/bfs/", dataset="Reddit")
+    # reachability("../experiments/bfs/", dataset="Reddit2")
+    reachability('../experiments/bfs/', dataset='ogbn_products')

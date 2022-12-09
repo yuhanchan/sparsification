@@ -150,7 +150,7 @@ def triangle_count(folder, dataset="Reddit"):
     y.append(triangle)
     plot_dict["baseline"] = [x, y]
 
-    for prune_algo in ["random", "in_degree", "out_degree", "er"]:
+    for prune_algo in ["random", "sym_degree", "er"]:
         outfile.write(f"------------------{prune_algo}--------------------\n")
         x = []
         y = []
@@ -181,10 +181,10 @@ def triangle_count(folder, dataset="Reddit"):
 
 
 if __name__ == "__main__":
-    cpu_time("../experiments/tc/", dataset="Reddit")
-    cpu_time("../experiments/tc/", dataset="Reddit2")
-    cpu_time("../experiments/tc/", dataset="ogbn_products")
+    # cpu_time("../experiments/tc/", dataset="Reddit")
+    # cpu_time("../experiments/tc/", dataset="Reddit2")
+    # cpu_time("../experiments/tc/", dataset="ogbn_products")
 
-    triangle_count("../experiments/tc/", dataset="Reddit")
-    triangle_count("../experiments/tc/", dataset="Reddit2")
+    # triangle_count("../experiments/tc/", dataset="Reddit")
+    # triangle_count("../experiments/tc/", dataset="Reddit2")
     triangle_count("../experiments/tc/", dataset="ogbn_products")

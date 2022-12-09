@@ -109,7 +109,7 @@ def component_count(folder, dataset="Reddit"):
     y.append(count)
     plot_dict["baseline"] = [x, y]
 
-    for prune_algo in ["random", "in_degree", "out_degree", "old_er", "er"]:
+    for prune_algo in ["random", "sym_degree", "er"]:
         outfile.write(f"------------------{prune_algo}--------------------\n")
         x = []
         y = []
@@ -141,10 +141,10 @@ def component_count(folder, dataset="Reddit"):
 
 
 if __name__ == "__main__":
-    cpu_time("../experiments/cc/", dataset="Reddit")
-    cpu_time("../experiments/cc/", dataset="Reddit2")
+    # cpu_time("../experiments/cc/", dataset="Reddit")
+    # cpu_time("../experiments/cc/", dataset="Reddit2")
     # cpu_time('../experiments/cc/', dataset='ogbn_products')
 
-    component_count("../experiments/cc/", dataset="Reddit")
-    component_count("../experiments/cc/", dataset="Reddit2")
-    # component_count('../experiments/cc/', dataset='ogbn_products')
+    # component_count("../experiments/cc/", dataset="Reddit")
+    # component_count("../experiments/cc/", dataset="Reddit2")
+    component_count('../experiments/cc/', dataset='ogbn_products')
