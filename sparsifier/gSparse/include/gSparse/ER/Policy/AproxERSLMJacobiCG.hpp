@@ -50,20 +50,24 @@ namespace gSparse
                                 static_cast<double>(graph->GetIncidentMatrix().cols()) / eps)));
                     std::cout<<"scale "<<scale<<std::endl;
 
+                    // scale = 1;
                     for (int i = 1; i != scale + 1; ++i)
                     {
                         Eigen::VectorXd x;
                         gSparse::PrecisionMatrix Q =
+                        // random projection matrix is used to reduce the dimension of matrix, 1xm * m*n -> 1xn
                         gSparse::Util::randomProjectionMatrix(1, 
                                                                 graph->GetIncidentMatrix().rows(), 
                                                                 static_cast<double>(scale), 
                                                                 JLTol);
-
+                        // std::cout << "Q " << Q << std::endl;
+                        // Y = Q * W^(1/2) * B        1xm * mxm * mxn -> 1xn
                         gSparse::PrecisionMatrix Y = (Q * graph->GetWeightMatrix().cwiseSqrt() * graph->GetIncidentMatrix());
 
                         // solve Linear system with 300 max iteration
                         Eigen::ConjugateGradient<gSparse::SparsePrecisionMatrix, Eigen::Lower | Eigen::Upper  > cg;
                         cg.setMaxIterations(maxIter);
+                        //cg.compute is laplacian solver, trying to get x where Lx=b, (b here is what's inside solve())
                         x = cg.compute(graph->GetLaplacianMatrix()).solve(Y.transpose());
                                     
                         if (cg.info() != Eigen::Success)

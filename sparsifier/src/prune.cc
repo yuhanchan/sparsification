@@ -120,8 +120,37 @@ int64_t in_threshold_pruning(Graph *g, int64_t num_edges,
   return num_pruned_edges;
 }
 
-void write_el_to_file(const Graph *g, std::string pruned_graph_el_filename,
-                      bool post_symmetrize) {
+int64_t sym_threshold_pruning(Graph *g, int64_t num_edges, int64_t threshold) {
+  int64_t num_pruned_edges = 0;
+
+  std::cout << "Threshold pruning based on symmetrical edges...\n";
+  std::cout << "Pruning threshold: " << threshold << std::endl;
+
+  Timer t_prune;
+  t_prune.Start();
+  for (int64_t i = 0; i < g->num_nodes(); ++i) {
+    if (g->out_degree(i) > threshold) {
+      int64_t num_edges_to_prune = g->out_degree(i) - threshold;
+      srand(SEED);
+      std::set<int64_t> prune_indices;
+      while ((int64_t)prune_indices.size() < num_edges_to_prune) {
+        int64_t ind = rand() % (g->out_degree(i));
+        prune_indices.insert(ind);
+      }
+      num_pruned_edges += prune_indices.size();
+      for (auto it : prune_indices) {
+        g->SetIthNeighborID(i, it);
+      }
+    }
+  }
+  t_prune.Stop();
+  PrintStep("[TimingStat] Time to prune (s):", t_prune.Seconds());
+
+  return num_pruned_edges;
+}
+
+int write_el_to_file(const Graph *g, std::string pruned_graph_el_filename,
+                     bool post_symmetrize) {
   std::ofstream pruned_graph_file(pruned_graph_el_filename);
   std::set<edge_t> edges;
 
@@ -134,6 +163,9 @@ void write_el_to_file(const Graph *g, std::string pruned_graph_el_filename,
         }
       }
     }
+    for (auto it : edges) {
+      pruned_graph_file << it.first << " " << it.second << "\n";
+    }
   } else {
     for (NodeID i = 0; i < g->num_nodes(); ++i) {
       for (auto it : g->out_neigh(i)) {
@@ -142,8 +174,12 @@ void write_el_to_file(const Graph *g, std::string pruned_graph_el_filename,
         }
       }
     }
+    for (auto it : edges) {
+      pruned_graph_file << it.first << " " << it.second << "\n";
+    }
   }
   pruned_graph_file.close();
+  return edges.size();
 }
 
 void write_edge_index_to_file(const Graph *g,
@@ -224,13 +260,21 @@ int main(int argc, char *argv[]) {
   }
 
   // Print a pruned graph to a file
-  write_el_to_file(&g, pruned_graph_file, post_symmetrize);
+  int num_edges_after_pruning =
+      write_el_to_file(&g, pruned_graph_file, post_symmetrize);
   // write_edge_index_to_file(&g, pruned_graph_file, num_edges_to_prune);
   t_overall.Stop();
   PrintStep("[TimingStat] Time to prune and write to file (s):",
             t_overall.Seconds());
-  std::cout << "Pruned percentage for " << pruning_threshold
-            << " is: " << num_edges_to_prune * 100.0 / num_edges << std::endl;
+  if (pruning_type == "random") {
+    std::cout << "Target pruning level: " << pruning_level
+              << " . Actual pruning level: "
+              << 1.0 - (num_edges_after_pruning * 1.0 / num_edges) << std::endl;
+  } else {
+    std::cout << "pruning threshold: " << pruning_threshold
+              << " . Actual pruning level: "
+              << 1.0 - (num_edges_after_pruning * 1.0 / num_edges) << std::endl;
+  }
 
   return 0;
 }

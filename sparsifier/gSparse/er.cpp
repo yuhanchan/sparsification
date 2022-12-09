@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
         outfile.close();
     }
     auto end = std::chrono::high_resolution_clock::now();
-    std::cout << "Compute time: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << " seconds" << std::endl;
+    std::cout << "Compute/Load time: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << " seconds" << std::endl;
     // Perform Sparsification
     start = std::chrono::high_resolution_clock::now();
     auto sparseGraph1 = sparsifier.GetSparsifiedGraph();

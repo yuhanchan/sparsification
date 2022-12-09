@@ -1,3 +1,7 @@
-from .random_sparsify import random_sparsify, cpp_random_sparsify, cpp_random_sparsify_all
-from .degree_sparsify import in_degree_sparsify, out_degree_sparsify
-from .er_sparsify import python_er_sparsify, cpp_er_sparsify
+from .random_sparsify import random_sparsify
+from .degree_sparsify import (
+    in_degree_sparsify,
+    out_degree_sparsify,
+    sym_degree_sparsify,
+)
+from .er_sparsify import python_er_sparsify, gsparse_er_sparsify

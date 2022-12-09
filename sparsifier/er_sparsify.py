@@ -64,17 +64,6 @@ def compute_reff(W, V, parallel=True, reuse=True):
         myLogger.info(message=f"Sparse.find took {time() - t_s} seconds.")
         n = np.shape(W)[0]
 
-        # # save start_nodes, end_nodes, V to txt file
-        # with open('start_nodes.txt', "w") as f:
-        #     for i in start_nodes:
-        #         f.write(f"{i}\n")
-        # with open('end_nodes.txt', "w") as f:
-        #     for i in end_nodes:
-        #         f.write(f"{i}\n")
-        # with open('V.txt', "w") as f:
-        #     np.savetxt(f, V, delimiter=",")
-        # sys.exit()
-
         if not parallel:
             t_ss = time()
             R_eff = sparse.lil_matrix((n, n))
@@ -174,7 +163,7 @@ def stage2(reuse=True):
         myLogger.info(message=f"Stage 2 took {t_e - t_s} seconds.")
 
 
-def compute_edge_data(
+def sampling(
     epsilon: Union[int, float],
     Pe,
     C,
@@ -209,30 +198,37 @@ def compute_edge_data(
     sparserW = sparse.csc_matrix(
         (np.squeeze(new_weights), (start_nodes, end_nodes)), shape=(N, N)
     )
-    sparserW = sparserW + sparserW.T  # make it symmetric
+
+    sparserW = sparserW + sparserW.T
+
     t_e = time()
-    myLogger.info(message=f"Stage 3b took {t_e - t_s} seconds.")
+    myLogger.info(message=f"Sampling took {t_e - t_s} seconds.")
+    print(f"Sampling took {t_e - t_s} seconds.")
     myLogger.info(
         f"Prune rate for epsilon={epsilon}: {1 - np.count_nonzero(new_weights) / np.size(new_weights)}, ({np.size(new_weights)} -> {np.count_nonzero(new_weights)})"
     )
 
+    print(
+        f"Prune rate for epsilon={epsilon}: {1 - np.count_nonzero(new_weights) / np.size(new_weights)}, ({np.size(new_weights)} -> {np.count_nonzero(new_weights)})"
+    )
     # convert into PyG's object
     edge_index, edge_weight = from_scipy_sparse_matrix(sparserW)
-    if str(epsilon) in config[dataset_name]["python_er_epsilon_to_drop_rate_map"]:
-        prune_file_path = osp.join(
+    if (
+        config == None
+        or str(epsilon)
+        not in config[dataset_name]["python_er_epsilon_to_drop_rate_map"]
+    ):
+        duw_el_path = osp.join(
             prune_file_dir,
-            str(
-                config[dataset_name]["python_er_epsilon_to_drop_rate_map"][str(epsilon)]
-            ),
-            "edge_data.pt",
+            f"epsilon_{epsilon}",
+            "duw.el",
         )
-        npy_path = osp.join(
+        dw_el_path = osp.join(
             prune_file_dir,
-            str(
-                config[dataset_name]["python_er_epsilon_to_drop_rate_map"][str(epsilon)]
-            ),
-            "dw.npy",
+            f"epsilon_{epsilon}",
+            "dw.wel",
         )
+    else:
         duw_el_path = osp.join(
             prune_file_dir,
             str(
@@ -247,68 +243,27 @@ def compute_edge_data(
             ),
             "dw.wel",
         )
-        uduw_el_path = osp.join(
-            prune_file_dir,
-            str(
-                config[dataset_name]["python_er_epsilon_to_drop_rate_map"][str(epsilon)]
-            ),
-            "uduw.el",
-        )
-        udw_el_path = osp.join(
-            prune_file_dir,
-            str(
-                config[dataset_name]["python_er_epsilon_to_drop_rate_map"][str(epsilon)]
-            ),
-            "udw.wel",
-        )
 
-        t_s = time()
-        os.makedirs(osp.dirname(npy_path), exist_ok=True)
-        to_save = (
-            torch.cat((edge_index, edge_weight.reshape(1, -1)), 0).numpy().transpose()
-        )
-        np.save(npy_path, to_save)
-        myLogger.info(message=f"Saved edge_data.pt in {time() - t_s} seconds")
-
-        # t_s = time()
-        # os.makedirs(osp.dirname(npy_path), exist_ok=True)
-        # to_save = torch.cat((edge_index, edge_weight.reshape(1, -1)), 0).numpy().transpose()
-        # np.save(npy_path, to_save)
-        # myLogger.info(message=f"Saved edge_data.pt in {time() - t_s} seconds")
-
-    else:
+    to_save = torch.cat((edge_index, edge_weight.reshape(1, -1)), 0).numpy().transpose()
+    if duw_el_path is not None and not osp.exists(duw_el_path):
+        t = time()
+        os.makedirs(osp.dirname(duw_el_path), exist_ok=True)
+        with open(duw_el_path, "w") as f:
+            for line in to_save:
+                f.write(f"{int(line[0])} {int(line[1])}\n")
         myLogger.info(
-            message=f"Drop rate for epsilon={epsilon} not found in config, edge_data.pt not saved"
+            message=f"Saved edge list in {duw_el_path} in {time() - t} seconds."
         )
 
-    # if duw_el_path is not None and not osp.exists(duw_el_path):
-    # os.makedirs(osp.dirname(duw_el_path), exist_ok=True)
-    # with open(duw_el_path, 'w') as f:
-    # for line in to_save:
-    # f.write(f"{int(line[0])} {int(line[1])}\n")
-    # myLogger.info(message=f"Saved edge list in {duw_el_path}")
-
-    # if dw_el_path is not None and not osp.exists(dw_el_path):
-    #     t = time()
-    #     os.makedirs(osp.dirname(dw_el_path), exist_ok=True)
-    #     with open(dw_el_path, 'w') as f:
-    #         for line in to_save:
-    #             f.write(f"{int(line[0])} {int(line[1])} {line[2]}\n")
-    #     myLogger.info(message=f"Saved edge list in {dw_el_path} in {time() - t} seconds")
-
-    # if uduw_el_path is not None and not osp.exists(uduw_el_path):
-    #     os.makedirs(osp.dirname(uduw_el_path), exist_ok=True)
-    #     with open(uduw_el_path, 'w') as f:
-    #         for line in to_save:
-    #             f.write(f"{int(line[0])} {int(line[1])}\n") if line[0] < line[1] else None
-    #     myLogger.info(message=f"Saved edge list in {uduw_el_path}")
-
-    # if udw_el_path is not None and not osp.exists(udw_el_path):
-    #     os.makedirs(osp.dirname(udw_el_path), exist_ok=True)
-    #     with open(udw_el_path, 'w') as f:
-    #         for line in to_save:
-    #             f.write(f"{int(line[0])} {int(line[1])} {line[2]}\n") if line[0] < line[1] else None
-    #     myLogger.info(message=f"Saved edge list in {udw_el_path}")
+    if dw_el_path is not None and not osp.exists(dw_el_path):
+        t = time()
+        os.makedirs(osp.dirname(dw_el_path), exist_ok=True)
+        with open(dw_el_path, "w") as f:
+            for line in to_save:
+                f.write(f"{int(line[0])} {int(line[1])} {line[2]}\n")
+        myLogger.info(
+            message=f"Saved edge list in {dw_el_path} in {time() - t} seconds"
+        )
 
     return edge_index, edge_weight
 
@@ -379,14 +334,22 @@ def stage3(
     C = 4 * C0
 
     if isinstance(epsilon, int) or isinstance(epsilon, float):
-        edge_index, edge_weight = compute_edge_data(
-            epsilon, Pe, C, weights, start_nodes, end_nodes, N, dataset_name, config
+        edge_index, edge_weight = sampling(
+            epsilon,
+            Pe,
+            C,
+            weights,
+            start_nodes,
+            end_nodes,
+            N,
+            dataset_name,
+            config,
         )
     elif isinstance(epsilon, list):
         with ProcessPoolExecutor(max_workers=max_workers) as executor:
             futures = {
                 executor.submit(
-                    compute_edge_data,
+                    sampling,
                     epsilon_,
                     Pe,
                     C,
@@ -410,13 +373,19 @@ def stage3(
 
 
 def python_er_sparsify(
-    dataset, dataset_name, epsilon: Union[int, float, list], config, reuse=True
+    dataset,
+    dataset_name,
+    dataset_type,
+    epsilon: Union[int, float, list],
+    reuse=True,
+    config=None,
 ):
     """
     This is the original ER sparsifier utilizing the Laplacian.jl repo
     Input:
         dataset: PygDataset
         dataset_name: str, name of the dataset
+        dataset_type: str, type of the dataset, 'pyg' or 'el'
         epsilon: int | float -> return edge_index, edge_weight
                  list -> compute each epsilon, no return
         config: config dict
@@ -439,13 +408,45 @@ def python_er_sparsify(
     )
 
     prune_file_dir = osp.join(
-        osp.dirname(osp.abspath(__file__)), f"../data/{dataset_name}/pruned/python_er"
+        osp.dirname(osp.abspath(__file__)), f"../data/{dataset_name}/pruned/er"
     )
     os.makedirs(prune_file_dir, exist_ok=True)
 
-    if isinstance(epsilon, int) or isinstance(epsilon, float):
-        # if str(epsilon) in config[dataset_name]["python_er_epsilon_to_drop_rate_map"]:
-        #     prune_file_path = osp.join(prune_file_dir, str(config[dataset_name]["python_er_epsilon_to_drop_rate_map"][str(epsilon)]), "edge_data.pt")
+    # load dataset
+    if dataset_type == "pyg":
+        pass
+    elif dataset_type == "el":
+        dataset = np.loadtxt(dataset, dtype=np.int64)
+    else:
+        myLogger.error(message=f"dataset_type must be one of the type: pyg, el")
+        sys.exit(1)
+
+    if isinstance(epsilon, int) or isinstance(epsilon, float):  # single epsilon
+        if (
+            config == None
+            or str(epsilon)
+            not in config[dataset_name]["python_er_epsilon_to_drop_rate_map"]
+        ):
+            myLogger.info(
+                message=f"No config found for {dataset_name} with epsilon {epsilon}, folder will prefixed with 'epsilon_'"
+            )
+            myLogger.error(message=f"config is None")
+            prune_file_path = osp.join(
+                prune_file_dir,
+                f"epsilon_{epsilon}",
+                "edge_data.pt",
+            )  # this file is for pyg dataset only
+        else:
+            prune_file_path = osp.join(
+                prune_file_dir,
+                str(
+                    config[dataset_name]["python_er_epsilon_to_drop_rate_map"][
+                        str(epsilon)
+                    ]
+                ),
+                "edge_data.pt",
+            )  # this file is for pyg dataset only
+
         myLogger.info(message=f"python_er_sparsify: epsilon: {epsilon}")
         if reuse and prune_file_path and osp.exists(prune_file_path):
             myLogger.info(message=f"edge_data.pt already exists. Loading it...")
@@ -454,10 +455,12 @@ def python_er_sparsify(
             edge_weight = edge_data["edge_weight"]
         else:
             myLogger.info(message=f"edge_data.pt does not exist. Computing it...")
-            if dataset_name in ["Reddit", "Reddit2", "ogbn_products"]:
+            if dataset_type == "pyg":
                 stage1(
-                    dataset.copy(), isPygDataset=True, reuse=reuse
-                )  # stage1 will change dataset
+                    dataset.copy(),
+                    isPygDataset=True,
+                    reuse=reuse,
+                )  # stage1 will change dataset, so make copy
                 stage2(reuse=reuse)
                 edge_index, edge_weight = stage3(
                     dataset,
@@ -468,7 +471,11 @@ def python_er_sparsify(
                     reuse=reuse,
                 )
             else:
-                stage1(dataset.copy(), isPygDataset=False, reuse=reuse)
+                stage1(
+                    dataset.copy(),
+                    isPygDataset=False,
+                    reuse=reuse,
+                )  # stage1 will change dataset, so make copy
                 stage2(reuse=reuse)
                 edge_index, edge_weight = stage3(
                     dataset,
@@ -478,25 +485,45 @@ def python_er_sparsify(
                     isPygDataset=False,
                     reuse=reuse,
                 )
-    elif isinstance(epsilon, list):
+
+    elif isinstance(epsilon, list):  # multiple epsilons
         myLogger.info(message=f"python_er_sparsify: epsilon: {epsilon}")
-        if dataset_name in ["Reddit", "Reddit2", "ogbn_products"]:
-            stage1(dataset.copy(), isPygDataset=True, reuse=reuse)
+        if dataset_type == "pyg":
+            stage1(
+                dataset.copy(),
+                isPygDataset=True,
+                reuse=reuse,
+            )  # stage1 will change dataset, so make copy
             stage2(reuse=reuse)
             edge_index, edge_weight = stage3(
-                dataset, dataset_name, epsilon, config, isPygDataset=True, reuse=reuse
+                dataset,
+                dataset_name,
+                epsilon,
+                config,
+                isPygDataset=True,
+                reuse=reuse,
             )
         else:
-            stage1(dataset.copy(), isPygDataset=False, reuse=reuse)
+            stage1(
+                dataset.copy(),
+                isPygDataset=False,
+                reuse=reuse,
+            )  # stage1 will change dataset, so make copy
             stage2(reuse=reuse)
             edge_index, edge_weight = stage3(
-                dataset, dataset_name, epsilon, config, isPygDataset=False, reuse=reuse
+                dataset,
+                dataset_name,
+                epsilon,
+                config,
+                isPygDataset=False,
+                reuse=reuse,
             )
+
     else:
         myLogger.error(message=f"epsilon must be one of the type: int, float, list")
         sys.exit(1)
 
-    if dataset_name in ["Reddit", "Reddit2", "ogbn_products"]:
+    if dataset_type == "pyg":
         data = dataset.data
         if edge_index is not None and edge_weight is not None:
             data.edge_index = edge_index
@@ -505,7 +532,7 @@ def python_er_sparsify(
     return dataset
 
 
-def cpp_er_sparsify(dataset_name, epsilon, config):
+def gsparse_er_sparsify(dataset_name, epsilon, config):
     """
     This is the gSparse version of ER pruning.
 

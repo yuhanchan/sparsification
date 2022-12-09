@@ -101,6 +101,10 @@ namespace gSparse
             // Save er to file
             virtual inline void SaveER(std::ofstream & ofs)
             {
+                // for (std::size_t i = 0; i < _er.rows(); ++i)
+                // {
+                //     ofs << _graph->GetEdgeList()(i, 0) << " " << _graph->GetEdgeList()(i, 1) << " " << _er(i) << std::endl;
+                // }
                 ofs << _er;
             }
             ///
