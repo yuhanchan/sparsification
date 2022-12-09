@@ -129,12 +129,12 @@ LDLinv_t approxchol(LLmatp_t &a) {
 
   ApproxCholPQ_t pq = ApproxCholPQ(a.degs);
 
-// // write a.degs to file
-// ofstream fout("a.degs.cpp");
-// for (int i = 0; i < a.degs.size(); i++) {
-//     fout << a.degs[i] << endl;
-// }
-// fout.close();
+  // // write a.degs to file
+  // ofstream fout("a.degs.cpp");
+  // for (int i = 0; i < a.degs.size(); i++) {
+  //     fout << a.degs[i] << endl;
+  // }
+  // fout.close();
 
 #ifdef DEBUG
   cout << "pq: " << pq << endl;
@@ -175,9 +175,9 @@ LDLinv_t approxchol(LLmatp_t &a) {
     // cout << it << ", len: " << len;
     len = a.compressCol(colspace, len, pq);
 
-// #ifdef DEBUG
-// cout << ", len: " << len << endl;
-// #endif
+    // #ifdef DEBUG
+    // cout << ", len: " << len << endl;
+    // #endif
 
 #ifdef DEBUG
     cout << "pq3: " << pq << endl;

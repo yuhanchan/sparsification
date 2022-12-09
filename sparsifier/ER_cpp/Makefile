@@ -9,6 +9,9 @@ all: main
 test:
 	$(CC) $(FLAGS) test.cpp -o bin/test
 
+ACD: 
+	$(CC) $(FLAGS) ACD.cpp -o bin/ACD
+
 main: main.o Matrix.h Laplacian.o
 	$(CC) $(FLAGS) main.o Laplacian.o -o bin/main
 

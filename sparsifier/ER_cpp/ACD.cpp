@@ -1,30 +1,18 @@
-#ifndef _MATRIX_H_
-#define _MATRIX_H_
-
-#include "macros.h"
+#include <iostream>
+#include <vector>
+#include <numeric>
 #include <algorithm>
 #include <assert.h>
 #include <chrono>
 #include <cmath>
 #include <fstream>
-#include <iostream>
-#include <numeric>
 #include <random>
 #include <sstream>
 #include <string>
-#include <vector>
+
+#define PSUEDO_RANDOM
 
 using namespace std;
-
-// function declarations
-
-int keyMap(int x, int n);
-double dot(vector<double> &a, vector<double> &b);
-double norm(vector<double> &a);
-// y = a * x + y
-void axpy2(double a, vector<double> &x, vector<double> &y);
-// p = z + beta * p
-void bzbeta(double beta, vector<double> &p, vector<double> &z);
 
 // struct declarations
 struct DenseMatrix;
@@ -107,14 +95,14 @@ struct SparseMatrixCOO {
   SparseMatrixCSC toCSC() {
     sort_col_then_row();
     SparseMatrixCSC csc(n, m, nnz);
-    csc.row = row;
+    csc.row_ind = row;
     csc.val = val;
-    csc.col.resize(m + 1);
+    csc.col_ptr.resize(m + 1);
     for (int i = 0; i < nnz; i++) {
-      csc.col[col[i] + 1]++;
+      csc.col_ptr[col[i] + 1]++;
     }
     for (int i = 0; i < m; i++) {
-      csc.col[i + 1] += csc.col[i];
+      csc.col_ptr[i + 1] += csc.col_ptr[i];
     }
     return csc;
   }
@@ -425,148 +413,6 @@ struct LDLinv_t {
   }
 };
 
-struct ApproxCholPQElem_t {
-  int prev;
-  int next;
-  int key;
-  // Constructor
-  ApproxCholPQElem_t(int prev, int next, int key) {
-    this->prev = prev;
-    this->next = next;
-    this->key = key;
-  }
-
-  // << operator overloading
-  friend ostream &operator<<(ostream &os, const ApproxCholPQElem_t &p) {
-    os << "prev: " << p.prev + 1 << ", next: " << p.next + 1
-       << ", key: " << p.key;
-    return os;
-  }
-};
-
-struct ApproxCholPQ_t {
-  vector<ApproxCholPQElem_t *> elems;
-  vector<int> lists;
-  int minlist;
-  int nitems;
-  int n;
-
-  // Constructor
-  ApproxCholPQ_t(int n) {
-    this->elems.resize(n, nullptr);
-    this->lists.resize(2 * n + 1, -1);
-    this->minlist = 0;
-    this->nitems = n;
-    this->n = n;
-  }
-
-  // pop
-  int pop() {
-    if (nitems == 0) {
-      cout << "Error: pop() called on empty PQ" << endl;
-      return -1;
-    }
-    while (this->lists[this->minlist] == -1) {
-      this->minlist++;
-    }
-    int i = this->lists[this->minlist];
-    int next = this->elems[i]->next;
-
-    this->lists[this->minlist] = next;
-    if (next > -1) {
-      this->elems[next] = new ApproxCholPQElem_t(-1, this->elems[next]->next,
-                                                 this->elems[next]->key);
-    }
-
-    this->nitems--;
-
-    return i;
-  }
-
-  // Move
-  void Move(int i, int newkey, int oldlist, int newlist) {
-#ifdef DEBUG
-    cout << "Moved called with i: " << i << ", newkey: " << newkey
-         << ", oldlist: " << oldlist << ", newlist: " << newlist << endl;
-#endif
-    int prev = this->elems[i]->prev;
-    int next = this->elems[i]->next;
-
-    if (next > -1) {
-      this->elems[next] = new ApproxCholPQElem_t(prev, this->elems[next]->next,
-                                                 this->elems[next]->key);
-    }
-    if (prev > -1) {
-      this->elems[prev] = new ApproxCholPQElem_t(this->elems[prev]->prev, next,
-                                                 this->elems[prev]->key);
-    } else {
-      this->lists[oldlist] = next;
-    }
-
-    int head = this->lists[newlist];
-    if (head > -1) {
-      this->elems[head] = new ApproxCholPQElem_t(i, this->elems[head]->next,
-                                                 this->elems[head]->key);
-    }
-    this->lists[newlist] = i;
-
-    this->elems[i] = new ApproxCholPQElem_t(-1, head, newkey);
-  }
-
-  // Dec
-  void Dec(int i) {
-#ifdef DEBUG
-    cout << "Dec called with i: " << i << endl;
-#endif
-    int oldlist = keyMap(this->elems[i]->key, this->n) - 1;
-    int newlist = keyMap(this->elems[i]->key - 1, this->n) - 1;
-
-    if (newlist != oldlist) {
-      this->Move(i, this->elems[i]->key - 1, oldlist, newlist);
-
-      if (newlist < this->minlist) {
-        this->minlist = newlist;
-      }
-    } else {
-      this->elems[i] = new ApproxCholPQElem_t(
-          this->elems[i]->prev, this->elems[i]->next, this->elems[i]->key - 1);
-    }
-  }
-
-  // Inc
-  void Inc(int i) {
-#ifdef DEBUG
-    cout << "Inc called with i: " << i << endl;
-#endif
-    int oldlist = keyMap(this->elems[i]->key, this->n) - 1;
-    int newlist = keyMap(this->elems[i]->key + 1, this->n) - 1;
-
-    if (newlist != oldlist) {
-      this->Move(i, this->elems[i]->key + 1, oldlist, newlist);
-    } else {
-      this->elems[i] = new ApproxCholPQElem_t(
-          this->elems[i]->prev, this->elems[i]->next, this->elems[i]->key + 1);
-    }
-  }
-
-  // << operator overloading
-  friend ostream &operator<<(ostream &os, const ApproxCholPQ_t &pq) {
-    os << "minlist = " << pq.minlist + 1 << endl;
-    os << "nitems = " << pq.nitems << endl;
-    os << "n = " << pq.n << endl;
-    os << "lists = ";
-    for (int i = 0; i < pq.lists.size(); i++) {
-      os << pq.lists[i] + 1 << ", ";
-    }
-    os << endl;
-    os << "elems = " << endl;
-    for (int i = 0; i < pq.elems.size(); i++) {
-      os << i << ": " << *pq.elems[i] << endl;
-    }
-    return os;
-  }
-};
-
 struct LLmatp_t {
   int n;              // numbers of rows/nodes
   vector<int> degs;   // degrees of nodes
@@ -632,10 +478,7 @@ struct LLmatp_t {
   }
 
   // compressCol
-  int compressCol(vector<LLp *> &colspace, int len, ApproxCholPQ_t &pq) {
-#ifdef DEBUG
-    cout << "compressCol called with len: " << len << endl;
-#endif
+  int compressCol(vector<LLp *> &colspace, int len) {
     // sort colspace by row
     sort(colspace.begin(), colspace.begin() + len,
          [](LLp *a, LLp *b) { return a->row < b->row; });
@@ -651,8 +494,6 @@ struct LLmatp_t {
       } else {
         colspace[ptr]->val += colspace[i]->val;
         colspace[i]->reverse->val = 0;
-
-        pq.Dec(currow);
       }
     }
 
@@ -662,13 +503,187 @@ struct LLmatp_t {
     return ptr + 1;
   }
 
-  // for debugging
-  void print_cols_until_selfloop() {
-    for (int i = 0; i < this->cols.size(); i++) {
-      cout << "" << i << ": ";
-      this->cols[i]->print_until_selfloop();
-    }
+  void pop(){
+
   }
+
 };
 
+LLmatp_t LLmatp(SparseMatrixCSC &a) {
+  int n = a.n;
+  int m = a.nnz;
+#ifdef DEBUG
+  cout << "n: " << n << endl;
+  cout << "m: " << m << endl;
 #endif
+
+  vector<int> degs = vector<int>(n, 0);
+
+  SparseMatrixCSC a_copy = SparseMatrixCSC(a);
+  for (int i = 0; i < a_copy.nnz; i++) {
+    a_copy.val[i] = i;
+  }
+  vector<double> flips = a_copy.Transpose().val;
+
+#ifdef DEBUG
+  cout << "flips: ";
+  for (int i = 0; i < flips.size(); i++) {
+    cout << flips[i] << " ";
+  }
+  cout << endl;
+#endif
+
+  vector<LLp *> cols(n, nullptr);
+  vector<LLp *> llelems(m, nullptr);
+
+  for (int i = 0; i < n; i++) {
+    degs[i] = a.col_ptr[i + 1] - a.col_ptr[i];
+
+    int ind = a.col_ptr[i];
+    int j = a.row_ind[ind];
+    double v = a.val[ind];
+    LLp *llpend = new LLp(j, v);
+    LLp *next = llpend;
+    llelems[ind] = llpend;
+    for (int ind = a.col_ptr[i] + 1; ind < a.col_ptr[i + 1]; ind++) {
+      j = a.row_ind[ind];
+      v = a.val[ind];
+      LLp *llp = new LLp(j, v, next);
+      llelems[ind] = llp;
+      next = llp;
+    }
+    cols[i] = next;
+  }
+
+  for (int i = 0; i < n; i++) {
+    for (int ind = a.col_ptr[i]; ind < a.col_ptr[i + 1]; ind++) {
+      llelems[ind]->reverse = llelems[flips[ind]];
+    }
+  }
+
+  return LLmatp_t(n, degs, cols, llelems);
+}
+
+LDLinv_t approxchol(LLmatp_t &a) {
+#ifdef PSUEDO_RANDOM
+  ifstream fin("/data3/chenyh/sparsification/utils/uniform_random.txt");
+#endif
+
+  int n = a.n;
+
+  LDLinv_t ldli = LDLinv_t(n);
+  int ldli_row_ptr = 0;
+
+  vector<double> d(n, 0);
+
+  int it = 0;
+
+  vector<LLp *> colspace(n, nullptr);
+  vector<double> csumspace(n, 0);
+  vector<double> vals(n, 0);
+
+  while (it < n - 1) {
+
+    int i = a.pop();
+
+    ldli.col[it] = i;
+    ldli.colptr[it] = ldli_row_ptr;
+
+    it++;
+
+    int len = a.get_ll_col(i, colspace);
+
+    len = a.compressCol(colspace, len);
+
+    double csum = 0;
+    for (int ii = 0; ii < len; ii++) {
+      vals[ii] = colspace[ii]->val;
+      csum += colspace[ii]->val;
+      csumspace[ii] = csum;
+    }
+    double wdeg = csum;
+
+    double colScale = 1;
+
+    for (int joffset = 0; joffset < len - 1; joffset++) {
+      LLp *ll = colspace[joffset];
+      double w = vals[joffset] * colScale;
+      int j = ll->row;
+      LLp *revj = ll->reverse;
+
+      double f = w / wdeg;
+
+      vals[joffset] = 0;
+
+#ifdef PSUEDO_RANDOM
+      double random_number;
+      fin >> random_number;
+      // if reaching end of file, reset to beginning
+      if (fin.eof()) {
+        fin.clear();
+        fin.seekg(0, fin.beg);
+      }
+      double r =
+          random_number * (csum - csumspace[joffset]) + csumspace[joffset];
+#else
+      double r =
+          static_cast<double>(rand()) / RAND_MAX * (csum - csumspace[joffset]) +
+          csumspace[joffset];
+#endif
+
+      int koff = lower_bound(csumspace.begin(), csumspace.begin() + len, r) -
+                 csumspace.begin(); // csumspace is assumed to be sorted
+      // int koff = searchsortedfirst(csumspace, r, len) - csumspace.begin(); //
+      // csumspace is assumed to be sorted
+
+      int k = colspace[koff]->row;
+
+      double newEdgeVal = f * (1 - f) * wdeg;
+
+      revj->row = k;
+      revj->val = newEdgeVal;
+      revj->reverse = ll;
+
+      LLp *khead = a.cols[k];
+      a.cols[k] = ll;
+      ll->next = khead;
+      ll->reverse = revj;
+      ll->val = newEdgeVal;
+      ll->row = j;
+
+      colScale *= (1 - f);
+      wdeg = wdeg * pow((1 - f), 2);
+
+      ldli.row_ind.push_back(j);
+      ldli.val.push_back(f);
+      ldli_row_ptr++;
+    }
+
+    LLp *ll = colspace[len - 1];
+    double w = vals[len - 1] * colScale;
+    int j = ll->row;
+    LLp *revj = ll->reverse;
+
+    revj->val = 0;
+
+    ldli.row_ind.push_back(j);
+    ldli.val.push_back(1);
+    ldli_row_ptr++;
+
+    d[i] = w;
+  }
+
+  ldli.colptr[it] = ldli_row_ptr;
+
+  ldli.d = d;
+
+#ifdef PSUEDO_RANDOM
+  fin.close();
+#endif
+
+  return ldli;
+}
+
+int main(){
+    return 0;
+}

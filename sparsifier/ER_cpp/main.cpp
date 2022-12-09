@@ -244,30 +244,30 @@ int main(int argc, char *argv[]) {
   // }
 
   auto llmat = LLmatp(mat);
-// // save mat.col_ptr to filename
-// string col_ptr_file =  "a.degs.cpp";
-// ofstream col_ptr_out(col_ptr_file);
-// for (int i = 0; i < llmat.degs.size(); i++) {
-//     col_ptr_out << llmat.degs[i] << endl;
-// }
+  // // save mat.col_ptr to filename
+  // string col_ptr_file =  "a.degs.cpp";
+  // ofstream col_ptr_out(col_ptr_file);
+  // for (int i = 0; i < llmat.degs.size(); i++) {
+  //     col_ptr_out << llmat.degs[i] << endl;
+  // }
 
-// return 0;
+  // return 0;
 
-// // print first 10 of the SparseMatrixCSC col_ptr, row_ind, val
-// cout << "mat: " << endl;
-// for (int i = 0; i < 10; i++) {
-//     cout << mat.col_ptr[i] << " ";
-// }
-// cout << endl;
-// for (int i = 0; i < 10; i++) {
-//     cout << mat.row_ind[i] << " ";
-// }
-// cout << endl;
-// for (int i = 0; i < 10; i++) {
-//     cout << mat.val[i] << " ";
-// }
+  // // print first 10 of the SparseMatrixCSC col_ptr, row_ind, val
+  // cout << "mat: " << endl;
+  // for (int i = 0; i < 10; i++) {
+  //     cout << mat.col_ptr[i] << " ";
+  // }
+  // cout << endl;
+  // for (int i = 0; i < 10; i++) {
+  //     cout << mat.row_ind[i] << " ";
+  // }
+  // cout << endl;
+  // for (int i = 0; i < 10; i++) {
+  //     cout << mat.val[i] << " ";
+  // }
 
-// return 0;
+  // return 0;
 
 #ifdef PRINT_MATRIX
   mat.print_dense();
