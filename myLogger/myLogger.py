@@ -37,6 +37,7 @@ def debug(message):
 def info(message):
     if logger is not None:
         logger.info(f"{basename(inspect.stack()[1].filename)} - {message}")
+        print(f"{basename(inspect.stack()[1].filename)} - {message}")
 
 
 def warning(message):

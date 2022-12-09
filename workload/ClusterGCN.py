@@ -153,19 +153,19 @@ def test(
     return accs
 
 
-def ClusterGCN(dataset, dataset_name, **kwargs):
+def ClusterGCN(train_dataset, test_dataset, dataset_name, **kwargs):
     # Default parameters
     experiment_dir = None
-    epochs = 50
+    epochs = 30
     eval_each = 5
     num_layers = 4
     init_checkpoint = None
     load_pruned_graph = False
-    do_inference_only =False
+    do_inference_only = False
     inference_repeat = 10
-    inference_batch_size = 1024
+    inference_batch_size = 40000
     save_ckpt_space = False
-    gpu_id = 0 
+    gpu_id = 0
 
     # Overwrite defaults
     experiment_dir = kwargs.get("experiment_dir", experiment_dir)
@@ -179,7 +179,7 @@ def ClusterGCN(dataset, dataset_name, **kwargs):
     inference_batch_size = kwargs.get("inference_batch_size", inference_batch_size)
     save_ckpt_space = kwargs.get("save_ckpt_space", save_ckpt_space)
     gpu_id = kwargs.get("gpu_id", gpu_id)
-    
+
     # Sanity checks
     assert isinstance(experiment_dir, str)
     assert isinstance(epochs, int)
@@ -192,7 +192,7 @@ def ClusterGCN(dataset, dataset_name, **kwargs):
     assert isinstance(inference_batch_size, int)
     assert isinstance(save_ckpt_space, bool)
     assert isinstance(gpu_id, int)
-    
+
     if (num_layers < 1) or (not isinstance(num_layers, int)):
         raise ValueError("num_layers should be integers >= 1")
 
@@ -215,20 +215,25 @@ def ClusterGCN(dataset, dataset_name, **kwargs):
     # Dataset
     if dataset_name == "Reddit":
         evaluator = None
-        data = dataset.data
+        train_data = train_dataset.data
+        test_data = test_dataset.data
     elif dataset_name == "Reddit2":
         evaluator = None
-        data = dataset.data
+        train_data = train_dataset.data
+        test_data = test_dataset.data
     elif dataset_name == "ogbn-products":
         evaluator = Evaluator(name=dataset_name)
-        data = dataset.data
+        train_data = train_dataset.data
+        test_data = test_dataset.data
     else:
         print("Dataset not supported.")
         sys.exit(1)
 
     # Model
     device = torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
-    model = Net(dataset.num_features, dataset.num_classes, num_layers).to(device)
+    model = Net(train_dataset.num_features, train_dataset.num_classes, num_layers).to(
+        device
+    )
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
     # Initial checkpoint
@@ -240,14 +245,16 @@ def ClusterGCN(dataset, dataset_name, **kwargs):
 
     if not do_inference_only:
         cluster_data = ClusterData(
-            data, num_parts=15000, recursive=False#, save_dir=dataset.processed_dir
+            train_data,
+            num_parts=15000,
+            recursive=False,  # , save_dir=dataset.processed_dir
         )
         train_loader = ClusterLoader(
             cluster_data, batch_size=32, shuffle=True, num_workers=1
         )
 
     subgraph_loader = NeighborSampler(
-        data.edge_index,
+        test_data.edge_index,
         sizes=[-1],
         batch_size=inference_batch_size,
         shuffle=False,
@@ -257,7 +264,11 @@ def ClusterGCN(dataset, dataset_name, **kwargs):
     # Inference only
     if do_inference_only:
         train_acc, val_acc, test_acc = test(
-            model, data, subgraph_loader, device, evaluator,
+            model,
+            test_data,
+            subgraph_loader,
+            device,
+            evaluator,
             repeat=inference_repeat,
         )
         print(f"Train: {train_acc:.4f}, Val: {val_acc:.4f}, Test: {test_acc:.4f}")
@@ -292,17 +303,25 @@ def ClusterGCN(dataset, dataset_name, **kwargs):
                 header=False,
             )
             train_scalars = []
-            if save_ckpt_space:
-                if epoch == epochs:
-                    ckp = {"model": model.state_dict(), "data": data}
-                    torch.save(ckp, osp.join(experiment_dir, "ckp_epoch_" + str(epoch) + ".pth.tar"))
-            elif epoch % 50 == 0:
-                ckp = {"model": model.state_dict(), "data": data}
-                torch.save(ckp, osp.join(experiment_dir, "ckp_epoch_" + str(epoch) + ".pth.tar"))
+            # if save_ckpt_space:
+            #     if epoch == epochs:
+            #         ckp = {"model": model.state_dict(), "data": data}
+            #         torch.save(
+            #             ckp,
+            #             osp.join(
+            #                 experiment_dir, "ckp_epoch_" + str(epoch) + ".pth.tar"
+            #             ),
+            #         )
+            # elif epoch % 50 == 0:
+            # ckp = {"model": model.state_dict(), "data": data}
+            # torch.save(
+            #     ckp,
+            #     osp.join(experiment_dir, "ckp_epoch_" + str(epoch) + ".pth.tar"),
+            # )
 
         if epoch % eval_each == 0:
             train_acc, val_acc, test_acc = test(
-                model, data, subgraph_loader, device, evaluator
+                model, test_data, subgraph_loader, device, evaluator
             )
             print(
                 f"Epoch: {epoch:02d}, Loss: {loss:.4f}, Train: {train_acc:.4f}, "
