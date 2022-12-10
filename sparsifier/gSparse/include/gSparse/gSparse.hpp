@@ -5,14 +5,12 @@
 #include "Config.hpp"
 #include "UndirectedGraph.hpp"
 
-
 // IO
 #include "GraphCSVReader.hpp"
 #include "GraphCSVWriter.hpp"
 
 // Sparsifiers
 #include "SpectralSparsifier/ERSampling.hpp"
-
 
 // Effective Resistances
 #include "ER/ApproximateER.hpp"

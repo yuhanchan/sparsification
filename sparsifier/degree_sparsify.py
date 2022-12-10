@@ -267,7 +267,9 @@ def sym_degree_sparsify(
     for src in edges:
         if src in edges[src]:
             edges[src].remove(src)
-    print(f"Read graph done. # nodes: {len(edges)}, time: {time.perf_counter() - t_s} s")
+    print(
+        f"Read graph done. # nodes: {len(edges)}, time: {time.perf_counter() - t_s} s"
+    )
     original_num_edges = len(edge_list)
 
     # sym degree sparsify

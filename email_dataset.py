@@ -390,46 +390,215 @@ def er_prune():
 
 def process():
     for prune_algo in ["random", "in_degree", "out_degree"]:
-        for prune_rate in ["0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9"]:
+        for prune_rate in [
+            "0.1",
+            "0.2",
+            "0.3",
+            "0.4",
+            "0.5",
+            "0.6",
+            "0.7",
+            "0.8",
+            "0.9",
+        ]:
             folder = f"data/email/pruned/{prune_algo}/{prune_rate}"
-            with open(f"{folder}/duw.comp.el", 'w') as outfile:
-                subprocess.run(["./utils/bin/utils", "-i", f"{folder}/duw.el", "-m", "10"], stderr=outfile) # get the largest component
-                subprocess.run(["./utils/bin/utils", "-i", f"{folder}/duw.comp.el", "-o", f"{folder}/final.el", "-m", "5"]) # elim disconnected comp
-                subprocess.run(["./utils/bin/utils", "-i", f"data/email/raw/final.el", "-o", f"{folder}/original.el", "-p", f"{folder}/final.el.map", "-m", "13"]) # apply edge map to the raw/final.el
-                subprocess.run(["./utils/bin/utils", "-i", f"{folder}/original.el", "-o", f"{folder}/original.onebase.el", "-m", "7"]) # change original el from 0-base to 1-base
+            with open(f"{folder}/duw.comp.el", "w") as outfile:
+                subprocess.run(
+                    ["./utils/bin/utils", "-i", f"{folder}/duw.el", "-m", "10"],
+                    stderr=outfile,
+                )  # get the largest component
+                subprocess.run(
+                    [
+                        "./utils/bin/utils",
+                        "-i",
+                        f"{folder}/duw.comp.el",
+                        "-o",
+                        f"{folder}/final.el",
+                        "-m",
+                        "5",
+                    ]
+                )  # elim disconnected comp
+                subprocess.run(
+                    [
+                        "./utils/bin/utils",
+                        "-i",
+                        f"data/email/raw/final.el",
+                        "-o",
+                        f"{folder}/original.el",
+                        "-p",
+                        f"{folder}/final.el.map",
+                        "-m",
+                        "13",
+                    ]
+                )  # apply edge map to the raw/final.el
+                subprocess.run(
+                    [
+                        "./utils/bin/utils",
+                        "-i",
+                        f"{folder}/original.el",
+                        "-o",
+                        f"{folder}/original.onebase.el",
+                        "-m",
+                        "7",
+                    ]
+                )  # change original el from 0-base to 1-base
 
     for prune_algo in ["er"]:
-        for prune_rate in ["0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9"]:
+        for prune_rate in [
+            "0.1",
+            "0.2",
+            "0.3",
+            "0.4",
+            "0.5",
+            "0.6",
+            "0.7",
+            "0.8",
+            "0.9",
+        ]:
             folder = f"data/email/pruned/{prune_algo}/{prune_rate}"
-            with open(f"{folder}/duw.comp.el", 'w') as outfile:
-                subprocess.run(["./utils/bin/utils", "-i", f"{folder}/duw.wel", "-o", f"{folder}/duw.el", "-m", "12"]) # remove weight column
-                subprocess.run(["./utils/bin/utils", "-i", f"{folder}/duw.el", "-m", "10"], stderr=outfile) # get the largest component
-                subprocess.run(["./utils/bin/utils", "-i", f"{folder}/duw.comp.el", "-o", f"{folder}/final.el", "-m", "5"]) # elim disconnected comp
-                subprocess.run(["./utils/bin/utils", "-i", f"data/email/raw/final.el", "-o", f"{folder}/original.el", "-p", f"{folder}/final.el.map", "-m", "13"]) # apply edge map to the raw/final.el
-                subprocess.run(["./utils/bin/utils", "-i", f"{folder}/original.el", "-o", f"{folder}/original.onebase.el", "-m", "7"]) # change original el from 0-base to 1-base
-
+            with open(f"{folder}/duw.comp.el", "w") as outfile:
+                subprocess.run(
+                    [
+                        "./utils/bin/utils",
+                        "-i",
+                        f"{folder}/duw.wel",
+                        "-o",
+                        f"{folder}/duw.el",
+                        "-m",
+                        "12",
+                    ]
+                )  # remove weight column
+                subprocess.run(
+                    ["./utils/bin/utils", "-i", f"{folder}/duw.el", "-m", "10"],
+                    stderr=outfile,
+                )  # get the largest component
+                subprocess.run(
+                    [
+                        "./utils/bin/utils",
+                        "-i",
+                        f"{folder}/duw.comp.el",
+                        "-o",
+                        f"{folder}/final.el",
+                        "-m",
+                        "5",
+                    ]
+                )  # elim disconnected comp
+                subprocess.run(
+                    [
+                        "./utils/bin/utils",
+                        "-i",
+                        f"data/email/raw/final.el",
+                        "-o",
+                        f"{folder}/original.el",
+                        "-p",
+                        f"{folder}/final.el.map",
+                        "-m",
+                        "13",
+                    ]
+                )  # apply edge map to the raw/final.el
+                subprocess.run(
+                    [
+                        "./utils/bin/utils",
+                        "-i",
+                        f"{folder}/original.el",
+                        "-o",
+                        f"{folder}/original.onebase.el",
+                        "-m",
+                        "7",
+                    ]
+                )  # change original el from 0-base to 1-base
 
 
 def func1(folder):
     """
     Helps parallelize process_Reddit
     """
-    with open(f"{folder}/duw.comp.el", 'w') as outfile:
-        subprocess.run(["./utils/bin/utils", "-i", f"{folder}/duw.el", "-m", "10"], stderr=outfile) # get the largest component
-        subprocess.run(["./utils/bin/utils", "-i", f"{folder}/duw.comp.el", "-o", f"{folder}/final.el", "-m", "5"]) # elim disconnected comp
-        subprocess.run(["./utils/bin/utils", "-i", f"data/Reddit_CGE/raw/duw.el", "-o", f"{folder}/original.el", "-p", f"{folder}/final.el.map", "-m", "13"]) # apply edge map to the raw/final.el
-        subprocess.run(["./utils/bin/utils", "-i", f"{folder}/original.el", "-o", f"{folder}/original.onebase.el", "-m", "7"]) # change original el from 0-base to 1-base
+    with open(f"{folder}/duw.comp.el", "w") as outfile:
+        subprocess.run(
+            ["./utils/bin/utils", "-i", f"{folder}/duw.el", "-m", "10"], stderr=outfile
+        )  # get the largest component
+        subprocess.run(
+            [
+                "./utils/bin/utils",
+                "-i",
+                f"{folder}/duw.comp.el",
+                "-o",
+                f"{folder}/final.el",
+                "-m",
+                "5",
+            ]
+        )  # elim disconnected comp
+        subprocess.run(
+            [
+                "./utils/bin/utils",
+                "-i",
+                f"data/Reddit_CGE/raw/duw.el",
+                "-o",
+                f"{folder}/original.el",
+                "-p",
+                f"{folder}/final.el.map",
+                "-m",
+                "13",
+            ]
+        )  # apply edge map to the raw/final.el
+        subprocess.run(
+            [
+                "./utils/bin/utils",
+                "-i",
+                f"{folder}/original.el",
+                "-o",
+                f"{folder}/original.onebase.el",
+                "-m",
+                "7",
+            ]
+        )  # change original el from 0-base to 1-base
+
 
 def func2(folder):
     """
     Helps parallelize process_Reddit
     """
-    with open(f"{folder}/duw.comp.el", 'w') as outfile:
+    with open(f"{folder}/duw.comp.el", "w") as outfile:
         # subprocess.run(["./utils/bin/utils", "-i", f"{folder}/duw.wel", "-o", f"{folder}/duw.el", "-m", "12"]) # remove weight column
-        subprocess.run(["./utils/bin/utils", "-i", f"{folder}/duw.el", "-m", "10"], stderr=outfile) # get the largest component
-        subprocess.run(["./utils/bin/utils", "-i", f"{folder}/duw.comp.el", "-o", f"{folder}/final.el", "-m", "5"]) # elim disconnected comp
-        subprocess.run(["./utils/bin/utils", "-i", f"data/Reddit_CGE/raw/duw.el", "-o", f"{folder}/original.el", "-p", f"{folder}/final.el.map", "-m", "13"]) # apply edge map to the raw/final.el
-        subprocess.run(["./utils/bin/utils", "-i", f"{folder}/original.el", "-o", f"{folder}/original.onebase.el", "-m", "7"]) # change original el from 0-base to 1-base
+        subprocess.run(
+            ["./utils/bin/utils", "-i", f"{folder}/duw.el", "-m", "10"], stderr=outfile
+        )  # get the largest component
+        subprocess.run(
+            [
+                "./utils/bin/utils",
+                "-i",
+                f"{folder}/duw.comp.el",
+                "-o",
+                f"{folder}/final.el",
+                "-m",
+                "5",
+            ]
+        )  # elim disconnected comp
+        subprocess.run(
+            [
+                "./utils/bin/utils",
+                "-i",
+                f"data/Reddit_CGE/raw/duw.el",
+                "-o",
+                f"{folder}/original.el",
+                "-p",
+                f"{folder}/final.el.map",
+                "-m",
+                "13",
+            ]
+        )  # apply edge map to the raw/final.el
+        subprocess.run(
+            [
+                "./utils/bin/utils",
+                "-i",
+                f"{folder}/original.el",
+                "-o",
+                f"{folder}/original.onebase.el",
+                "-m",
+                "7",
+            ]
+        )  # change original el from 0-base to 1-base
+
 
 def process_Reddit():
     with ProcessPoolExecutor(max_workers=128) as executor:
@@ -439,16 +608,15 @@ def process_Reddit():
                 folder = f"data/Reddit_CGE/pruned/{prune_algo}/{prune_rate}"
                 futures.append(executor.submit(func1, folder))
 
-
         for prune_algo in ["er"]:
             for prune_rate in os.listdir(f"data/Reddit_CGE/pruned/{prune_algo}"):
                 folder = f"data/Reddit_CGE/pruned/{prune_algo}/{prune_rate}"
                 futures.append(executor.submit(func2, folder))
 
-
         for future in futures:
             future.result()
-        
+
+
 # random_prune()
 # in_degree_prune()
 # out_degree_prune()

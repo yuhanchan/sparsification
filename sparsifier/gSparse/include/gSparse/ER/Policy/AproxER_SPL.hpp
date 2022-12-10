@@ -1,6 +1,6 @@
-// Copyright (C) 2018 Thanaphon Chavengsaksongkram <as12production@gmail.com>, He Sun <he.sun@ed.ac.uk>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2018 Thanaphon Chavengsaksongkram <as12production@gmail.com>,
+// He Sun <he.sun@ed.ac.uk> This file is subject to the license terms in the
+// LICENSE file found in the top-level directory of this distribution.
 
 #ifndef GSPARSE_ER_POLICY_APPROXER_SPL_HPP
 #define GSPARSE_ER_POLICY_APPROXER_SPL_HPP
@@ -13,18 +13,15 @@
 
 #include <iostream>
 
-namespace gSparse 
-{
-    namespace ER 
-    {
-        namespace Policy
-        {
-           /* 
-            TODO: Implement a Speilman Approximate Effective Resistance
-           */
-          
-        }
-        
-    }
+namespace gSparse {
+namespace ER {
+namespace Policy {
+/*
+ TODO: Implement a Speilman Approximate Effective Resistance
+*/
+
 }
+
+} // namespace ER
+} // namespace gSparse
 #endif

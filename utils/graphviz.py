@@ -6,6 +6,7 @@ import networkx as nx
 import sys
 import matplotlib.pyplot as plt
 
+
 def main(argv):
     """
     Input: edge_file, output_file
@@ -19,7 +20,7 @@ def main(argv):
     G = nx.Graph()
 
     # read in the edges
-    with open(argv[1], 'r') as f:
+    with open(argv[1], "r") as f:
         lines = f.readlines()
         lines = lines[1:]
         for line in lines:
@@ -32,6 +33,5 @@ def main(argv):
     plt.savefig(f"{argv[2]}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main(sys.argv)
-

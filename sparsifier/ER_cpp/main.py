@@ -22,6 +22,7 @@ prune_file_dir = None
 
 PRINT_REFF = False
 
+
 def compute_reff(n, edges, V):
     R_eff = sparse.lil_matrix((n, n))
     for orig, end in edges:
@@ -59,23 +60,24 @@ def stage3(file_path):
     n += 1
     # print(f"n: {n}, m: {m}, nnz: {nnz}")
     # print(f"V: {V}")
-    # compute Reff 
+    # compute Reff
     t_s = time_ns()
     compute_reff(n, edges, V)
     t_e = time_ns()
     print(f"compute_reff time: {int((t_e - t_s)/1000000)} ms")
 
+
 def main(argc, argv):
     # call julia
     total_t_s = time()
-    
+
     t_s = time_ns()
     print("calling julia...")
     print(f"julia test.jl --filepath={argv[1]}")
     os.system(f"julia test.jl --filepath={argv[1]}")
     t_e = time_ns()
     print(f"julia script time: {int((t_e - t_s)/1000000)} ms")
-    
+
     print("")
     stage3(argv[1])
 

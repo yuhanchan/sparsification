@@ -28,7 +28,7 @@ protected:
   int argc_;
   char **argv_;
   std::string name_;
-  std::string get_args_ = "f:g:hk:su:m";
+  std::string get_args_ = "f:g:hk:su:mb";
   std::vector<std::string> help_strings_;
 
   int scale_ = -1;
@@ -155,8 +155,9 @@ public:
                 "1000000");
     AddHelpLine('z', "filepath", "filepath for analysis output",
                 "None if not specified");
-    AddHelpLine('c', "", "This flag is used for cc only, will print out edges "
-                         "with nodes only in component 0",
+    AddHelpLine('c', "",
+                "This flag is used for cc only, will print out edges "
+                "with nodes only in component 0",
                 "false");
   }
 

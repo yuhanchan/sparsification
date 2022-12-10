@@ -10,7 +10,7 @@ getLDLiParallel(mat) = Lap.approxCholParallel(Lap.LLmatp(mat))
 applyLDLi(ldli, mat) = sparse(reduce(hcat, map(x -> Lap.LDLsolver(ldli, Vector(x)), eachcol(mat))))
 
 function run(n::Int)
-        
+
     a = Lap.pure_random_graph(n)
     a = sparse([2, 4, 1, 3, 2, 4, 1, 3], [1, 1, 2, 2, 3, 3, 4, 4], [4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0], 4, 4)
     display(a)

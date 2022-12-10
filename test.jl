@@ -10,7 +10,7 @@ import Laplacians as Lap
 getLDLi(mat) = Lap.approxChol(Lap.LLmatp(mat))
 applyLDLi(ldli, mat) = sparse(reduce(hcat, map(x -> Lap.LDLsolver(ldli, Vector(x)), eachcol(mat))))
 
-function getLDLi_partitioned(g, npart::Int) 
+function getLDLi_partitioned(g, npart::Int)
     # create partitions
     parts = Metis.partition(g, npart)
 
@@ -27,14 +27,14 @@ function getLDLi_partitioned(g, npart::Int)
     part_count = [[i, count(==(i), parts)] for i in sort(unique(parts))]
     subgraphs = Vector{SparseMatrixCSC}()
 
-    for i in range(start=1, step=1, stop=length(part_count)-1)
+    for i in range(start=1, step=1, stop=length(part_count) - 1)
         part_count[i+1][2] = part_count[i][2] + part_count[i+1][2] # compute prefix sum
     end
     println(part_count)
 
     subg = SparseMatrixCSC(Matrix(g)[1:part_count[1][2], 1:part_count[1][2]])
     push!(subgraphs, subg)
-    for i in range(start=1, step=1, stop=length(part_count)-1)
+    for i in range(start=1, step=1, stop=length(part_count) - 1)
         subg = SparseMatrixCSC(Matrix(g)[part_count[i][2]+1:part_count[i+1][2], part_count[i][2]+1:part_count[i+1][2]])
         push!(subgraphs, subg)
     end
@@ -54,7 +54,7 @@ function getLDLi_partitioned(g, npart::Int)
         subldli.col .+= col_adjust
         col_adjust += subg.n - 1
         subldli.colptr .+= colptr_adjust
-        colptr_adjust = last(subldli.colptr) -1 
+        colptr_adjust = last(subldli.colptr) - 1
         subldli.rowval .+= rowval_adjust
         rowval_adjust += subg.n
 

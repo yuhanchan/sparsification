@@ -4,7 +4,9 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-n", "--nodes", type=int, default=100, help="number of nodes")
 parser.add_argument("-e", "--edges", type=int, default=10000, help="number of edges")
-parser.add_argument("-o", "--output", type=str, default="toy.in", help="output filename")
+parser.add_argument(
+    "-o", "--output", type=str, default="toy.in", help="output filename"
+)
 args = parser.parse_args()
 
 n = args.nodes

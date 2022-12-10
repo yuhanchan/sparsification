@@ -1,4 +1,37 @@
+import numpy as np
+import torch
+import myLogger
+import os.path as osp
+import os
+import sys
 
+# set random seed for deterministic results
+torch.manual_seed(1)
+np.random.seed(1)
+
+
+def pyg_random_sparsify(
+    dataset,
+    dataset_name,
+    prune_rate,
+    save_edgelist=True,
+    post_symmetrize=False,
+):
+    """
+    Input:
+        dataset: PygDataset object only
+        dataset_name: str, name of dataset
+        prune_rate: float, between 0 and 1
+        save_edgelist: bool, if True, save raw edgelist file, raw edgelist is used some workloads. default is True
+        post_symmetrize: bool, if True, post symmetrize pruned edge list
+    Output:
+        dataset: PygDataset, with edges randomly pruned
+    """
+    myLogger.info(
+        f"---------- Random sparsify Begin -----------\n"
+        + f"dataset: {dataset_name}, target prune rate: {prune_rate}"
+    )
+    if post_symmetrize:
         myLogger.info(
             "pruned edge list will be post symmetrized, make sure the input edgelist is symmetrical, otherwise the result prune rate will be incorrect!"
         )

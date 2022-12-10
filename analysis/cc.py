@@ -147,4 +147,4 @@ if __name__ == "__main__":
 
     # component_count("../experiments/cc/", dataset="Reddit")
     # component_count("../experiments/cc/", dataset="Reddit2")
-    component_count('../experiments/cc/', dataset='ogbn_products')
+    component_count("../experiments/cc/", dataset="ogbn_products")

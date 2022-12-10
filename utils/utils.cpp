@@ -288,8 +288,8 @@ void apply_edge_map(ifstream &in, ofstream &out, string edge_map_file) {
 }
 
 /*
-* Check if the input edgelist is symmetric
-*/
+ * Check if the input edgelist is symmetric
+ */
 bool is_symmetric(ifstream &in) {
   string first_line;
   getline(in, first_line);

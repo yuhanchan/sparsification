@@ -1,14 +1,14 @@
-#include <iostream>
-#include <vector>
-#include <numeric>
 #include <algorithm>
 #include <assert.h>
 #include <chrono>
 #include <cmath>
 #include <fstream>
+#include <iostream>
+#include <numeric>
 #include <random>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #define PSUEDO_RANDOM
 
@@ -503,10 +503,7 @@ struct LLmatp_t {
     return ptr + 1;
   }
 
-  void pop(){
-
-  }
-
+  void pop() {}
 };
 
 LLmatp_t LLmatp(SparseMatrixCSC &a) {
@@ -684,6 +681,4 @@ LDLinv_t approxchol(LLmatp_t &a) {
   return ldli;
 }
 
-int main(){
-    return 0;
-}
+int main() { return 0; }
