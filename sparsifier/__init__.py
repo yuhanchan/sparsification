@@ -4,4 +4,4 @@ from .degree_sparsify import (
     out_degree_sparsify,
     sym_degree_sparsify,
 )
-from .er_sparsify import python_er_sparsify, gsparse_er_sparsify
+from .er_sparsify import python_er_sparsify

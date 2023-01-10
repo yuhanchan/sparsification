@@ -1,12 +1,16 @@
 import os
+import logging
 import sys
 import os.path as osp
 import numpy as np
 import torch
-import myLogger
 from collections import defaultdict
 import random
 import time
+
+# setup logger
+logger = logging.getLogger("root")
+logger.debug("submodule message")
 
 
 def compile_degree_pruner():
@@ -25,7 +29,7 @@ def pyg_degree_sparsify(
     dataset_name,
     in_or_out,
     degree_thres,
-    config=None,
+    prune_rate_val,
 ):
     """
     Input:
@@ -33,8 +37,9 @@ def pyg_degree_sparsify(
         dataset_name: str, name of dataset
         in_or_out: str, 'in' or 'out'
         degree_thres: int, threshold for in-degree
+        prune_rate_val: float, between 0 and 1, = true purne rate,
+                        used for save file path, prefix with thres_ if set to None
         post_symmetrize: bool, if True, post symmetrize pruned edge list
-        config: configs for mapping threshold to prune_rate
     Output:
         dataset: PygDataset, with edges dropped
     """
@@ -42,31 +47,23 @@ def pyg_degree_sparsify(
     cwd = os.getcwd()
     current_file_dir = os.path.dirname(os.path.realpath(__file__))
 
-    myLogger.info(f"---------- Degree sparsify Begin -----------\n")
-    myLogger.info(f"{in_or_out}_degree_sparsify with threshold {degree_thres}")
+    logger.info(f"---------- Degree sparsify Begin -----------\n")
+    logger.info(f"{in_or_out}_degree_sparsify with threshold {degree_thres}")
 
-    if (
-        config == None
-        or str(degree_thres)
-        not in config[dataset_name]["degree_thres_to_drop_rate_map"]
-    ):
-        myLogger.info(
-            message=f"No config found for {dataset_name} with threshold {degree_thres}, folder will prefixed with 'thres_'"
+    if prune_rate_val is None:
+        logger.warning(
+            f"prune_rate_val is None, " + "folder will prefixed with 'thres_'"
         )
         duw_el_path = os.path.join(
             current_file_dir,
             f"../data/{dataset_name}/pruned/{in_or_out}_degree/",
-            f"thres_{degree_thres}",
-            "duw.el",
+            f"thres_{degree_thres}/duw.el",
         )
     else:
         duw_el_path = os.path.join(
             current_file_dir,
             f"../data/{dataset_name}/pruned/{in_or_out}_degree/",
-            str(
-                config[dataset_name]["degree_thres_to_drop_rate_map"][str(degree_thres)]
-            ),
-            "duw.el",
+            f"{prune_rate_val}/duw.el",
         )
 
     input_duw_el_path = os.path.join(
@@ -85,7 +82,7 @@ def pyg_degree_sparsify(
 
     new_num_edges = dataset.data.edge_index.shape[1]
 
-    myLogger.info(
+    logger.info(
         f"dataset: {dataset_name}, degree_thres: {degree_thres}, actual prune rate: {1.0 - new_num_edges / original_num_edges}\n"
         + f"---------- Degree sparsify End -----------\n"
     )
@@ -98,7 +95,7 @@ def el_degree_sparsify(
     dataset_name,
     in_or_out,
     degree_thres,
-    config=None,
+    prune_rate_val,
 ):
     """
     Input:
@@ -106,8 +103,9 @@ def el_degree_sparsify(
         dataset_name: str, name of dataset
         in_or_out: str, 'in' or 'out'
         degree_thres: int, threshold for in-degree
+        prune_rate_val: float, between 0 and 1, = true purne rate,
+                        used for save file path, prefix with thres_ if set to None
         post_symmetrize: bool, if True, post symmetrize pruned edge list
-        config: configs for mapping threshold to prune_rate
     Output:
         dataset: PygDataset, with edges dropped
     """
@@ -115,31 +113,23 @@ def el_degree_sparsify(
     cwd = os.getcwd()
     current_file_dir = os.path.dirname(os.path.realpath(__file__))
 
-    myLogger.info(f"---------- Degree sparsify Begin -----------\n")
-    myLogger.info(f"{in_or_out}_degree_sparsify with threshold {degree_thres}")
+    logger.info(f"---------- Degree sparsify Begin -----------\n")
+    logger.info(f"{in_or_out}_degree_sparsify with threshold {degree_thres}")
 
-    if (
-        config == None
-        or str(degree_thres)
-        not in config[dataset_name]["degree_thres_to_drop_rate_map"]
-    ):
-        myLogger.info(
-            message=f"No config found for {dataset_name} with threshold {degree_thres}, folder will prefixed with 'thres_'"
+    if prune_rate_val is None:
+        logger.warning(
+            f"prune_rate_val is None, " + "folder will prefixed with 'thres_'"
         )
         duw_el_path = os.path.join(
             current_file_dir,
             f"../data/{dataset_name}/pruned/{in_or_out}_degree/",
-            f"thres_{degree_thres}",
-            "duw.el",
+            f"thres_{degree_thres}/duw.el",
         )
     else:
         duw_el_path = os.path.join(
             current_file_dir,
             f"../data/{dataset_name}/pruned/{in_or_out}_degree/",
-            str(
-                config[dataset_name]["degree_thres_to_drop_rate_map"][str(degree_thres)]
-            ),
-            "duw.el",
+            f"{prune_rate_val}/duw.el",
         )
 
     os.makedirs(os.path.dirname(duw_el_path), exist_ok=True)
@@ -149,7 +139,7 @@ def el_degree_sparsify(
     )
     os.chdir(cwd)
 
-    myLogger.info(f"---------- Degree sparsify End -----------\n")
+    logger.info(f"---------- Degree sparsify End -----------\n")
 
 
 def in_degree_sparsify(
@@ -157,28 +147,27 @@ def in_degree_sparsify(
     dataset_name,
     dataset_type,
     degree_thres,
-    config=None,
+    prune_rate_val,
 ):
+    degree_thres = int(degree_thres)
     if dataset_type == "pyg":
         return pyg_degree_sparsify(
-            dataset,
-            dataset_name,
-            "in",
-            degree_thres,
-            config=config,
+            dataset=dataset,
+            dataset_name=dataset_name,
+            in_or_out="in",
+            degree_thres=degree_thres,
+            prune_rate_val=prune_rate_val,
         )
     elif dataset_type == "el":
         return el_degree_sparsify(
-            dataset,
-            dataset_name,
-            "in",
-            degree_thres,
-            config=config,
+            dataset=dataset,
+            dataset_name=dataset_name,
+            in_or_out="in",
+            degree_thres=degree_thres,
+            prune_rate_val=prune_rate_val,
         )
     else:
-        myLogger.error(
-            message=f"dataset type {dataset_type} is not supported. Exiting..."
-        )
+        logger.error(f"dataset type {dataset_type} is not supported. Exiting...")
         sys.exit(1)
 
 
@@ -187,28 +176,27 @@ def out_degree_sparsify(
     dataset_name,
     dataset_type,
     degree_thres,
-    config=None,
+    prune_rate_val,
 ):
+    degree_thres = int(degree_thres)
     if dataset_type == "pyg":
         return pyg_degree_sparsify(
-            dataset,
-            dataset_name,
-            "out",
-            degree_thres,
-            config=config,
+            dataset=dataset,
+            dataset_name=dataset_name,
+            in_or_out="out",
+            degree_thres=degree_thres,
+            prune_rate_val=prune_rate_val,
         )
     elif dataset_type == "el":
         return el_degree_sparsify(
-            dataset,
-            dataset_name,
-            "out",
-            degree_thres,
-            config=config,
+            dataset=dataset,
+            dataset_name=dataset_name,
+            in_or_out="out",
+            degree_thres=degree_thres,
+            prune_rate_val=prune_rate_val,
         )
     else:
-        myLogger.error(
-            message=f"dataset type {dataset_type} is not supported. Exiting..."
-        )
+        logger.error(f"dataset type {dataset_type} is not supported. Exiting...")
         sys.exit(1)
 
 
@@ -216,7 +204,7 @@ def sym_degree_sparsify(
     dataset,
     dataset_name,
     degree_thres,
-    config=None,
+    prune_rate_val,
 ):
     """
     Input:
@@ -224,37 +212,31 @@ def sym_degree_sparsify(
         dataset_name: str, name of dataset
         in_or_out: str, 'in' or 'out'
         degree_thres: int, threshold for in-degree
+        prune_rate_val: float, between 0 and 1, = true purne rate,
+                        used for save file path, prefix with thres_ if set to None
         post_symmetrize: bool, if True, post symmetrize pruned edge list
-        config: configs for mapping threshold to prune_rate
     Output:
         dataset: PygDataset, with edges dropped
     """
+    degree_thres = int(degree_thres)
     current_file_dir = os.path.dirname(os.path.realpath(__file__))
-    myLogger.info(f"---------- Degree sparsify Begin -----------\n")
-    myLogger.info(f"sym_degree_sparsify with threshold {degree_thres}")
+    logger.info(f"---------- Degree sparsify Begin -----------\n")
+    logger.info(f"sym_degree_sparsify with threshold {degree_thres}")
 
-    if (
-        config == None
-        or str(degree_thres)
-        not in config[dataset_name]["degree_thres_to_drop_rate_map"]
-    ):
-        myLogger.info(
-            message=f"No config found for {dataset_name} with threshold {degree_thres}, folder will prefixed with 'thres_'"
+    if prune_rate_val is None:
+        logger.warning(
+            f"prune_rate_val is None, " + "folder will prefixed with 'thres_'"
         )
         duw_el_path = os.path.join(
             current_file_dir,
             f"../data/{dataset_name}/pruned/sym_degree/",
-            f"thres_{degree_thres}",
-            "duw.el",
+            f"thres_{degree_thres}/duw.el",
         )
     else:
         duw_el_path = os.path.join(
             current_file_dir,
             f"../data/{dataset_name}/pruned/sym_degree/",
-            str(
-                config[dataset_name]["degree_thres_to_drop_rate_map"][str(degree_thres)]
-            ),
-            "duw.el",
+            f"{prune_rate_val}/duw.el",
         )
 
     t_s = time.perf_counter()

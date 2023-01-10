@@ -1,4 +1,5 @@
 import os
+import logging
 import os.path as osp
 import sys
 from time import time
@@ -15,7 +16,6 @@ from numpy import inf
 
 from torch_geometric.utils import get_laplacian, from_scipy_sparse_matrix
 from torch_sparse import SparseTensor
-import myLogger
 from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import Pool, shared_memory
 from subprocess import Popen
@@ -26,6 +26,10 @@ pkl_file_path = None  # The Reff file
 stage3_file_path = None  # parameters used in stage3
 prune_file_path = None
 prune_file_dir = None
+
+# setup logger
+logger = logging.getLogger("root")
+logger.debug("submodule message")
 
 
 def compute_single_reff(i, V_shared, start_nodes, end_nodes):
@@ -52,16 +56,16 @@ def compute_reff(W, V, parallel=True, reuse=True):
             parallel: True if you want to run the computation in parallel
             reuse: True if you want to reuse the V matrix if exists
     """
-    myLogger.info("Stage 3a: computing Reff")
+    logger.info("Stage 3a: computing Reff")
     if reuse and osp.exists(pkl_file_path):
-        myLogger.info(message=f"Reff already exists, loading...")
+        logger.info(f"Reff already exists, loading...")
         with open(pkl_file_path, "rb") as f:
             R_eff = pickle.load(f)
     else:
-        myLogger.info(message=f"Reff not exist, computing...")
+        logger.info(f"Reff not exist, computing...")
         t_s = time()
         start_nodes, end_nodes, weights = sparse.find(sparse.tril(W))
-        myLogger.info(message=f"Sparse.find took {time() - t_s} seconds.")
+        logger.info(f"Sparse.find took {time() - t_s} seconds.")
         n = np.shape(W)[0]
 
         if not parallel:
@@ -69,7 +73,7 @@ def compute_reff(W, V, parallel=True, reuse=True):
             R_eff = sparse.lil_matrix((n, n))
             for orig, end in zip(start_nodes, end_nodes):
                 R_eff[orig, end] = np.linalg.norm(V[orig, :] - V[end, :]) ** 2
-            myLogger.info(message=f"Computation took {time() - t_ss} seconds.")
+            logger.info(f"Computation took {time() - t_ss} seconds.")
 
         else:
             # make V and R_eff shared_memory to avoid copying in multiprocessing
@@ -93,7 +97,7 @@ def compute_reff(W, V, parallel=True, reuse=True):
                         )
                     ],
                 )
-            myLogger.info(message=f"Parallel computation took {time() - t_ss} seconds.")
+            logger.info(f"Parallel computation took {time() - t_ss} seconds.")
             shm1.close()
             shm1.unlink()
 
@@ -102,14 +106,14 @@ def compute_reff(W, V, parallel=True, reuse=True):
             for res in results:
                 for orig, end, reff in res:
                     R_eff[orig, end] = reff
-            myLogger.info(message=f"Collecting results took {time() - t_ss} seconds.")
+            logger.info(f"Collecting results took {time() - t_ss} seconds.")
 
         t_ss = time()
         with open(pkl_file_path, "wb") as f:
             pickle.dump(R_eff, f)
-            myLogger.info(message=f"Reff.pkl saved. Took {time() - t_ss} seconds.")
+            logger.info(f"Reff.pkl saved. Took {time() - t_ss} seconds.")
         t_e = time()
-        myLogger.info(message=f"Stage 3a took {t_e - t_s} seconds.")
+        logger.info(f"Stage 3a took {t_e - t_s} seconds.")
     return R_eff
 
 
@@ -120,39 +124,39 @@ def stage1(dataset, isPygDataset=False, reuse=True):
         dataset: PygDataset or simple numpy array
         isPygDataset: True if dataset is a PygDataset
     """
-    myLogger.info(message=f"Stage 1: converting pytorch dataset to npz file")
+    logger.info(f"Stage 1: converting pytorch dataset to npz file")
     if reuse and osp.exists(npz_file_path):
-        myLogger.info(message=f"npz file already exists. Skipping...")
+        logger.info(f"npz file already exists. Skipping...")
     else:
-        myLogger.info(message=f"npz file not exist. Computing...")
+        logger.info(f"npz file not exist. Computing...")
         t_s = time()
         if isPygDataset:
             sparse_transform = ToSparseTensor()
             sparse_t_data = sparse_transform(dataset.data)
             scipy_data = sparse_t_data.adj_t.to_scipy(layout="csc")
             sparse.save_npz(npz_file_path, scipy_data)
-            myLogger.info(message=f"npz file generated.")
+            logger.info(f"npz file generated.")
         else:
             scipy_data = sparse.csc_matrix(
                 (np.ones(dataset.shape[0], int), (dataset[:, 0], dataset[:, 1]))
             )
             sparse.save_npz(npz_file_path, scipy_data)
-            myLogger.info(message=f"npz file generated.")
+            logger.info(f"npz file generated.")
         t_e = time()
-        myLogger.info(message=f"Stage 1 took {t_e - t_s} seconds.")
+        logger.info(f"Stage 1 took {t_e - t_s} seconds.")
 
 
 def stage2(reuse=True):
     """
     Stage 2: Run the Julia script that loads the npz file and generates the V matrix
     """
-    myLogger.info(
-        message=f"Stage 2: invoking julia script to generate V.csv matrix (Z in the paper)"
+    logger.info(
+        f"Stage 2: invoking julia script to generate V.csv matrix (Z in the paper)"
     )
     if reuse and osp.exists(csv_file_path):
-        myLogger.info(message=f"csv file already exists. Skipping...")
+        logger.info(f"csv file already exists. Skipping...")
     else:
-        myLogger.info(message=f"csv file not exist. Computing...")
+        logger.info(f"csv file not exist. Computing...")
         t_s = time()
         cwd = os.getcwd()
         current_file_dir = osp.dirname(osp.realpath(__file__))
@@ -160,11 +164,12 @@ def stage2(reuse=True):
         os.system(f"julia compute_V.jl --filepath={npz_file_path}")
         os.chdir(cwd)
         t_e = time()
-        myLogger.info(message=f"Stage 2 took {t_e - t_s} seconds.")
+        logger.info(f"Stage 2 took {t_e - t_s} seconds.")
 
 
 def sampling(
     epsilon: Union[int, float],
+    prune_rate_val,
     Pe,
     C,
     weights,
@@ -172,7 +177,6 @@ def sampling(
     end_nodes,
     N,
     dataset_name,
-    config,
 ):
     """
     This function is called from stage3.
@@ -180,9 +184,9 @@ def sampling(
     This function is seperated to be able to use future.concurrent
     """
     if not isinstance(epsilon, int) and not isinstance(epsilon, float):
-        myLogger.error(message=f"epsilon must be one of the type: int, float")
+        logger.error(f"epsilon must be one of the type: int, float")
         sys.exit(1)
-    myLogger.info(message=f"Stage 3b: sampling edges based on Reff")
+    logger.info(f"Stage 3b: sampling edges based on Reff")
     t_s = time()
     q = round(N * np.log(N) * 9 * C**2 / (epsilon**2))
     results = np.random.choice(np.arange(np.shape(Pe)[0]), int(q), p=list(Pe))
@@ -202,22 +206,15 @@ def sampling(
     sparserW = sparserW + sparserW.T
 
     t_e = time()
-    myLogger.info(message=f"Sampling took {t_e - t_s} seconds.")
+    logger.info(f"Sampling took {t_e - t_s} seconds.")
     print(f"Sampling took {t_e - t_s} seconds.")
-    myLogger.info(
-        f"Prune rate for epsilon={epsilon}: {1 - np.count_nonzero(new_weights) / np.size(new_weights)}, ({np.size(new_weights)} -> {np.count_nonzero(new_weights)})"
+    logger.info(
+        f"Prune rate for epsilon = {epsilon} : {1 - np.count_nonzero(new_weights) / np.size(new_weights)}, ({np.size(new_weights)} -> {np.count_nonzero(new_weights)})"
     )
 
-    print(
-        f"Prune rate for epsilon={epsilon}: {1 - np.count_nonzero(new_weights) / np.size(new_weights)}, ({np.size(new_weights)} -> {np.count_nonzero(new_weights)})"
-    )
     # convert into PyG's object
     edge_index, edge_weight = from_scipy_sparse_matrix(sparserW)
-    if (
-        config == None
-        or str(epsilon)
-        not in config[dataset_name]["python_er_epsilon_to_drop_rate_map"]
-    ):
+    if prune_rate_val is None:
         duw_el_path = osp.join(
             prune_file_dir,
             f"epsilon_{epsilon}",
@@ -231,17 +228,11 @@ def sampling(
     else:
         duw_el_path = osp.join(
             prune_file_dir,
-            str(
-                config[dataset_name]["python_er_epsilon_to_drop_rate_map"][str(epsilon)]
-            ),
-            "duw.el",
+            f"{prune_rate_val}/duw.el",
         )
         dw_el_path = osp.join(
             prune_file_dir,
-            str(
-                config[dataset_name]["python_er_epsilon_to_drop_rate_map"][str(epsilon)]
-            ),
-            "dw.wel",
+            f"{prune_rate_val}/dw.wel",
         )
 
     to_save = torch.cat((edge_index, edge_weight.reshape(1, -1)), 0).numpy().transpose()
@@ -251,9 +242,7 @@ def sampling(
         with open(duw_el_path, "w") as f:
             for line in to_save:
                 f.write(f"{int(line[0])} {int(line[1])}\n")
-        myLogger.info(
-            message=f"Saved edge list in {duw_el_path} in {time() - t} seconds."
-        )
+        logger.info(f"Saved edge list in {duw_el_path} in {time() - t} seconds.")
 
     if dw_el_path is not None and not osp.exists(dw_el_path):
         t = time()
@@ -261,9 +250,7 @@ def sampling(
         with open(dw_el_path, "w") as f:
             for line in to_save:
                 f.write(f"{int(line[0])} {int(line[1])} {line[2]}\n")
-        myLogger.info(
-            message=f"Saved edge list in {dw_el_path} in {time() - t} seconds"
-        )
+        logger.info(f"Saved edge list in {dw_el_path} in {time() - t} seconds")
 
     return edge_index, edge_weight
 
@@ -272,14 +259,14 @@ def stage3(
     dataset,
     dataset_name,
     epsilon: Union[int, float, list],
-    config,
+    prune_rate_val,
     isPygDataset=False,
     max_workers=64,
     reuse=True,
 ):
-    myLogger.info(message=f"Stage 3: Pruning edges")
+    logger.info(f"Stage 3: Pruning edges")
     if reuse and osp.exists(stage3_file_path):
-        myLogger.info(message="stage3.npz already exists, loading")
+        logger.info("stage3.npz already exists, loading")
         stage3_var = np.load(stage3_file_path)
         Pe = stage3_var["Pe"]
         weights = stage3_var["weights"]
@@ -305,7 +292,7 @@ def stage3(
         W_scipy = L_diag - L_scipy  # Weight matrix, nxn
 
         # compute Reff
-        R_eff = compute_reff(W_scipy, V, parallel=True, reuse=reuse)
+        R_eff = compute_reff(W_scipy, V, parallel=False, reuse=reuse)
 
         # only taking the lower triangle of the W_nxn as it is symmetric
         start_nodes, end_nodes, weights = sparse.find(sparse.tril(W_scipy))
@@ -324,7 +311,7 @@ def stage3(
             end_nodes=end_nodes,
             N=N,
         )
-        myLogger.info(message=f"stage3.npz saved")
+        logger.info(f"stage3.npz saved")
 
     # Sampling
     # Rudelson, 1996 Random Vectors in the Isotropic Position
@@ -336,6 +323,7 @@ def stage3(
     if isinstance(epsilon, int) or isinstance(epsilon, float):
         edge_index, edge_weight = sampling(
             epsilon,
+            prune_rate_val,
             Pe,
             C,
             weights,
@@ -343,14 +331,16 @@ def stage3(
             end_nodes,
             N,
             dataset_name,
-            config,
         )
     elif isinstance(epsilon, list):
+        assert isinstance(prune_rate_val, list)
+        assert len(epsilon) == len(prune_rate_val)
         with ProcessPoolExecutor(max_workers=max_workers) as executor:
             futures = {
                 executor.submit(
                     sampling,
                     epsilon_,
+                    prune_rate_val_,
                     Pe,
                     C,
                     weights,
@@ -358,16 +348,15 @@ def stage3(
                     end_nodes,
                     N,
                     dataset_name,
-                    config,
                 ): epsilon_
-                for epsilon_ in epsilon
+                for epsilon_, prune_rate_val_ in zip(epsilon, prune_rate_val)
             }
             for future in futures:
                 print(f"Epsilon: {futures[future]}")
                 future.result()
         edge_index, edge_weight = None, None
     else:
-        myLogger.error(message=f"epsilon must be one of the type: int, float, list")
+        logger.error(f"epsilon must be one of the type: int, float, list")
         sys.exit(1)
     return edge_index, edge_weight
 
@@ -377,8 +366,8 @@ def python_er_sparsify(
     dataset_name,
     dataset_type,
     epsilon: Union[int, float, list],
+    prune_rate_val,
     reuse=True,
-    config=None,
 ):
     """
     This is the original ER sparsifier utilizing the Laplacian.jl repo
@@ -388,6 +377,8 @@ def python_er_sparsify(
         dataset_type: str, type of the dataset, 'pyg' or 'el'
         epsilon: int | float -> return edge_index, edge_weight
                  list -> compute each epsilon, no return
+        prune_rate_val: float, between 0 and 1, = true purne rate,
+                        used for save file path, prefix with epsilon_ if set to None
         config: config dict
         reuse: bool, whether to reuse the previous computation
     Output:
@@ -418,43 +409,33 @@ def python_er_sparsify(
     elif dataset_type == "el":
         dataset = np.loadtxt(dataset, dtype=np.int64)
     else:
-        myLogger.error(message=f"dataset_type must be one of the type: pyg, el")
+        logger.error(f"dataset_type must be one of the type: pyg, el")
         sys.exit(1)
 
     if isinstance(epsilon, int) or isinstance(epsilon, float):  # single epsilon
-        if (
-            config == None
-            or str(epsilon)
-            not in config[dataset_name]["python_er_epsilon_to_drop_rate_map"]
-        ):
-            myLogger.info(
-                message=f"No config found for {dataset_name} with epsilon {epsilon}, folder will prefixed with 'epsilon_'"
+        if prune_rate_val is None:
+            logger.warning(
+                f"prune_rate_val is None, folder will prefixed with 'epsilon_'"
             )
-            myLogger.error(message=f"config is None")
+            logger.error(f"config is None")
             prune_file_path = osp.join(
                 prune_file_dir,
-                f"epsilon_{epsilon}",
-                "edge_data.pt",
+                f"epsilon_{epsilon}/edge_data.pt",
             )  # this file is for pyg dataset only
         else:
             prune_file_path = osp.join(
                 prune_file_dir,
-                str(
-                    config[dataset_name]["python_er_epsilon_to_drop_rate_map"][
-                        str(epsilon)
-                    ]
-                ),
-                "edge_data.pt",
+                f"{prune_rate_val}/edge_data.pt",
             )  # this file is for pyg dataset only
 
-        myLogger.info(message=f"python_er_sparsify: epsilon: {epsilon}")
+        logger.info(f"python_er_sparsify: epsilon: {epsilon}")
         if reuse and prune_file_path and osp.exists(prune_file_path):
-            myLogger.info(message=f"edge_data.pt already exists. Loading it...")
+            logger.info(f"edge_data.pt already exists. Loading it...")
             edge_data = torch.load(prune_file_path)
             edge_index = edge_data["edge_index"]
             edge_weight = edge_data["edge_weight"]
         else:
-            myLogger.info(message=f"edge_data.pt does not exist. Computing it...")
+            logger.info(f"edge_data.pt does not exist. Computing it...")
             if dataset_type == "pyg":
                 stage1(
                     dataset.copy(),
@@ -466,7 +447,7 @@ def python_er_sparsify(
                     dataset,
                     dataset_name,
                     epsilon,
-                    config,
+                    prune_rate_val,
                     isPygDataset=True,
                     reuse=reuse,
                 )
@@ -481,13 +462,13 @@ def python_er_sparsify(
                     dataset,
                     dataset_name,
                     epsilon,
-                    config,
+                    prune_rate_val,
                     isPygDataset=False,
                     reuse=reuse,
                 )
 
     elif isinstance(epsilon, list):  # multiple epsilons
-        myLogger.info(message=f"python_er_sparsify: epsilon: {epsilon}")
+        logger.info(f"python_er_sparsify: epsilon: {epsilon}")
         if dataset_type == "pyg":
             stage1(
                 dataset.copy(),
@@ -499,7 +480,7 @@ def python_er_sparsify(
                 dataset,
                 dataset_name,
                 epsilon,
-                config,
+                prune_rate_val,
                 isPygDataset=True,
                 reuse=reuse,
             )
@@ -514,13 +495,13 @@ def python_er_sparsify(
                 dataset,
                 dataset_name,
                 epsilon,
-                config,
+                prune_rate_val,
                 isPygDataset=False,
                 reuse=reuse,
             )
 
     else:
-        myLogger.error(message=f"epsilon must be one of the type: int, float, list")
+        logger.error(f"epsilon must be one of the type: int, float, list")
         sys.exit(1)
 
     if dataset_type == "pyg":
@@ -532,41 +513,41 @@ def python_er_sparsify(
     return dataset
 
 
-def gsparse_er_sparsify(dataset_name, epsilon, config):
-    """
-    This is the gSparse version of ER pruning.
+# def gsparse_er_sparsify(dataset_name, epsilon, config):
+#     """
+#     This is the gSparse version of ER pruning.
 
-    Input:
-        dataset_name: str, name of the dataset
-        epsilon: int | float -> return edge_index, edge_weight
-                 list -> compute each epsilon, no return
-        config: config dict
-    """
-    if str(epsilon) in config[dataset_name]["cpp_er_epsilon_to_drop_rate_map"]:
-        prune_file_dir = osp.join(
-            osp.dirname(osp.abspath(__file__)), f"../data/{dataset_name}/pruned/er"
-        )
-        input_path = osp.join(
-            osp.dirname(osp.abspath(__file__)), f"../data/{dataset_name}/raw/uduw.el"
-        )
-        er_path = osp.join(
-            osp.dirname(osp.abspath(__file__)), f"../data/{dataset_name}/raw/er.txt"
-        )
-        el_path = osp.join(
-            prune_file_dir,
-            str(config[dataset_name]["cpp_er_epsilon_to_drop_rate_map"][str(epsilon)]),
-            "udw.el_noweight",
-        )
-        weight_path = osp.join(
-            prune_file_dir,
-            str(config[dataset_name]["cpp_er_epsilon_to_drop_rate_map"][str(epsilon)]),
-            "udw.weight",
-        )
-    os.makedirs(osp.dirname(el_path), exist_ok=True)
-    Popen(
-        osp.join(
-            osp.dirname(osp.abspath(__file__)),
-            f"./gSparse/bin/er {epsilon} {input_path} {el_path} {weight_path} {er_path}",
-        ),
-        shell=True,
-    ).wait()
+#     Input:
+#         dataset_name: str, name of the dataset
+#         epsilon: int | float -> return edge_index, edge_weight
+#                  list -> compute each epsilon, no return
+#         config: config dict
+#     """
+#     if str(epsilon) in config[dataset_name]["cpp_er_epsilon_to_drop_rate_map"]:
+#         prune_file_dir = osp.join(
+#             osp.dirname(osp.abspath(__file__)), f"../data/{dataset_name}/pruned/er"
+#         )
+#         input_path = osp.join(
+#             osp.dirname(osp.abspath(__file__)), f"../data/{dataset_name}/raw/uduw.el"
+#         )
+#         er_path = osp.join(
+#             osp.dirname(osp.abspath(__file__)), f"../data/{dataset_name}/raw/er.txt"
+#         )
+#         el_path = osp.join(
+#             prune_file_dir,
+#             str(config[dataset_name]["cpp_er_epsilon_to_drop_rate_map"][str(epsilon)]),
+#             "udw.el_noweight",
+#         )
+#         weight_path = osp.join(
+#             prune_file_dir,
+#             str(config[dataset_name]["cpp_er_epsilon_to_drop_rate_map"][str(epsilon)]),
+#             "udw.weight",
+#         )
+#     os.makedirs(osp.dirname(el_path), exist_ok=True)
+#     Popen(
+#         osp.join(
+#             osp.dirname(osp.abspath(__file__)),
+#             f"./gSparse/bin/er {epsilon} {input_path} {el_path} {weight_path} {er_path}",
+#         ),
+#         shell=True,
+#     ).wait()
