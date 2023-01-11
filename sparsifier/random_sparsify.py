@@ -18,6 +18,13 @@ np.random.seed(1)
 cwd = os.getcwd()
 current_file_dir = os.path.dirname(os.path.realpath(__file__))
 
+# set env
+PROJECT_HOME = os.getenv(key="PROJECT_HOME")
+if PROJECT_HOME is None:
+    print("PROJECT_HOME is not set, ") 
+    print("please source env.sh at the top level of the project")
+    exit(1)
+
 
 def pyg_random_sparsify(
     dataset,
@@ -112,7 +119,6 @@ def pyg_random_sparsify(
 
 
 def el_random_sparsify(
-    dataset,
     dataset_name,
     prune_rate_key,
     prune_rate_val,
@@ -121,7 +127,6 @@ def el_random_sparsify(
 ):
     """
     Input:
-        dataset: str, path to edgelist file, must be absolute path
         dataset_name: str, name of dataset
         prune_rate_key: float, between 0 and 1, = true prune rate if post_symmetrize=False
         prune_rate_val: float, between 0 and 1, = true purne rate if post_symmetrize=True, use prune_rate_key if set to None
@@ -130,11 +135,8 @@ def el_random_sparsify(
     Output:
         None, pruned edgelist file saved
     """
+    dataset = osp.join(PROJECT_HOME, f"data/{dataset_name}/raw/duw.el")
     # sanity checks
-    if not isinstance(dataset, str):
-        raise ValueError(f"dataset must be str, got {type(dataset)}")
-    if not osp.isabs(dataset):
-        raise ValueError(f"dataset must be absolute path, got {dataset}")
     if not osp.exists(dataset):
         raise ValueError(f"dataset {dataset} does not exist")
 
@@ -152,20 +154,20 @@ def el_random_sparsify(
 
     if not post_symmetrize:
         duw_el_path = os.path.join(
-            current_file_dir,
-            f"../data/{dataset_name}/pruned/random/",
+            PROJECT_HOME,
+            f"data/{dataset_name}/pruned/random/",
             f"{prune_rate_key}/duw.el",
         )
     elif prune_rate_val is None:
         duw_el_path = os.path.join(
-            current_file_dir,
-            f"../data/{dataset_name}/pruned/random/",
+            PROJECT_HOME,
+            f"data/{dataset_name}/pruned/random/",
             f"key_{prune_rate_key}/duw.el",
         )
     else:
         duw_el_path = os.path.join(
-            current_file_dir,
-            f"../data/{dataset_name}/pruned/random/",
+            PROJECT_HOME,
+            f"data/{dataset_name}/pruned/random/",
             f"{prune_rate_val}/duw.el",
         )
 
@@ -185,7 +187,6 @@ def el_random_sparsify(
 
 # This is the top level function
 def random_sparsify(
-    dataset,
     dataset_name,
     prune_rate_key,
     prune_rate_val,
@@ -206,22 +207,21 @@ def random_sparsify(
     if dataset_type == "el":
         logger.info("---------- Random sparsify for el format input -----------")
         el_random_sparsify(
-            dataset,
             dataset_name,
             prune_rate_key,
             prune_rate_val,
             save_edgelist=save_edgelist,
             post_symmetrize=post_symmetrize,
         )
-    elif dataset_type == "pyg":
-        logger.info("---------- Random sparsify for pyg format input -----------")
-        pyg_random_sparsify(
-            dataset,
-            dataset_name,
-            prune_rate_key,
-            prune_rate_val,
-            save_edgelist=save_edgelist,
-            post_symmetrize=post_symmetrize,
-        )
+    # elif dataset_type == "pyg":
+    #     logger.info("---------- Random sparsify for pyg format input -----------")
+    #     pyg_random_sparsify(
+    #         dataset,
+    #         dataset_name,
+    #         prune_rate_key,
+    #         prune_rate_val,
+    #         save_edgelist=save_edgelist,
+    #         post_symmetrize=post_symmetrize,
+    #     )
     else:
         raise ValueError(f"dataset_type must be el/pyg, got {dataset_type}")

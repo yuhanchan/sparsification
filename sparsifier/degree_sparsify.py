@@ -12,6 +12,13 @@ import time
 logger = logging.getLogger("root")
 logger.debug("submodule message")
 
+# set env
+PROJECT_HOME = os.getenv(key="PROJECT_HOME")
+if PROJECT_HOME is None:
+    print("PROJECT_HOME is not set, ") 
+    print("please source env.sh at the top level of the project")
+    exit(1)
+
 
 def compile_degree_pruner():
     cwd = os.getcwd()
@@ -91,7 +98,6 @@ def pyg_degree_sparsify(
 
 
 def el_degree_sparsify(
-    dataset,
     dataset_name,
     in_or_out,
     degree_thres,
@@ -109,6 +115,7 @@ def el_degree_sparsify(
     Output:
         dataset: PygDataset, with edges dropped
     """
+    dataset = osp.join(PROJECT_HOME, f"data/{dataset_name}/raw/duw.el")
     assert in_or_out in ["in", "out"], 'in_or_out should be "in" or "out"'
     cwd = os.getcwd()
     current_file_dir = os.path.dirname(os.path.realpath(__file__))
@@ -143,65 +150,60 @@ def el_degree_sparsify(
 
 
 def in_degree_sparsify(
-    dataset,
     dataset_name,
     dataset_type,
     degree_thres,
     prune_rate_val,
 ):
     degree_thres = int(degree_thres)
-    if dataset_type == "pyg":
-        return pyg_degree_sparsify(
-            dataset=dataset,
-            dataset_name=dataset_name,
-            in_or_out="in",
-            degree_thres=degree_thres,
-            prune_rate_val=prune_rate_val,
-        )
-    elif dataset_type == "el":
+    if dataset_type == "el":
         return el_degree_sparsify(
-            dataset=dataset,
             dataset_name=dataset_name,
             in_or_out="in",
             degree_thres=degree_thres,
             prune_rate_val=prune_rate_val,
         )
+    # elif dataset_type == "pyg":
+    #     return pyg_degree_sparsify(
+    #         dataset=dataset,
+    #         dataset_name=dataset_name,
+    #         in_or_out="in",
+    #         degree_thres=degree_thres,
+    #         prune_rate_val=prune_rate_val,
+    #     )
     else:
         logger.error(f"dataset type {dataset_type} is not supported. Exiting...")
         sys.exit(1)
 
 
 def out_degree_sparsify(
-    dataset,
     dataset_name,
     dataset_type,
     degree_thres,
     prune_rate_val,
 ):
     degree_thres = int(degree_thres)
-    if dataset_type == "pyg":
-        return pyg_degree_sparsify(
-            dataset=dataset,
-            dataset_name=dataset_name,
-            in_or_out="out",
-            degree_thres=degree_thres,
-            prune_rate_val=prune_rate_val,
-        )
-    elif dataset_type == "el":
+    if dataset_type == "el":
         return el_degree_sparsify(
-            dataset=dataset,
             dataset_name=dataset_name,
             in_or_out="out",
             degree_thres=degree_thres,
             prune_rate_val=prune_rate_val,
         )
+    # elif dataset_type == "pyg":
+    #     return pyg_degree_sparsify(
+    #         dataset=dataset,
+    #         dataset_name=dataset_name,
+    #         in_or_out="out",
+    #         degree_thres=degree_thres,
+    #         prune_rate_val=prune_rate_val,
+    #     )
     else:
         logger.error(f"dataset type {dataset_type} is not supported. Exiting...")
         sys.exit(1)
 
 
 def sym_degree_sparsify(
-    dataset,
     dataset_name,
     degree_thres,
     prune_rate_val,
@@ -219,6 +221,7 @@ def sym_degree_sparsify(
         dataset: PygDataset, with edges dropped
     """
     degree_thres = int(degree_thres)
+    dataset = osp.join(PROJECT_HOME, f"data/{dataset_name}/raw/duw.el")
     current_file_dir = os.path.dirname(os.path.realpath(__file__))
     logger.info(f"---------- Degree sparsify Begin -----------\n")
     logger.info(f"sym_degree_sparsify with threshold {degree_thres}")
