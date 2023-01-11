@@ -161,13 +161,13 @@ def el_random_sparsify(
     elif prune_rate_val is None:
         duw_el_path = os.path.join(
             PROJECT_HOME,
-            f"data/{dataset_name}/pruned/random/",
+            f"data/{dataset_name}/pruned/sym_random/",
             f"key_{prune_rate_key}/duw.el",
         )
     else:
         duw_el_path = os.path.join(
             PROJECT_HOME,
-            f"data/{dataset_name}/pruned/random/",
+            f"data/{dataset_name}/pruned/sym_random/",
             f"{prune_rate_val}/duw.el",
         )
 
