@@ -12,6 +12,7 @@ class CmdArgs {
 public:
   CmdArgs(int argc, char **argv);
   const std::string &inFname() const { return _inFname; }
+  const std::string &refFname() const { return _refFname; }
   const std::string &outFname() const { return _outFname; }
   const std::string &mapFname() const { return _mapFname; }
   const std::string &mode() const { return _mode; }
@@ -20,6 +21,7 @@ public:
 
 private:
   std::string _inFname;
+  std::string _refFname;
   std::string _outFname;
   std::string _mapFname;
   std::string _mode;

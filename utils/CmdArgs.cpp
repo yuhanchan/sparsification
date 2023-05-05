@@ -23,6 +23,14 @@ CmdArgs::CmdArgs(int argc, char **argv) {
         continue;
       }
       _inFname = argv[i];
+    } else if (arg == "-u") {
+      i++;
+      if (i == argc) {
+        cout << "Missing ref file after -u argument." << endl;
+        _success = false;
+        continue;
+      }
+      _refFname = argv[i];
     } else if (arg == "-o") {
       i++;
       if (i == argc) {
@@ -61,6 +69,9 @@ void CmdArgs::dispHelp() const {
   cout << "Input arguments:" << endl;
   cout << "  -i [path]" << endl;
   cout << "       input filename" << endl;
+  cout << "Reference arguments:" << endl;
+  cout << "  -r [path]" << endl;
+  cout << "       ref filename" << endl;
   cout << "Output arguments:" << endl;
   cout << "  -o [path]" << endl;
   cout << "       output filename" << endl;

@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <utility>
 #include <vector>
+#include <unordered_map>
 
 using namespace std;
 
@@ -231,29 +232,27 @@ void elim_disconnected_nodes(ifstream &in, ofstream &out,
     }
   }
 
-  vector<int> ind_map(row_ind[row_ind.size() - 1] + 10,
-                      0); // this is to map the row indices to the new indices
+  unordered_map<int, int> ind_map;
+  int new_ind = 0;
   for (int i = 0; i < row_ind.size(); i++) {
-    ind_map[row_ind[i]] = 1;
-    ind_map[col_ind[i]] = 1;
+    // if row_ind[i] is not in the map, add it
+    if (ind_map.find(row_ind[i]) == ind_map.end()) {
+      ind_map[row_ind[i]] = new_ind;
+      ++new_ind;
+    }
   }
-  for (int i = 1; i < ind_map.size(); i++) {
-    ind_map[i] += ind_map[i - 1];
-  }
-  for (int i = 0; i < ind_map.size(); i++) {
-    ind_map[i] -= 1;
-  }
-
-  for (int i = ind_map.size() - 1; i > 0; i--) {
-    if (ind_map[i] == ind_map[i - 1]) {
-      ind_map[i] = -1;
+  for (int i = 0; i < col_ind.size(); i++) {
+    // if col_ind[i] is not in the map, add it
+    if (ind_map.find(col_ind[i]) == ind_map.end()) {
+      ind_map[col_ind[i]] = new_ind;
+      ++new_ind;
     }
   }
 
   if (edge_map_file.size()) {
     ofstream out_edge_map(edge_map_file);
-    for (int i = 0; i < ind_map.size(); i++) {
-      out_edge_map << ind_map[i] << endl;
+    for (auto &e : ind_map) {
+      out_edge_map << e.first << " " << e.second << endl;
     }
   }
 
@@ -271,19 +270,24 @@ void elim_disconnected_nodes(ifstream &in, ofstream &out,
 }
 
 void apply_edge_map(ifstream &in, ofstream &out, string edge_map_file) {
-  vector<int> edge_map;
+  unordered_map<int, int> edge_map;
   ifstream in_edge_map(edge_map_file);
-  int ind;
-  while (in_edge_map >> ind) {
-    edge_map.push_back(ind);
+  int old_ind, ind;
+  while (in_edge_map >> old_ind >> ind) {
+    edge_map[old_ind] = ind;
   }
 
-  int u, v;
-  while (in >> u >> v) {
-    if (edge_map[u] == -1 || edge_map[v] == -1) {
-      continue;
+  // each row in in has different number of numbers, seprated by space
+  // read from in one number at a time, and apply the map, output to out
+  // keep the original line format
+  string line;
+  while (getline(in, line)) {
+    stringstream ss(line);
+    string num;
+    while (getline(ss, num, ' ')) {
+      out << edge_map[stoi(num)] << " ";
     }
-    out << edge_map[u] << " " << edge_map[v] << endl;
+    out << endl;
   }
 }
 
@@ -342,14 +346,86 @@ int is_connected(string in, bool print_comp0 = false) {
   return status;
 }
 
+void match_ref(ifstream &in, ifstream &ref, ofstream &out){
+  string first_line;
+  getline(ref, first_line);
+  stringstream ss(first_line);
+  int num_count_per_line = 0;
+  string num;
+  while (getline(ss, num, ' ')) {
+    cout << num << endl;
+    num_count_per_line++;
+  }
+
+  // reset cursor
+  ref.clear();
+  ref.seekg(0, ios::beg);
+
+  vector<edge_t> ref_edges;
+  if (num_count_per_line == 2) {
+    cout << "Input file has 2 numbers per line, treat as un-weighted." << endl;
+    int u, v;
+    while (in >> u >> v) {
+      ref_edges.push_back(make_pair(u, v));
+    }
+  } else if (num_count_per_line == 3) {
+    cout << "Input file has 3 numbers per line, treat as weighted." << endl;
+    int u, v;
+    float w;
+    while (in >> u >> v >> w) {
+      ref_edges.push_back(make_pair(u, v));
+    }
+  }
+
+
+  getline(in, first_line);
+  ss.str(first_line);
+  while (getline(ss, num, ' ')) {
+    cout << num << endl;
+    num_count_per_line++;
+  }
+
+  // reset cursor
+  in.clear();
+  in.seekg(0, ios::beg);
+
+  if (num_count_per_line == 2) {
+    cout << "Input file has 2 numbers per line, treat as un-weighted." << endl;
+    vector<edge_t> edges;
+    int u, v;
+    while (in >> u >> v) {
+      edges.push_back(make_pair(u, v));
+    }
+
+    for (const edge_t &e : edges) {
+      out << e.first << " " << e.second << endl;
+    }
+  } else if (num_count_per_line == 3) {
+    cout << "Input file has 3 numbers per line, treat as weighted." << endl;
+    vector<wedge_t> edges;
+    int u, v;
+    float w;
+    while (in >> u >> v >> w) {
+      edges.push_back(make_pair(make_pair(u, v), w));
+    }
+
+    for (const wedge_t &e : edges) {
+      out << e.first.first << " " << e.first.second << " " << e.second << endl;
+    }
+  }
+
+}
+
 int main(int argc, char *argv[]) {
   CmdArgs args(argc, argv);
   cout << "---------- utils ----------" << endl;
   cout << "Input file: " << args.inFname() << endl;
+  cout << "Ref file: " << args.refFname() << endl;
   cout << "Output file: " << args.outFname() << endl;
   cout << "Mode: " << args.mode() << endl;
 
   ifstream fin(args.inFname());
+  ifstream fref(args.refFname());
   ofstream fout(args.outFname());
   if (args.mode() == "duw2uduw" || args.mode() == "1") {
     duw_to_uduw(fin, fout);
@@ -377,6 +453,8 @@ int main(int argc, char *argv[]) {
     unweight(fin, fout);
   } else if (args.mode() == "apply_edge_map" || args.mode() == "13") {
     apply_edge_map(fin, fout, args.mapFname());
+  } else if (args.mode() == "match_ref" || args.mode() == "14") {
+    match_ref(fin, fref, fout);
   } else {
     cout << "Unknown mode: " << args.mode() << endl << endl;
     cout << "Available modes: (use number or mode name) " << endl;
@@ -393,6 +471,7 @@ int main(int argc, char *argv[]) {
     cout << "\t\t11: symmetrize" << endl;
     cout << "\t\t12: unweight" << endl;
     cout << "\t\t13: apply_edge_map" << endl;
+    cout << "\t\t14: match_ref" << endl;
   }
 
   return 0;
