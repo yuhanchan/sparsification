@@ -11,19 +11,26 @@ import torch.nn.functional as F
 from ogb.nodeproppred import Evaluator
 from torch.nn import ModuleList
 from torch_geometric.nn import SAGEConv
+from torch_geometric.loader import ClusterData, ClusterLoader, NeighborSampler
 from tqdm import tqdm
+
+PROJECT_HOME = os.getenv(key="PROJECT_HOME")
+if PROJECT_HOME is None:
+    print("PROJECT_HOME is not set, ") 
+    print("please source env.sh at the top level of the project")
+    exit(1)
 
 
 class Net(torch.nn.Module):
     def __init__(self, in_channels, out_channels, num_layers=1):
         hidden_channels = 256
-        if (num_layers < 1) or (not isinstance(num_layers, int)):
-            raise ValueError("num_layers should be integers >= 1")
 
         super(Net, self).__init__()
         self.inProj = torch.nn.Linear(in_channels, hidden_channels)
         if num_layers == 1:
-            self.convs = ModuleList([SAGEConv(hidden_channels, out_channels, aggr="mean")])
+            self.convs = ModuleList(
+                [SAGEConv(hidden_channels, out_channels, aggr="mean")]
+            )
         else:
             self.convs = ModuleList(
                 [
@@ -48,7 +55,7 @@ class Net(torch.nn.Module):
                 x = F.dropout(x, p=0.5, training=self.training)
                 x = x + 0.2 * inp
         return F.log_softmax(x, dim=-1)
-    
+
     def inference(self, x_all, subgraph_loader, device):
         pbar = tqdm(total=x_all.size(0) * len(self.convs))
         pbar.set_description("Evaluating")
@@ -69,7 +76,7 @@ class Net(torch.nn.Module):
                 x = x_all[n_id].to(device)
                 x_target = x[: size[1]]
                 t = time.time()
-                x = conv((x, x_target), edge_index) 
+                x = conv((x, x_target), edge_index)
                 torch.cuda.synchronize()
                 total_time += time.time() - t
                 if i != len(self.convs) - 1:
@@ -155,29 +162,31 @@ def test(
 
 def ClusterGCN(train_dataset, test_dataset, dataset_name, **kwargs):
     # Default parameters
-    experiment_dir = None
+    experiment_dir = PROJECT_HOME + "/experiments/ClusterGCN/" + dataset_name
+    experiment_dir_postfix = ""
     epochs = 30
     eval_each = 5
     num_layers = 4
-    init_checkpoint = None
+    load_ckpt = None
     load_pruned_graph = False
     do_inference_only = False
     inference_repeat = 10
     inference_batch_size = 40000
-    save_ckpt_space = False
+    ckpt_interval = 10000  # set to a large number to disable checkpoint saving
     gpu_id = 0
 
     # Overwrite defaults
     experiment_dir = kwargs.get("experiment_dir", experiment_dir)
+    experiment_dir_postfix = kwargs.get("experiment_dir_postfix", experiment_dir_postfix)
     epochs = kwargs.get("epochs", epochs)
     eval_each = kwargs.get("eval_each", eval_each)
     num_layers = kwargs.get("num_layers", num_layers)
-    init_checkpoint = kwargs.get("init_checkpoint", init_checkpoint)
+    load_ckpt = kwargs.get("load_ckpt", load_ckpt)
     load_pruned_graph = kwargs.get("load_pruned_graph", load_pruned_graph)
     do_inference_only = kwargs.get("do_inference_only", do_inference_only)
     inference_repeat = kwargs.get("inference_repeat", inference_repeat)
     inference_batch_size = kwargs.get("inference_batch_size", inference_batch_size)
-    save_ckpt_space = kwargs.get("save_ckpt_space", save_ckpt_space)
+    ckpt_interval = kwargs.get("ckpt_interval", ckpt_interval)
     gpu_id = kwargs.get("gpu_id", gpu_id)
 
     # Sanity checks
@@ -185,32 +194,35 @@ def ClusterGCN(train_dataset, test_dataset, dataset_name, **kwargs):
     assert isinstance(epochs, int)
     assert isinstance(eval_each, int)
     assert isinstance(num_layers, int)
-    assert isinstance(init_checkpoint, str)
+    assert isinstance(load_ckpt, str) or load_ckpt is None
     assert isinstance(load_pruned_graph, bool)
     assert isinstance(do_inference_only, bool)
     assert isinstance(inference_repeat, int)
     assert isinstance(inference_batch_size, int)
-    assert isinstance(save_ckpt_space, bool)
+    assert isinstance(ckpt_interval, int)
     assert isinstance(gpu_id, int)
 
     if (num_layers < 1) or (not isinstance(num_layers, int)):
         raise ValueError("num_layers should be integers >= 1")
 
     # Dump parameters
+    experiment_dir = osp.join(experiment_dir, experiment_dir_postfix)
     if experiment_dir is not None:
         os.makedirs(experiment_dir, exist_ok=True)
         with open(os.path.join(experiment_dir, "args.txt"), "w") as f:
-            f.write(f"expriment_dir = {experiment_dir}")
-            f.write(f"epochs = {epochs}")
-            f.write(f"eval_each = {eval_each}")
-            f.write(f"num_layers = {num_layers}")
-            f.write(f"init_checkpoint = {init_checkpoint}")
-            f.write(f"load_pruned_graph = {load_pruned_graph}")
-            f.write(f"do_inference_only = {do_inference_only}")
-            f.write(f"inference_repeat = {inference_repeat}")
-            f.write(f"inference_batch_size = {inference_batch_size}")
-            f.write(f"save_ckpt_space = {save_ckpt_space}")
-            f.write(f"gpu_id = {gpu_id}")
+            f.write(f"---------------- params ----------------\n")
+            f.write(f"expriment_dir = {experiment_dir}\n")
+            f.write(f"epochs = {epochs}\n")
+            f.write(f"eval_each = {eval_each}\n")
+            f.write(f"num_layers = {num_layers}\n")
+            f.write(f"load_ckpt = {load_ckpt}\n")
+            f.write(f"load_pruned_graph = {load_pruned_graph}\n")
+            f.write(f"do_inference_only = {do_inference_only}\n")
+            f.write(f"inference_repeat = {inference_repeat}\n")
+            f.write(f"inference_batch_size = {inference_batch_size}\n")
+            f.write(f"ckpt_interval = {ckpt_interval}\n")
+            f.write(f"gpu_id = {gpu_id}\n")
+            f.write(f"----------------------------------------\n\n")
 
     # Dataset
     if dataset_name == "Reddit":
@@ -237,11 +249,12 @@ def ClusterGCN(train_dataset, test_dataset, dataset_name, **kwargs):
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
     # Initial checkpoint
-    if init_checkpoint is not None:
-        ckp = torch.load(init_checkpoint, map_location="cpu")
+    if load_ckpt is not None:
+        ckp = torch.load(load_ckpt, map_location="cpu")
         model.load_state_dict(ckp["model"])
         if load_pruned_graph:
-            data = ckp["data"]
+            train_data = ckp["train_data"]
+            test_data = ckp["test_data"]
 
     if not do_inference_only:
         cluster_data = ClusterData(
@@ -274,10 +287,6 @@ def ClusterGCN(train_dataset, test_dataset, dataset_name, **kwargs):
         print(f"Train: {train_acc:.4f}, Val: {val_acc:.4f}, Test: {test_acc:.4f}")
         exit(0)
 
-    if experiment_dir is not None:
-        ckp = {"model": model.state_dict(), "data": data}
-        torch.save(ckp, osp.join(experiment_dir, "init_ckp.pth.tar"))
-
     train_scalars = []
     train_columns = ["Epoch", "Loss"]
     if experiment_dir is not None:
@@ -303,21 +312,27 @@ def ClusterGCN(train_dataset, test_dataset, dataset_name, **kwargs):
                 header=False,
             )
             train_scalars = []
-            # if save_ckpt_space:
-            #     if epoch == epochs:
-            #         ckp = {"model": model.state_dict(), "data": data}
-            #         torch.save(
-            #             ckp,
-            #             osp.join(
-            #                 experiment_dir, "ckp_epoch_" + str(epoch) + ".pth.tar"
-            #             ),
-            #         )
-            # elif epoch % 50 == 0:
-            # ckp = {"model": model.state_dict(), "data": data}
-            # torch.save(
-            #     ckp,
-            #     osp.join(experiment_dir, "ckp_epoch_" + str(epoch) + ".pth.tar"),
-            # )
+            if epoch == epochs:
+                # ckp = {
+                #     "model": model.state_dict(),
+                #     "train_data": train_data,
+                #     "test_data": test_data,
+                # }
+                # torch.save(
+                #     ckp,
+                #     osp.join(experiment_dir, "ckp_epoch_" + str(epoch) + ".pth.tar"),
+                # )
+                pass
+            elif epoch % ckpt_interval == 0:
+                ckp = {
+                    "model": model.state_dict(),
+                    "train_data": train_data,
+                    "test_data": test_data,
+                }
+                torch.save(
+                    ckp,
+                    osp.join(experiment_dir, "ckp_epoch_" + str(epoch) + ".pth.tar"),
+                )
 
         if epoch % eval_each == 0:
             train_acc, val_acc, test_acc = test(
