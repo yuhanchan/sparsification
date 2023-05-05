@@ -36,3 +36,4 @@ output_sparsifier_raw/
 output_sparsifier_parsed/
 paper_fig/
 paper_fig_full/
+run_gnn.sh

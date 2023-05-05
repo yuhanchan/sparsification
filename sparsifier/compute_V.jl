@@ -64,7 +64,8 @@ function compute_V(a, JLfac=4.0)
     UR = @time "compute Q(W^1/2)B" U' * R # nxk
 
     V = zeros(n, k)
-    @time string("total time for k=", k, " iteration") Threads.@threads for i in 1:k
+    @time string("total time for k=", k, " iteration") for i in 1:k
+    # @time string("total time for k=", k, " iteration") Threads.@threads for i in 1:k
         print(i, "/", k)
         V[:, i] = @time string("time for i=", i) f(UR[:, i]) # f is the linear solver, solve for x in Ax=b
     end
