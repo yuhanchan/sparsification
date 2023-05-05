@@ -26,23 +26,22 @@ def readAllGraphsNK(dataset_name, config):
     graphs_dict["original"] = [originalGraph]
 
 
-    # for prune_algo in ["LocalDegree", "LSpar", "GSpar", "LocalSimilarity", "SCAN"]:
-    #     graphs = []
-    #     for prune_rate in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}"):
-    #         if config[dataset_name]["directed"] and config[dataset_name]["weighted"]:
-    #             G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/dw.wel", nk.Format.EdgeListSpaceZero, directed=True)
-    #         elif config[dataset_name]["directed"]:
-    #             G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
-    #         elif config[dataset_name]["weighted"]:
-    #             G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/udw.wel", nk.Format.EdgeListSpaceZero, directed=False)
-    #         else:
-    #             G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
-    #         G.addNodes(originalGraph.numberOfNodes()-G.numberOfNodes())
-    #         graphs.append(G)
-    #     graphs_dict[prune_algo] = graphs
+    for prune_algo in ["LocalDegree", "LSpar", "GSpar", "LocalSimilarity", "SCAN"]:
+        graphs = []
+        for prune_rate in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}"):
+            if config[dataset_name]["directed"] and config[dataset_name]["weighted"]:
+                G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/dw.wel", nk.Format.EdgeListSpaceZero, directed=True)
+            elif config[dataset_name]["directed"]:
+                G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
+            elif config[dataset_name]["weighted"]:
+                G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/udw.wel", nk.Format.EdgeListSpaceZero, directed=False)
+            else:
+                G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
+            G.addNodes(originalGraph.numberOfNodes()-G.numberOfNodes())
+            graphs.append(G)
+        graphs_dict[prune_algo] = graphs
 
-    # for prune_algo in ["Random", "KNeighbor", "RankDegree", "ForestFire"]:
-    for prune_algo in ["Random"]:
+    for prune_algo in ["Random", "KNeighbor", "RankDegree", "ForestFire"]:
         graphs = []
         for prune_rate in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}"):
             for run in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}"):
@@ -58,36 +57,36 @@ def readAllGraphsNK(dataset_name, config):
                 graphs.append(G)
         graphs_dict[prune_algo] = graphs
         
-    # for prune_algo in ["ER-Min", "ER-Max"]: # weighted er
-    #     graphs = []
-    #     for prune_rate in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}"):
-    #         for run in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}"):
-    #             if config[dataset_name]["directed"]:
-    #                 G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/dw.wel", nk.Format.EdgeListSpaceZero, directed=True)
-    #             else:
-    #                 G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/udw.wel", nk.Format.EdgeListSpaceZero, directed=False)
-    #             G.addNodes(originalGraph.numberOfNodes()-G.numberOfNodes())
-    #             graphs.append(G)
-    #     graphs_dict[f"{prune_algo}_weighted"] = graphs
+    for prune_algo in ["ER-Min", "ER-Max"]: # weighted er
+        graphs = []
+        for prune_rate in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}"):
+            for run in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}"):
+                if config[dataset_name]["directed"]:
+                    G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/dw.wel", nk.Format.EdgeListSpaceZero, directed=True)
+                else:
+                    G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/udw.wel", nk.Format.EdgeListSpaceZero, directed=False)
+                G.addNodes(originalGraph.numberOfNodes()-G.numberOfNodes())
+                graphs.append(G)
+        graphs_dict[f"{prune_algo}_weighted"] = graphs
 
-    # for prune_algo in ["ER-Min", "ER-Max"]: # unweighted er
-    #     graphs = []
-    #     for prune_rate in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}"):
-    #         for run in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}"):
-    #             if config[dataset_name]["directed"]:
-    #                 G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
-    #             else:
-    #                 G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
-    #             G.addNodes(originalGraph.numberOfNodes()-G.numberOfNodes())
-    #             graphs.append(G)
-    #     graphs_dict[f"{prune_algo}_unweighted"] = graphs
+    for prune_algo in ["ER-Min", "ER-Max"]: # unweighted er
+        graphs = []
+        for prune_rate in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}"):
+            for run in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}"):
+                if config[dataset_name]["directed"]:
+                    G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
+                else:
+                    G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
+                G.addNodes(originalGraph.numberOfNodes()-G.numberOfNodes())
+                graphs.append(G)
+        graphs_dict[f"{prune_algo}_unweighted"] = graphs
 
-    # for prune_algo in ["SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7"]:
-    #     filepath = f"data/{dataset_name}/pruned/{prune_algo}/0/uduw.el"
-    #     if osp.exists(filepath):
-    #         G = nk.readGraph(filepath, nk.Format.EdgeListSpaceZero, directed=False)
-    #         G.addNodes(originalGraph.numberOfNodes()-G.numberOfNodes())
-    #         graphs_dict[prune_algo] = [G]
+    for prune_algo in ["SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7"]:
+        filepath = f"data/{dataset_name}/pruned/{prune_algo}/0/uduw.el"
+        if osp.exists(filepath):
+            G = nk.readGraph(filepath, nk.Format.EdgeListSpaceZero, directed=False)
+            G.addNodes(originalGraph.numberOfNodes()-G.numberOfNodes())
+            graphs_dict[prune_algo] = [G]
 
     return graphs_dict
 
