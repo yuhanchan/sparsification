@@ -1,6 +1,7 @@
 __pycache__
 *.egg-info
 data/*
+data_unused/
 .vscode
 bin/
 experiments/
@@ -25,3 +26,13 @@ utils/uniform_random.txt
 *.txt
 *.svg
 node_modules/
+gt_out/
+metric_output/
+metric_parsed/
+output_metric_parsed/
+output_metric_raw/
+output_metric_plot/
+output_sparsifier_raw/
+output_sparsifier_parsed/
+paper_fig/
+paper_fig_full/
