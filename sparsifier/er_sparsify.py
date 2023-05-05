@@ -2,7 +2,7 @@ import os
 import logging
 import os.path as osp
 import sys
-from time import time
+from time import time, time_ns, process_time
 import pickle
 from typing import Union
 
@@ -19,6 +19,30 @@ from torch_sparse import SparseTensor
 from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import Pool, shared_memory
 from subprocess import Popen
+import timeit
+import psutil
+import json
+from memory_profiler import memory_usage
+
+# inner psutil function
+def process_memory():
+    process = psutil.Process(os.getpid())
+    mem_info = process.memory_info()
+    return mem_info.rss
+ 
+# decorator function
+def profile(func):
+    def wrapper(*args, **kwargs):
+        # mem_before = process_memory()
+        t_s, pt_s = time(), process_time()
+        # result = func(*args, **kwargs)
+        mem_usage, result = memory_usage((func, args, kwargs), retval=True, max_iterations=1, )
+        t_e, pt_e = time(), process_time()
+        # mem_after = process_memory()
+        # print(f"{func.__name__}:consumed memory: {mem_after-mem_before:,}, wall time: {t_e-t_s} s, cpu time: {pt_e-pt_s} s")
+        print(f"{func.__name__}:consumed memory: {max(mem_usage):,}, wall time: {t_e-t_s} s, cpu time: {pt_e-pt_s} s")
+        return result
+    return wrapper
 
 npz_file_path = None  # convert original edge list to npz file
 csv_file_path = None  # The Z matrix in paper
@@ -27,9 +51,9 @@ stage3_file_path = None  # parameters used in stage3
 prune_file_path = None
 prune_file_dir = None
 
-# setup logger
+# setup logger, output to stdout
 logger = logging.getLogger("root")
-logger.debug("submodule message")
+logger.debug("debug message test")
 
 
 def compute_single_reff(i, V_shared, start_nodes, end_nodes):
@@ -57,6 +81,7 @@ def compute_reff(W, V, parallel=True, reuse=True):
             reuse: True if you want to reuse the V matrix if exists
     """
     logger.info("Stage 3a: computing Reff")
+    print("Stage 3a: computing Reff")
     if reuse and osp.exists(pkl_file_path):
         logger.info(f"Reff already exists, loading...")
         with open(pkl_file_path, "rb") as f:
@@ -125,6 +150,7 @@ def stage1(dataset, isPygDataset=False, reuse=True):
         isPygDataset: True if dataset is a PygDataset
     """
     logger.info(f"Stage 1: converting pytorch dataset to npz file")
+    print(f"Stage 1: converting pytorch dataset to npz file")
     if reuse and osp.exists(npz_file_path):
         logger.info(f"npz file already exists. Skipping...")
     else:
@@ -137,9 +163,18 @@ def stage1(dataset, isPygDataset=False, reuse=True):
             sparse.save_npz(npz_file_path, scipy_data)
             logger.info(f"npz file generated.")
         else:
-            scipy_data = sparse.csc_matrix(
-                (np.ones(dataset.shape[0], int), (dataset[:, 0], dataset[:, 1]))
-            )
+            if dataset.shape[1] == 2:
+                scipy_data = sparse.csc_matrix(
+                    (np.ones(dataset.shape[0], int), (dataset[:, 0].astype(int), dataset[:, 1].astype(int)))
+                )
+            elif dataset.shape[1] == 3:
+                scipy_data = sparse.csc_matrix(
+                    (dataset[:, 2].astype(float), (dataset[:, 0].astype(int), dataset[:, 1].astype(int)))
+                )
+            else:
+                raise ValueError(
+                    f"dataset should have shape (n, 2) for unweighted or (n, 3) for weighted. Got {dataset.shape}"
+                )
             sparse.save_npz(npz_file_path, scipy_data)
             logger.info(f"npz file generated.")
         t_e = time()
@@ -177,6 +212,8 @@ def sampling(
     end_nodes,
     N,
     dataset_name,
+    method="max", # max: high Pe has higher chance to be sampled, min: low Pe has higher chance to be sampled
+    postfix_folder="0",
 ):
     """
     This function is called from stage3.
@@ -189,10 +226,27 @@ def sampling(
     logger.info(f"Stage 3b: sampling edges based on Reff")
     t_s = time()
     q = round(N * np.log(N) * 9 * C**2 / (epsilon**2))
-    results = np.random.choice(np.arange(np.shape(Pe)[0]), int(q), p=list(Pe))
+    if method == "max":
+        np.random.seed(time_ns()%1000000000)
+        results = np.random.choice(np.arange(np.shape(Pe)[0]), int(q), p=list(Pe))
+    elif method == "min":
+        Pe_inverse = [1/x for x in Pe]
+        Pe_inverse = Pe_inverse/np.sum(Pe_inverse)
+        np.random.seed(time_ns()%1000000000)
+        results = np.random.choice(np.arange(np.shape(Pe)[0]), int(q), p=Pe_inverse)
+    else:
+        logger.error(f"method must be one of the type: max, min")
+        sys.exit(1)
     spin_counts = stats.itemfreq(results).astype(int)
 
     per_spin_weights = weights / (q * Pe)
+    # if method == "max":
+    #     per_spin_weights = weights / (q * Pe)
+    # elif method == "min":
+    #     per_spin_weights = weights / (q * Pe_inverse)
+    # else:
+    #     logger.error(f"method must be one of the type: max, min")
+    #     sys.exit(1)
     per_spin_weights[per_spin_weights == inf] = 0
 
     counts = np.zeros(np.shape(weights)[0])
@@ -211,32 +265,38 @@ def sampling(
     logger.info(
         f"Prune rate for epsilon = {epsilon} : {1 - np.count_nonzero(new_weights) / np.size(new_weights)}, ({np.size(new_weights)} -> {np.count_nonzero(new_weights)})"
     )
+    print(
+        f"Prune rate for epsilon = {epsilon} : {1 - np.count_nonzero(new_weights) / np.size(new_weights)}, ({np.size(new_weights)} -> {np.count_nonzero(new_weights)})"
+    )
 
     # convert into PyG's object
     edge_index, edge_weight = from_scipy_sparse_matrix(sparserW)
     if prune_rate_val is None:
-        duw_el_path = osp.join(
-            prune_file_dir,
-            f"epsilon_{epsilon}",
-            "duw.el",
-        )
-        dw_el_path = osp.join(
-            prune_file_dir,
-            f"epsilon_{epsilon}",
-            "dw.wel",
-        )
+        # duw_el_path = osp.join(
+        #     prune_file_dir,
+        #     f"epsilon_{epsilon}",
+        #     "duw.el",
+        # )
+        # dw_el_path = osp.join(
+        #     prune_file_dir,
+        #     f"epsilon_{epsilon}",
+        #     "dw.wel",
+        # )
+        duw_el_path = None
+        dw_el_path = None
     else:
         duw_el_path = osp.join(
             prune_file_dir,
-            f"{prune_rate_val}/duw.el",
+            f"{prune_rate_val}/{postfix_folder}/duw.el",
         )
         dw_el_path = osp.join(
             prune_file_dir,
-            f"{prune_rate_val}/dw.wel",
+            f"{prune_rate_val}/{postfix_folder}/dw.wel",
         )
 
     to_save = torch.cat((edge_index, edge_weight.reshape(1, -1)), 0).numpy().transpose()
-    if duw_el_path is not None and not osp.exists(duw_el_path):
+    # if duw_el_path is not None and not osp.exists(duw_el_path):
+    if duw_el_path is not None:
         t = time()
         os.makedirs(osp.dirname(duw_el_path), exist_ok=True)
         with open(duw_el_path, "w") as f:
@@ -244,7 +304,8 @@ def sampling(
                 f.write(f"{int(line[0])} {int(line[1])}\n")
         logger.info(f"Saved edge list in {duw_el_path} in {time() - t} seconds.")
 
-    if dw_el_path is not None and not osp.exists(dw_el_path):
+    # if dw_el_path is not None and not osp.exists(dw_el_path):
+    if dw_el_path is not None:
         t = time()
         os.makedirs(osp.dirname(dw_el_path), exist_ok=True)
         with open(dw_el_path, "w") as f:
@@ -263,6 +324,8 @@ def stage3(
     isPygDataset=False,
     max_workers=64,
     reuse=True,
+    method="max", # max: high Pe has higher chance to be sampled, min: low Pe has higher chance to be sampled
+    postfix_folder="0",
 ):
     logger.info(f"Stage 3: Pruning edges")
     if reuse and osp.exists(stage3_file_path):
@@ -281,7 +344,10 @@ def stage3(
         if isPygDataset:
             L_edge_idx, L_edge_attr = get_laplacian(dataset.data.edge_index)
         else:
-            L_edge_idx, L_edge_attr = get_laplacian(torch.tensor(np.transpose(dataset)))
+            if dataset.shape[1] == 2:
+                L_edge_idx, L_edge_attr = get_laplacian(edge_index=torch.tensor(np.transpose(dataset.astype(int)), dtype=torch.long))
+            else:
+                L_edge_idx, L_edge_attr = get_laplacian(edge_index=torch.tensor(np.transpose(dataset[:, 0:2].astype(int)), dtype=torch.long), edge_weight=torch.tensor(dataset[:, 2], dtype=torch.float))
         L = SparseTensor(
             row=L_edge_idx[0], col=L_edge_idx[1], value=L_edge_attr
         )  # Lapacian, nxn
@@ -331,6 +397,8 @@ def stage3(
             end_nodes,
             N,
             dataset_name,
+            method,
+            postfix_folder=postfix_folder,
         )
     elif isinstance(epsilon, list):
         assert isinstance(prune_rate_val, list)
@@ -348,6 +416,8 @@ def stage3(
                     end_nodes,
                     N,
                     dataset_name,
+                    method,
+                    postfix_folder,
                 ): epsilon_
                 for epsilon_, prune_rate_val_ in zip(epsilon, prune_rate_val)
             }
@@ -359,8 +429,10 @@ def stage3(
         logger.error(f"epsilon must be one of the type: int, float, list")
         sys.exit(1)
     return edge_index, edge_weight
+    # return None, None
 
 
+# @profile
 def python_er_sparsify(
     dataset,
     dataset_name,
@@ -368,6 +440,9 @@ def python_er_sparsify(
     epsilon: Union[int, float, list],
     prune_rate_val,
     reuse=True,
+    method="max", # max: high Pe has higher chance to be sampled, min: low Pe has higher chance to be sampled
+    config=None,
+    postfix_folder="1",
 ):
     """
     This is the original ER sparsifier utilizing the Laplacian.jl repo
@@ -398,16 +473,27 @@ def python_er_sparsify(
         osp.dirname(osp.abspath(__file__)), f"../data/{dataset_name}/raw/stage3.npz"
     )
 
-    prune_file_dir = osp.join(
-        osp.dirname(osp.abspath(__file__)), f"../data/{dataset_name}/pruned/er"
-    )
+    if method == "max":
+        prune_file_dir = osp.join(
+            osp.dirname(osp.abspath(__file__)), f"../data/{dataset_name}/pruned/ER-Max"
+        )
+    elif method == "min":
+        prune_file_dir = osp.join(
+            osp.dirname(osp.abspath(__file__)), f"../data/{dataset_name}/pruned/ER-Min"
+        )
+    else:
+        logger.error(f"method must be one of the type: max, min")
+        exit(1)
     os.makedirs(prune_file_dir, exist_ok=True)
 
     # load dataset
     if dataset_type == "pyg":
         pass
     elif dataset_type == "el":
-        dataset = np.loadtxt(dataset, dtype=np.int64)
+        if config and config[dataset_name]["weighted"]:
+            dataset = np.loadtxt(dataset, dtype=np.float)
+        else:
+            dataset = np.loadtxt(dataset, dtype=np.int64)
     else:
         logger.error(f"dataset_type must be one of the type: pyg, el")
         sys.exit(1)
@@ -450,6 +536,8 @@ def python_er_sparsify(
                     prune_rate_val,
                     isPygDataset=True,
                     reuse=reuse,
+                    method=method,
+                    postfix_folder=postfix_folder,
                 )
             else:
                 stage1(
@@ -465,6 +553,8 @@ def python_er_sparsify(
                     prune_rate_val,
                     isPygDataset=False,
                     reuse=reuse,
+                    method=method,
+                    postfix_folder=postfix_folder,
                 )
 
     elif isinstance(epsilon, list):  # multiple epsilons
@@ -483,6 +573,8 @@ def python_er_sparsify(
                 prune_rate_val,
                 isPygDataset=True,
                 reuse=reuse,
+                method=method,
+                postfix_folder=postfix_folder,
             )
         else:
             stage1(
@@ -498,6 +590,8 @@ def python_er_sparsify(
                 prune_rate_val,
                 isPygDataset=False,
                 reuse=reuse,
+                method=method,
+                postfix_folder=postfix_folder,
             )
 
     else:
