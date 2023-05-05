@@ -23,6 +23,7 @@ from sparsifiers import *
 from datasets import *
 from graph_reader import *
 from memory_profiler import memory_usage
+import argparse
  
 
 
@@ -151,11 +152,33 @@ def graphSparsifier(dataset_name, targetRatios, config, mode, multi_process=Fals
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dataset_name", type=str, required=True, help="name of the dataset, or 'all'")
+    parser.add_argument("--mode", choices=["sparsify", "eval", "all"], required=True, help="sparsify: only sparsify graphs; eval: only evaluate metrics (need to have run sparsify first); all: run both sparsify and eval")
+    args = parser.parse_args()
+
     config = json.load(open("config.json", "r"))
 
-    # dataset_names = ["ego-Facebook", "ego-Twitter", "soc-Pokec", "human_gene2", "cage14", "com-DBLP", "com-LiveJournal", "com-Amazon", "email-Enron", "wiki-Talk", "cit-HepPh", "ca-AstroPh", "ca-HepPh", "web-BerkStan", "web-Google", "web-NotreDame", "web-Stanford", "roadNet-CA", "Reddit", "ogbn-products", "ogbn-proteins"]
-    # dataset_names = ["web-Google", "web-Stanford"]
-    dataset_names = ["web-Google"]
+    if args.dataset_name == "all":
+        dataset_names = ["ego-Facebook", 
+                        "ego-Twitter", 
+                        "human_gene2", 
+                        "com-DBLP", 
+                        "com-Amazon", 
+                        "email-Enron", 
+                        "wiki-Talk", 
+                        "ca-AstroPh", 
+                        "ca-HepPh", 
+                        "web-BerkStan", 
+                        "web-Google", 
+                        "web-NotreDame", 
+                        "web-Stanford", 
+                        "Reddit", 
+                        "ogbn-proteins"
+                        ]
+    else:
+        dataset_names = [args.dataset_name]
+
 
     # # mode 0: print overview
     # for dataset_name in dataset_names:
@@ -163,117 +186,112 @@ def main():
     #     graphSparsifier(dataset_name=dataset_name, targetRatios=[], config=config, mode=0)
     #     print("-----------------------")
 
-    # # mode 1: er min and er max
-    # for dataset_name in dataset_names:
-    #     # print to terminal
-    #     sys.stdout = sys.__stdout__
-    #     print("\n\n----------------------------------")
-    #     print(dataset_name)
-    #     # redirect print to file, append mode
-    #     # sys.stdout = open(f"output/{dataset_name}.txt", "a")
-    #     graphSparsifier(dataset_name=dataset_name, targetRatios=[], config=config, mode=1)
+    if args.mode == "sparsify" or args.mode == "all":
+        # mode 1: er min and er max
+        for dataset_name in dataset_names:
+            # print to terminal
+            sys.stdout = sys.__stdout__
+            print("\n\n----------------------------------")
+            print(dataset_name)
+            # redirect print to file, append mode
+            # sys.stdout = open(f"output/{dataset_name}.txt", "a")
+            graphSparsifier(dataset_name=dataset_name, targetRatios=[], config=config, mode=1)
 
-    # # mode 2: random, localDegree, forestfire, Gspar, localsim, SCAN, RankDegree
-    # for dataset_name in dataset_names:
-    #     # print to terminal
-    #     sys.stdout = sys.__stdout__
-    #     print("\n\n----------------------------------")
-    #     print(dataset_name)
-    #     # redirect print to file, append mode
-    #     # sys.stdout = open(f"output/{dataset_name}.txt", "a")
-    #     prune_rate = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.96, 0.97, 0.98, 0.99] 
-    #     graphSparsifier(dataset_name=dataset_name, targetRatios=[1-x for x in prune_rate], config=config, mode=2, multi_process=True)
+        # mode 2: random, localDegree, forestfire, Gspar, localsim, SCAN, RankDegree
+        for dataset_name in dataset_names:
+            # print to terminal
+            sys.stdout = sys.__stdout__
+            print("\n\n----------------------------------")
+            print(dataset_name)
+            # redirect print to file, append mode
+            # sys.stdout = open(f"output/{dataset_name}.txt", "a")
+            prune_rate = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.96, 0.97, 0.98, 0.99] 
+            graphSparsifier(dataset_name=dataset_name, targetRatios=[1-x for x in prune_rate], config=config, mode=2, multi_process=True)
 
-    # # mode 3: KNeighbor
-    # for dataset_name in dataset_names:
-    #     # print to terminal
-    #     sys.stdout = sys.__stdout__
-    #     print("\n\n----------------------------------")
-    #     print(dataset_name)
-    #     # redirect print to file, append mode
-    #     # sys.stdout = open(f"output/{dataset_name}.txt", "a")
-    #     print()
-    #     graphSparsifier(dataset_name=dataset_name, targetRatios=[], config=config, mode=3)
+        # mode 3: KNeighbor
+        for dataset_name in dataset_names:
+            # print to terminal
+            sys.stdout = sys.__stdout__
+            print("\n\n----------------------------------")
+            print(dataset_name)
+            # redirect print to file, append mode
+            # sys.stdout = open(f"output/{dataset_name}.txt", "a")
+            print()
+            graphSparsifier(dataset_name=dataset_name, targetRatios=[], config=config, mode=3)
 
-    # # mode 4: t-spanner
-    # graphSparsifier(dataset_name=dataset_names, targetRatios=[], config=config, mode=4)
+        # mode 4: t-spanner
+        graphSparsifier(dataset_name=dataset_names, targetRatios=[], config=config, mode=4)
 
-    # # mode 5: spanningForest
-    # for dataset_name in dataset_names:
-    #     # print to terminal
-    #     sys.stdout = sys.__stdout__
-    #     print("\n\n----------------------------------")
-    #     print(dataset_name)
-    #     # redirect print to file, append mode
-    #     # sys.stdout = open(f"output/{dataset_name}.txt", "a")
-    #     graphSparsifier(dataset_name=dataset_name, targetRatios=[], config=config, mode=5)
+        # mode 5: spanningForest
+        for dataset_name in dataset_names:
+            # print to terminal
+            sys.stdout = sys.__stdout__
+            print("\n\n----------------------------------")
+            print(dataset_name)
+            # redirect print to file, append mode
+            # sys.stdout = open(f"output/{dataset_name}.txt", "a")
+            graphSparsifier(dataset_name=dataset_name, targetRatios=[], config=config, mode=5)
 
-    # # mode 6: LSpar
-    # for dataset_name in dataset_names:
-    #     # print to terminal
-    #     sys.stdout = sys.__stdout__
-    #     print("\n\n----------------------------------")
-    #     print(dataset_name)
-    #     # redirect print to file, append mode
-    #     # sys.stdout = open(f"output/{dataset_name}.txt", "a")
-    #     print()
-    #     graphSparsifier(dataset_name=dataset_name, targetRatios=[], config=config, mode=6)
-
-
-
-
-    # dataset_names = ["ego-Facebook", "ego-Twitter", "soc-Pokec", "human_gene2", "cage14", "com-DBLP", "com-LiveJournal", "com-Amazon", "email-Enron", "wiki-Talk", "cit-HepPh", "ca-AstroPh", "ca-HepPh", "web-BerkStan", "web-Google", "web-NotreDame", "web-Stanford", "roadNet-CA", "Reddit", "ogbn-products", "ogbn-proteins"]
-
-    # # G, G_gt = readGraphs(dataset_name=dataset_name, targetRatio=0.2, config=config, readGTformat=False, er_weighted=True)
-
-    dataset_name = "web-Google"
-
-    G_nk_dict = readAllGraphsNK(dataset_name, config)
-    print(G_nk_dict)
-
-    # # EffectiveDiameter_nk(G_nk_dict)
-    # G_nk_dict["er_min_weighted"] = []
-    # G_nk_dict["er_max_weighted"] = []
-    # for name, Graphs in G_nk_dict.items():
-    #     for Graph in Graphs:
-    #         diameter = nk.distance.Diameter(Graph, algo=nk.distance.DiameterAlgo.Exact).run().getDiameter()
-    #         print(f"{name}\t#nodes: {Graph.numberOfNodes()}\t #edges: {Graph.numberOfEdges()}\t diameter: {diameter}")
-
-    # nk.overview(G_nk_dict["original"][0])
-    # baseline = np.array(page_rank(G_nk_dict["original"][0], max_iter=1000)).flatten()
-    # for name, Graphs in G_nk_dict.items():
-    #     for Graph in Graphs:
-    #         pr = np.array(page_rank(Graph, max_iter=1000)).flatten()
-    #         print(name, 1-Graph.numberOfEdges()/G_nk_dict["original"][0].numberOfEdges(), ranking_precision(baseline, pr, k=100))
+        # mode 6: LSpar
+        for dataset_name in dataset_names:
+            # print to terminal
+            sys.stdout = sys.__stdout__
+            print("\n\n----------------------------------")
+            print(dataset_name)
+            # redirect print to file, append mode
+            # sys.stdout = open(f"output/{dataset_name}.txt", "a")
+            print()
+            graphSparsifier(dataset_name=dataset_name, targetRatios=[], config=config, mode=6)
 
 
-    # degreeDistribution_nk(dataset_name, G_nk_dict, nbin=100, logToFile=True)
-    # Centrality_nk(dataset_name, "EstimateBetweenness", G_nk_dict, 100, logToFile=True)
-    # Centrality_nk(dataset_name, "TopCloseness", G_nk_dict, 100, logToFile=True)
-    # Centrality_nk(dataset_name, "Degree", G_nk_dict, 100, logToFile=True)
-    # Centrality_nk(dataset_name, "Katz", G_nk_dict, 100, logToFile=True)
-    # Centrality_nk(dataset_name, "Laplacian", G_nk_dict, 100, logToFile=True)
-    # Centrality_nk(dataset_name, "Eigenvector", G_nk_dict, 100, logToFile=True)
-    # Centrality_nk(dataset_name, "CoreDecomposition", G_nk_dict, 100, logToFile=True)
-    # DetectCommunity_nk(dataset_name, G_nk_dict, logToFile=True)
-    # ClusteringF1Similarity_nk(dataset_name, G_nk_dict, logToFile=True)
+    if args.mode == "eval" or args.mode == "all":
+        for dataset_name in dataset_names:
+            G_nk_dict = readAllGraphsNK(dataset_name, config)
+            degreeDistribution_nk(dataset_name, G_nk_dict, nbin=100, logToFile=True)
+            Centrality_nk(dataset_name, "EstimateBetweenness", G_nk_dict, 100, logToFile=True)
+            Centrality_nk(dataset_name, "TopCloseness", G_nk_dict, 100, logToFile=True)
+            Centrality_nk(dataset_name, "Degree", G_nk_dict, 100, logToFile=True)
+            Centrality_nk(dataset_name, "Katz", G_nk_dict, 100, logToFile=True)
+            Centrality_nk(dataset_name, "Laplacian", G_nk_dict, 100, logToFile=True)
+            Centrality_nk(dataset_name, "Eigenvector", G_nk_dict, 100, logToFile=True)
+            Centrality_nk(dataset_name, "CoreDecomposition", G_nk_dict, 100, logToFile=True)
+            DetectCommunity_nk(dataset_name, G_nk_dict, logToFile=True)
+            ClusteringF1Similarity_nk(dataset_name, G_nk_dict, logToFile=True)
+            Centrality_nk(dataset_name, "PageRank", G_nk_dict, 100, logToFile=False)
+            QuadraticFormSimilarity_nk(dataset_name, G_nk_dict, logToFile=True)
+            del G_nk_dict # release memory
+
+            G_gt_dict = readAllGraphsGT(dataset_name, config) 
+            ApproximateDiameter_gt(dataset_name, G_gt_dict, logToFile=True)
+            SPSP_Eccentricity_gt(dataset_name, G_gt_dict, num_nodes=100, logToFile=True)
+            GlobalClusteringCoefficient_gt(dataset_name, G_gt_dict, logToFile=True)
+            LocalClusteringCoefficient_gt(dataset_name, G_gt_dict, logToFile=True)
+            MaxFlow_gt(dataset_name, G_gt_dict, logToFile=True)
+            del G_gt_dict # release memory
+
+
+if __name__ == "__main__":
+    set_start_method("spawn") # must write this line under if __name__ == "__main__":, otherwise it will not work
+    main() 
+
+
+""" unused code
+
+    G_nk_dict["er_min_weighted"] = []
+    G_nk_dict["er_max_weighted"] = []
+    for name, Graphs in G_nk_dict.items():
+        for Graph in Graphs:
+            diameter = nk.distance.Diameter(Graph, algo=nk.distance.DiameterAlgo.Exact).run().getDiameter()
+            print(f"{name}\t#nodes: {Graph.numberOfNodes()}\t #edges: {Graph.numberOfEdges()}\t diameter: {diameter}")
+
+    nk.overview(G_nk_dict["original"][0])
+    baseline = np.array(page_rank(G_nk_dict["original"][0], max_iter=1000)).flatten()
+    for name, Graphs in G_nk_dict.items():
+        for Graph in Graphs:
+            pr = np.array(page_rank(Graph, max_iter=1000)).flatten()
+            print(name, 1-Graph.numberOfEdges()/G_nk_dict["original"][0].numberOfEdges(), ranking_precision(baseline, pr, k=100))
+
     # ClusteringF1SimilarityWithGroundTruth_nk(dataset_name, G_nk_dict, osp.join(PROJECT_HOME, "data/com-Amazon/raw/com-amazon.all.dedup.cmty.remap.txt"), logToFile=False)
-    Centrality_nk(dataset_name, "PageRank", G_nk_dict, 100, logToFile=False)
-    # QuadraticFormSimilarity_nk(dataset_name, G_nk_dict, logToFile=True)
-    
-    # # release memory
-    # del G_nk_dict
-
-    # G_gt_dict = readAllGraphsGT(dataset_name, config) 
-    # print(G_gt_dict)
-
-    # ApproximateDiameter_gt(dataset_name, G_gt_dict, logToFile=True)
-    # SPSP_Eccentricity_gt(dataset_name, G_gt_dict, num_nodes=100, logToFile=True)
-    # GlobalClusteringCoefficient_gt(dataset_name, G_gt_dict, logToFile=True)
-    # LocalClusteringCoefficient_gt(dataset_name, G_gt_dict, logToFile=True)
-    # MaxFlow_gt(dataset_name, G_gt_dict, logToFile=True)
-
-
 
     # # # basic
     # degreeDistribution_nk(G_nk_dict)
@@ -313,7 +331,6 @@ def main():
     # QuadraticFormSimilarity_nk(G_nk_dict)
     
 
-
     # G_gt_dict = readAllGraphsGT(dataset_name, config) 
     # print(G_gt_dict)
 
@@ -327,29 +344,10 @@ def main():
     # Centrality_gt("Katz", G_gt_dict, 100)
     # Centrality_gt("Eigenvector", G_gt_dict, 100)
 
-
-
     # NOT USED
     # Centrality("SciPyPageRank", 10)
     # Centrality("SciPyEVZ", 10)
     # Centrality("ApproxElectricalCloseness", 10)
     # min_cut(G_gt)
     # EigenValueSimilarity(G)
-
-
-if __name__ == "__main__":
-    set_start_method("spawn") # must write this line under if __name__ == "__main__":, otherwise it will not work
-    main() 
-
-
-# email
-# Betweenness Centrality            # Time: 931.42 s   Process Time: 57513.74 s
-# EstimateBetweenness Centrality    # Time: 21.69 s    Process Time: 166.39 s
-# Closeness Centrality              # Time: 136.36 s   Process Time: 10752.11 s
-# Approx Closeness Centrality       # Time: 3.46 s     Process Time: 101.55 s
-# Degree Centrality                 # Time: 1.48 s     Process Time: 88.95 s
-# KPath Centrality                  # Time: 464.48 s   Process Time: 731.76 s
-# Katz Centrality                   # Time: 2.36 s     Process Time: 147.04 s
-# Laplacian Centrality              # Time: 3.61 s     Process Time: 219.96 s
-# Eigenvector Centrality            # Time: 11.98 s    Process Time: 915.80 s
-# CoreDecomposition Centrality      # Time: 2.14 s     Process Time: 136.40 s
+"""
