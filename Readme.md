@@ -8,6 +8,12 @@ We may use the terms ``sparsify`` and ``prune`` interchangably in this doc
 ├── analysis # legacy code, do not use
 ├── config.json # config file for sparsification params
 ├── data # datasets raw files and pruned files
+    ├──...
+          ├── # graphs are stored in edgelist format.
+              # uduw.el, duw.el, udw.wel, dw.wel means 
+              # undirected-unweighted, directed-unweighted,
+              # undirected-weighted, directed-weighted 
+              # edgelist files, respectively.
 ├── dataLoader # code for loading datasets
 ├── env.sh # bash file for setting PROJECT_HOME
 ├── experiments # output folder for GNN, auto-created
@@ -40,5 +46,14 @@ We may use the terms ``sparsify`` and ``prune`` interchangably in this doc
 ```
 
 
+
+
+## Env
+
+Conda is recommendated to manage env. To install necessary packages:
+1. Install conda. [link](https://docs.anaconda.com/free/anaconda/install/index.html)
+2. Create an env named ```spar``` by running ```conda env create --file env.yaml```
+3. Activate env by running ```conda activate spar```
+4. Setup env by running ```source env.sh```. (Run step 3 and 4 every time a new terminal is started.)
 
 
