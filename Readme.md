@@ -52,8 +52,18 @@ We may use the terms ``sparsify`` and ``prune`` interchangably in this doc
 
 Conda is recommendated to manage env. To install necessary packages:
 1. Install conda. [link](https://docs.anaconda.com/free/anaconda/install/index.html)
-2. Create an env named ```spar``` by running ```conda env create --file env.yaml```
-3. Activate env by running ```conda activate spar```
-4. Setup env by running ```source env.sh```. (Run step 3 and 4 every time a new terminal is started.)
+2. Create an env named ``spar`` by running ``conda env create --file env.yaml``
+3. Activate env by running ``conda activate spar``
+4. Setup env by running ``source env.sh``. (Run step 3 and 4 every time a new terminal is started.)
+
+
+## System Requirements
+- OS: We run experiments on Ubuntu 20.04 LTS, with python 3.9.12. Other platform may also work, but not extensively tested. 
+- Memory: Depends on the size of graphs.
+- Storage: Graph size varies from ~MB to ~GB. However, to conduct end-to-end experiments for all sparsifiers, the storage required will quickly explode. Each graph will be sparsified using ``12`` sparsifiers, each with ``9`` different prune rates, and some non-deterministic sparsifiers will run ``3-10`` times to show variance. Also a directed/un-directed weighted/enweighted version (totaling ``4``) for each graph may be required for evaluating for some metrics. These factors altogether will leads to a ``100x-1000x`` storage expansion to only the original graph, and can quickly get to ``TB`` level. We recommend starting with small graphs first. 
+
+## Dataset Download
+run ``python utils/data_preparation.py [dataset_name/all]`` to download data. ``all`` will download all data, we recommend start with small datasets. datasets from small to large (by #edge) are *``(smallest) ego-Facebook, ca-HepPh, email-Enron, ca-AstroPh, com-Amazon, com-DBLP, web-NotreDame, ego-Twitter, web-Stanford, wiki-Talk, web-Google, web-BerkStan, human_gene2, ogbn-proteins, Reddit (largest)``*
+
 
 
