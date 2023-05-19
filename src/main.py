@@ -28,10 +28,25 @@ import argparse
 
 
 def graphOverview(G):
+    """Print graph overview, helper function """
     for name, Graph in G.items():
         nk.overview(Graph)
 
 def loadOriginalGraph(dataset_name, config, undirected_only=False):
+    """Load original graph from file
+
+    Args:
+        dataset_name (str): dataset name
+        config (dict): config loaded from json
+        undirected_only (bool, optional): Set to True to override graph directness in config file and load undirected graph only. 
+                                          Defaults to False. This is used for sparsifiers that only support undirected graph.
+
+    Returns:
+        nk graph: original graph
+    """
+    if dataset_name not in config:
+        raise ValueError(f"dataset {dataset_name} not in config, check config.json")
+
     if undirected_only:
         if config[dataset_name]["weighted"]:
             originalGraph = nk.readGraph(f"data/{dataset_name}/raw/udw.wel", nk.Format.EdgeListSpaceZero, directed=False)
@@ -52,103 +67,147 @@ def loadOriginalGraph(dataset_name, config, undirected_only=False):
     return originalGraph
 
 
-def graphSparsifier(dataset_name, targetRatios, config, mode, multi_process=False, num_run=1):
+def graphSparsifier(dataset_names, sparsifiers, targetRatios, config, multi_process=False, max_workers=8, num_run=1):
     """This function generates sparsified graphs with different sparsification algorithms, and save to files
 
     Args:
-        dataset_name (str): dataset name
+        dataset_name (str or list): dataset name
+        sparsifiers (list or str): list of sparsifiers to run
+        targetRatios (list or float): target ratios
+        config (dict): config loaded from json
+        multi_process (bool, optional): Set to True to run sparsifiers in parallel. Defaults to False.
+        max_workers (int, optional): Number of workers for parallelization, only effective when multi_process set to True. Defaults to 8.
+        num_run (int, optional): Number of runs for non-deterministic sparsifiers, deterministic sparsifiers will ignore this. Defaults to 1.
     """
 
-    # print overview only
-    if mode == 0:
-        if config[dataset_name]["directed"] and config[dataset_name]["weighted"]:
-            originalGraph = nk.readGraph(f"data/{dataset_name}/raw/dw.wel", nk.Format.EdgeListSpaceZero, directed=True)
-        elif config[dataset_name]["directed"]:
-            originalGraph = nk.readGraph(f"data/{dataset_name}/raw/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
-        elif config[dataset_name]["weighted"]:
-            originalGraph = nk.readGraph(f"data/{dataset_name}/raw/udw.wel", nk.Format.EdgeListSpaceZero, directed=False)
-        else:
-            originalGraph = nk.readGraph(f"data/{dataset_name}/raw/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
-        nk.overview(originalGraph)
+    if isinstance(dataset_names, str):
+        dataset_names = [dataset_names]
+    if isinstance(sparsifiers, str):
+        sparsifiers = [sparsifiers]
+    if isinstance(targetRatios, float):
+        sparseRatios = [targetRatios]
 
-    # ER min and ER max
-    elif mode == 1:
-        print("ER min:")
-        for i in range(num_run):
-            ERMinSparsifier(dataset_name, config, multi_process=True, postfix_folder=str(i))
-        print("ER max:")
-        for i in range(num_run):
-            ERMaxSparsifier(dataset_name, config, multi_process=True, postfix_folder=str(i))
-
-    # random, local degree, forestfire, local similarity, GSpar, scan, RankDegree
-    elif mode == 2:
+    for dataset_name in dataset_names:
         originalGraph = loadOriginalGraph(dataset_name, config, undirected_only=False)
-        for targetRatio in targetRatios:
-            targetRatio = round(targetRatio, 3)
-            if multi_process:
-                with ProcessPoolExecutor(max_workers=128) as executor:
-                    for i in range(num_run):
-                        executor.submit(RandomEdgeSparsifier, dataset_name, originalGraph, targetRatio, config, str(i))
-                        executor.submit(ForestFireSparsifier, dataset_name, originalGraph, targetRatio, config, str(i))
-                        executor.submit(RankDegreeSparsifier, dataset_name, originalGraph, targetRatio, config, str(i))
-                    # following are same for all runs
-                    executor.submit(LocalDegreeSparsifier, dataset_name, originalGraph, targetRatio, config, "0")
-                    executor.submit(GSpar, dataset_name, originalGraph, targetRatio, config, "0")
-                    executor.submit(LocalSimilaritySparsifier, dataset_name, originalGraph, targetRatio, config, "0")
-                    executor.submit(SCANSparsifier, dataset_name, originalGraph, targetRatio, config, "0")
-            else:
+        originalGraph_ud = loadOriginalGraph(dataset_name, config, undirected_only=True)
+        for sparsifier in sparsifiers:
+            if sparsifier == "ER":
                 for i in range(num_run):
-                    RandomEdgeSparsifier(dataset_name, originalGraph, targetRatio, config, postfix_folder=str(i))
-                    ForestFireSparsifier(dataset_name, originalGraph, targetRatio, config, postfix_folder=str(i))
-                    RankDegreeSparsifier(dataset_name, originalGraph, targetRatio, config, postfix_folder=str(i))
-                # following are same for all runs
-                LocalDegreeSparsifier(dataset_name, originalGraph, targetRatio, config, postfix_folder="0")
-                GSpar(dataset_name, originalGraph, targetRatio, config, postfix_folder="0")
-                LocalSimilaritySparsifier(dataset_name, originalGraph, targetRatio, config, postfix_folder="0")
-                SCANSparsifier(dataset_name, originalGraph, targetRatio, config, postfix_folder="0")
+                    ERMaxSparsifier(dataset_name, config, multi_process=True, postfix_folder=str(i))
 
-    # KNeighbor
-    elif mode == 3:
-        originalGraph = loadOriginalGraph(dataset_name, config, undirected_only=False)
-        for k in config[dataset_name]["kNeighbors"]:
-            for i in range(num_run):
+            elif sparsifier == "Random":
                 if multi_process:
-                    with ProcessPoolExecutor(max_workers=128) as executor:
-                        executor.submit(KNeighborSparsifier, dataset_name, originalGraph, k, config, str(i))
+                    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+                        for targetRatio in targetRatios:
+                            targetRatio = round(targetRatio, 3)
+                            for i in range(num_run):
+                                executor.submit(RandomEdgeSparsifier, dataset_name, originalGraph, targetRatio, config, str(i))
                 else:
-                    KNeighborSparsifier(dataset_name, originalGraph, k, config, postfix_folder=str(i))
+                    for targetRatio in targetRatios:
+                        targetRatio = round(targetRatio, 3)
+                        for i in range(num_run):
+                            RandomEdgeSparsifier(dataset_name, originalGraph, targetRatio, config, postfix_folder=str(i))
 
-    # t-spanner, always use undirected graph, same across multiple runs, so run only once
-    elif mode == 4:
-        with ProcessPoolExecutor(max_workers=128) as executor:
-            futures = []
-            if type(dataset_name) is not list:
-                originalGraph = loadOriginalGraph(dataset_name, config, undirected_only=True)
-                for t in [3, 5, 7]:
-                    futures.append(executor.submit(wrapped_spanner, dataset_name, originalGraph, t, config, "0"))
-            else:
-                for d in dataset_name:
-                    originalGraph = loadOriginalGraph(d, config, undirected_only=True)
+            elif sparsifier == "ForestFire":
+                if multi_process:
+                    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+                        for targetRatio in targetRatios:
+                            targetRatio = round(targetRatio, 3)
+                            for i in range(num_run):
+                                executor.submit(ForestFireSparsifier, dataset_name, originalGraph, targetRatio, config, str(i))
+                else:
+                    for targetRatio in targetRatios:
+                        targetRatio = round(targetRatio, 3)
+                        for i in range(num_run):
+                            ForestFireSparsifier(dataset_name, originalGraph, targetRatio, config, postfix_folder=str(i))
+
+            elif sparsifier == "RankDegree":
+                if multi_process:
+                    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+                        for targetRatio in targetRatios:
+                            targetRatio = round(targetRatio, 3)
+                            for i in range(num_run):
+                                executor.submit(RankDegreeSparsifier, dataset_name, originalGraph, targetRatio, config, str(i))
+                else:
+                    for targetRatio in targetRatios:
+                        targetRatio = round(targetRatio, 3)
+                        for i in range(num_run):
+                            RankDegreeSparsifier(dataset_name, originalGraph, targetRatio, config, postfix_folder=str(i))
+
+            elif sparsifier == "LocalDegree":
+                if multi_process:
+                    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+                        for targetRatio in targetRatios:
+                            targetRatio = round(targetRatio, 3)
+                            executor.submit(LocalDegreeSparsifier, dataset_name, originalGraph, targetRatio, config, "0")
+                else:
+                    for targetRatio in targetRatios:
+                        targetRatio = round(targetRatio, 3)
+                        LocalDegreeSparsifier(dataset_name, originalGraph, targetRatio, config, postfix_folder="0")
+
+            elif sparsifier == "GSpar":
+                if multi_process:
+                    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+                        for targetRatio in targetRatios:
+                            targetRatio = round(targetRatio, 3)
+                            executor.submit(GSpar, dataset_name, originalGraph, targetRatio, config, "0")
+                else:
+                    for targetRatio in targetRatios:
+                        targetRatio = round(targetRatio, 3)
+                        GSpar(dataset_name, originalGraph, targetRatio, config, postfix_folder="0")
+
+            elif sparsifier == "LocalSimilarity":
+                if multi_process:
+                    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+                        for targetRatio in targetRatios:
+                            targetRatio = round(targetRatio, 3)
+                            executor.submit(LocalSimilaritySparsifier, dataset_name, originalGraph, targetRatio, config, "0")
+                else:
+                    for targetRatio in targetRatios:
+                        targetRatio = round(targetRatio, 3)
+                        LocalSimilaritySparsifier(dataset_name, originalGraph, targetRatio, config, postfix_folder="0")
+
+            elif sparsifier == "SCAN":
+                if multi_process:
+                    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+                        for targetRatio in targetRatios:
+                            targetRatio = round(targetRatio, 3)
+                            executor.submit(SCANSparsifier, dataset_name, originalGraph, targetRatio, config, "0")
+                else:
+                    for targetRatio in targetRatios:
+                        targetRatio = round(targetRatio, 3)
+                        SCANSparsifier(dataset_name, originalGraph, targetRatio, config, postfix_folder="0")
+
+            elif sparsifier == "KNeighbor":
+                if multi_process:
+                    for k in config[dataset_name]["kNeighbors"]:
+                        for i in range(num_run):
+                            with ProcessPoolExecutor(max_workers=max_workers) as executor:
+                                executor.submit(KNeighborSparsifier, dataset_name, originalGraph, k, config, str(i))
+                else:
+                    for k in config[dataset_name]["kNeighbors"]:
+                        for i in range(num_run):
+                            KNeighborSparsifier(dataset_name, originalGraph, k, config, postfix_folder=str(i))
+
+            elif sparsifier == "tSpanner":
+                with ProcessPoolExecutor(max_workers=max_workers) as executor:
                     for t in [3, 5, 7]:
-                        futures.append(executor.submit(wrapped_spanner, d, originalGraph, t, config, "0"))
-            for future in futures:
-                future.result()
+                        executor.submit(executor.submit(wrapped_spanner, dataset_name, originalGraph_ud, t, config, "0"))
 
-    # spanning, always use undirected graph
-    elif mode == 5: 
-        originalGraph = loadOriginalGraph(dataset_name, config, undirected_only=True)
-        # same across multiple runs, so run only once
-        SpanningForestSparsifier(dataset_name, originalGraph, config, postfix_folder="0")
+            elif sparsifier == "SpanningForest":
+                SpanningForestSparsifier(dataset_name, originalGraph_ud, config, postfix_folder="0")
 
-    # LSpar
-    elif mode == 6:
-        originalGraph = loadOriginalGraph(dataset_name, config, undirected_only=False)
-        for c in config[dataset_name]["LSpar_c"]: # always the same across runs
-            if multi_process:
-                with ProcessPoolExecutor(max_workers=128) as executor:
-                    executor.submit(LSpar, dataset_name, originalGraph, config, c, "0")
+            elif sparsifier == "LSpar":
+                if multi_process:
+                    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+                        for c in config[dataset_name]["LSpar_c"]:
+                            executor.submit(LSpar, dataset_name, originalGraph, config, c, "0")
+                else:
+                    for c in config[dataset_name]["LSpar_c"]:
+                        LSpar(dataset_name, originalGraph, config, c, postfix_folder="0")
+            
             else:
-                LSpar(dataset_name, originalGraph, config, c, postfix_folder="0")
+                raise ValueError("Unknown sparsifier: {}".format(sparsifier))
 
 
 def main():
@@ -180,69 +239,16 @@ def main():
         dataset_names = [args.dataset_name]
 
 
-    # # mode 0: print overview
-    # for dataset_name in dataset_names:
-    #     print(dataset_name)
-    #     graphSparsifier(dataset_name=dataset_name, targetRatios=[], config=config, mode=0)
-    #     print("-----------------------")
-
     if args.mode == "sparsify" or args.mode == "all":
-        # mode 1: er min and er max
         for dataset_name in dataset_names:
-            # print to terminal
-            sys.stdout = sys.__stdout__
-            print("\n\n----------------------------------")
-            print(dataset_name)
-            # redirect print to file, append mode
-            # sys.stdout = open(f"output/{dataset_name}.txt", "a")
-            graphSparsifier(dataset_name=dataset_name, targetRatios=[], config=config, mode=1)
-
-        # mode 2: random, localDegree, forestfire, Gspar, localsim, SCAN, RankDegree
-        for dataset_name in dataset_names:
-            # print to terminal
-            sys.stdout = sys.__stdout__
-            print("\n\n----------------------------------")
-            print(dataset_name)
-            # redirect print to file, append mode
-            # sys.stdout = open(f"output/{dataset_name}.txt", "a")
-            prune_rate = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.96, 0.97, 0.98, 0.99] 
-            graphSparsifier(dataset_name=dataset_name, targetRatios=[1-x for x in prune_rate], config=config, mode=2, multi_process=True)
-
-        # mode 3: KNeighbor
-        for dataset_name in dataset_names:
-            # print to terminal
-            sys.stdout = sys.__stdout__
-            print("\n\n----------------------------------")
-            print(dataset_name)
-            # redirect print to file, append mode
-            # sys.stdout = open(f"output/{dataset_name}.txt", "a")
-            print()
-            graphSparsifier(dataset_name=dataset_name, targetRatios=[], config=config, mode=3)
-
-        # mode 4: t-spanner
-        graphSparsifier(dataset_name=dataset_names, targetRatios=[], config=config, mode=4)
-
-        # mode 5: spanningForest
-        for dataset_name in dataset_names:
-            # print to terminal
-            sys.stdout = sys.__stdout__
-            print("\n\n----------------------------------")
-            print(dataset_name)
-            # redirect print to file, append mode
-            # sys.stdout = open(f"output/{dataset_name}.txt", "a")
-            graphSparsifier(dataset_name=dataset_name, targetRatios=[], config=config, mode=5)
-
-        # mode 6: LSpar
-        for dataset_name in dataset_names:
-            # print to terminal
-            sys.stdout = sys.__stdout__
-            print("\n\n----------------------------------")
-            print(dataset_name)
-            # redirect print to file, append mode
-            # sys.stdout = open(f"output/{dataset_name}.txt", "a")
-            print()
-            graphSparsifier(dataset_name=dataset_name, targetRatios=[], config=config, mode=6)
-
+            graphSparsifier(dataset_name=dataset_name, 
+                            sparsifiers=["ER", "Random", "ForestFire", "RankDegree", 
+                                         "LocalDegree", "GSpar", "LocalSimilarity", 
+                                         "SCAN", "KNeighbor", "tSpanner", 
+                                         "SpanningForest", "LSpar"], 
+                            targetRatios=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9], 
+                            config=config
+                            )
 
     if args.mode == "eval" or args.mode == "all":
         for dataset_name in dataset_names:
