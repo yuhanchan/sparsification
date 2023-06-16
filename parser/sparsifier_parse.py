@@ -127,7 +127,12 @@ def parse(dataset_name):
     fout.close()
 
 if __name__ == "__main__":
-    for dataset_name in ["ego-Facebook",
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dataset_name', required=True)
+    args = parser.parse_args()
+
+    if args.dataset_name == "all":
+        dataset_names = ["ego-Facebook",
                         "ego-Twitter", 
                         "soc-Pokec", 
                         "human_gene2", 
@@ -147,5 +152,9 @@ if __name__ == "__main__":
                         "roadNet-CA", 
                         "Reddit", 
                         "ogbn-products", 
-                        "ogbn-proteins"]:
+                        "ogbn-proteins"]
+    else:
+        dataset_names = [args.dataset_name]
+
+    for dataset_name in dataset_names:
         parse(dataset_name)

@@ -1,8 +1,25 @@
 #!/bin/bash
 
-filein="data/roadNet-CA/raw/uduw.el"
-directed=0
-weighted=0
+# filein="data/roadNet-CA/raw/uduw.el"
+# directed=0
+# weighted=0
+filein=$1
+directed=$2
+weighted=$3
+
+# chekc 3 inputs are given
+if [[ $# -ne 3 ]]; then
+    echo "Usage: $0 <filein> <directed> <weighted>"
+    echo "directed: 0 for undirected, 1 for directed"
+    echo "weighted: 0 for unweighted, 1 for weighted"
+    exit 1
+fi
+
+# check if file exists
+if [[ ! -f $filein ]]; then
+    echo "File $filein does not exist!"
+    exit 1
+fi
 
 if [[ $directed -eq 1 ]]; then
     if [[ $weighted -eq 1 ]]; then # directed and weighted

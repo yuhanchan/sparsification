@@ -62,8 +62,42 @@ Conda is recommendated to manage env. To install necessary packages:
 - Memory: Depends on the size of graphs.
 - Storage: Graph size varies from ~MB to ~GB. However, to conduct end-to-end experiments for all sparsifiers, the storage required will quickly explode. Each graph will be sparsified using ``12`` sparsifiers, each with ``9`` different prune rates, and some non-deterministic sparsifiers will run ``3-10`` times to show variance. Also a directed/un-directed weighted/enweighted version (totaling ``4``) for each graph may be required for evaluating for some metrics. These factors altogether will leads to a ``100x-1000x`` storage expansion to only the original graph, and can quickly get to ``TB`` level. We recommend starting with small graphs first. 
 
+
+## Compile util code
+```bash
+cd $PROJECT_HOME/utils
+make
+cd $PROJECT_HOME
+```
+
+
 ## Dataset Download
 run ``python utils/data_preparation.py [dataset_name/all]`` to download data. ``all`` will download all data, we recommend start with small datasets. datasets from small to large (by #edge) are *``(smallest) ego-Facebook, ca-HepPh, email-Enron, ca-AstroPh, com-Amazon, com-DBLP, web-NotreDame, ego-Twitter, web-Stanford, wiki-Talk, web-Google, web-BerkStan, human_gene2, ogbn-proteins, Reddit (largest)``*
 
 
+## Run
+Run ``python $PROJECT_HOME/src/main.py --dataset_name [dataset_name/all] --mode [sparsify/eval/all]``
 
+``--dataset_name`` indicates the dataset to use, use name instead of the dataset path, ``all`` will run for all datasets. It is recommended not to use ``all`` unless you know what you are doing because it can take a long time and large file space.
+
+``--mode`` indicates what to run. ``sparsify`` will run all sparsifiers on the given ``dataset_name``. ``eval`` assumed the sparsified files already exists, and evaluate the performance of the sparsified graphs on all metrics, run ``eval`` only if you have run ``sparsify`` on the given dataset. ``all`` will run ``sparsify`` and ``eval`` in tandem.
+
+To run in a finer granularity, e.g. if want to run only a subset of sparsifiers and/or a subset of evaluation metrics, you need to modify the ``$PROJECT_HOME/src/main.py`` file, simply comment out lines for specific sparsifers and evaluation metrics should do.
+
+
+## Output
+The log for running ``sparsify`` will be in ``$PROJECT_HOME/output_sparsifier_raw/[dataset_name].txt``, and the log for running ``eval`` will be in ``$PROJECT_HOME/output_metric_raw/[dataset_name]/[metric]/log``
+
+## Output Parse
+Two scripts are provided for raw output parse, ``$PROJECT_HOME/parser/sparsifier_parse.py``, and ``$PROJECT_HOME/parser/metric_parse.py``.
+
+Run ``python $PROJECT_HOME/parser/{sparsifier_parse.py, metric_parse.py} --dataset_name [dataset_name]/all``
+
+As always, ``all`` will run for all datasets.
+
+## Plot
+Two script are provided for plotting parsed data, ``$PROJECT_HOME/plot/plot.py`` and ``$PROJECT_HOME/plot/paper_plot.py``
+
+``python $PROJECT_HOME/plot/plot.py --dataset_name [dataset_name]/all --metric [metric]/all`` will plot the specified dataset for the specified metric for all sparsifiers and prune rates. 
+
+``python $PROJECT_HOME/plot/paper_plot.py`` will reproduce the figures used in the paper. 
