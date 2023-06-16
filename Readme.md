@@ -71,12 +71,18 @@ cd $PROJECT_HOME
 ```
 
 
-## Dataset Download
-run ``python utils/data_preparation.py [dataset_name/all]`` to download data. ``all`` will download all data, we recommend start with small datasets. datasets from small to large (by #edge) are *``(smallest) ego-Facebook, ca-HepPh, email-Enron, ca-AstroPh, com-Amazon, com-DBLP, web-NotreDame, ego-Twitter, web-Stanford, wiki-Talk, web-Google, web-BerkStan, human_gene2, ogbn-proteins, Reddit (largest)``*
+## Dataset Download and Pre-processing
+```bash
+python utils/data_preparation.py [dataset_name/all]
+```
+
+This will download data and do necessary data pre-processin. ``all`` will download all data, we recommend start with small datasets. datasets from small to large (by #edge) are *``(smallest) ego-Facebook, ca-HepPh, email-Enron, ca-AstroPh, com-Amazon, com-DBLP, web-NotreDame, ego-Twitter, web-Stanford, wiki-Talk, web-Google, web-BerkStan, human_gene2, ogbn-proteins, Reddit (largest)``*
 
 
 ## Run
-Run ``python $PROJECT_HOME/src/main.py --dataset_name [dataset_name/all] --mode [sparsify/eval/all]``
+```bash
+python $PROJECT_HOME/src/main.py --dataset_name [dataset_name/all] --mode [sparsify/eval/all]
+```
 
 ``--dataset_name`` indicates the dataset to use, use name instead of the dataset path, ``all`` will run for all datasets. It is recommended not to use ``all`` unless you know what you are doing because it can take a long time and large file space.
 
@@ -91,13 +97,21 @@ The log for running ``sparsify`` will be in ``$PROJECT_HOME/output_sparsifier_ra
 ## Output Parse
 Two scripts are provided for raw output parse, ``$PROJECT_HOME/parser/sparsifier_parse.py``, and ``$PROJECT_HOME/parser/metric_parse.py``.
 
-Run ``python $PROJECT_HOME/parser/{sparsifier_parse.py, metric_parse.py} --dataset_name [dataset_name]/all``
+```bash
+python $PROJECT_HOME/parser/{sparsifier_parse.py, metric_parse.py} --dataset_name [dataset_name]/all
+```
 
 As always, ``all`` will run for all datasets.
 
 ## Plot
 Two script are provided for plotting parsed data, ``$PROJECT_HOME/plot/plot.py`` and ``$PROJECT_HOME/plot/paper_plot.py``
 
-``python $PROJECT_HOME/plot/plot.py --dataset_name [dataset_name]/all --metric [metric]/all`` will plot the specified dataset for the specified metric for all sparsifiers and prune rates. 
+```bash
+python $PROJECT_HOME/plot/plot.py --dataset_name [dataset_name]/all --metric [metric]/all
+```
+ will plot the specified dataset for the specified metric for all sparsifiers and prune rates. 
 
-``python $PROJECT_HOME/plot/paper_plot.py`` will reproduce the figures used in the paper. 
+```bash
+python $PROJECT_HOME/plot/paper_plot.py
+``` 
+will reproduce the figures used in the paper.
