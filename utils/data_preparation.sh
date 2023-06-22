@@ -35,21 +35,21 @@ if [[ $directed -eq 1 ]]; then
         # sort by src then dst
         filein=$fileout
         fileout=$(echo ${filein} | sed 's/[^/]*$/dw.wel.sorted/g')
-        ./utils/bin/utils -i $filein -o $fileout -m 6
+        $PROJECT_HOME/utils/bin/utils -i $filein -o $fileout -m 6
 
         # remove isolated nodes, also to 0-based
         filein=$fileout
         fileout=$(echo ${filein} | sed 's/[^/]*$/dw.wel/g')
-        ./utils/bin/utils -i $filein -o $fileout -m 5
+        $PROJECT_HOME/utils/bin/utils -i $filein -o $fileout -m 5
 
         # symmetrize
         fileout=$(echo ${filein} | sed 's/[^/]*$/dw.sym.wel/g')
-        ./utils/bin/utils -i $filein -o $fileout -m 11
+        $PROJECT_HOME/utils/bin/utils -i $filein -o $fileout -m 11
 
         # dw2udw
         filein=$fileout
         fileout=$(echo ${filein} | sed 's/[^/]*$/udw.wel/g')
-        ./utils/bin/utils -i $filein -o $fileout -m 3
+        $PROJECT_HOME/utils/bin/utils -i $filein -o $fileout -m 3
 
     else # directed and unweighted
         # remove lines start with #
@@ -64,22 +64,22 @@ if [[ $directed -eq 1 ]]; then
         # sort by src then dst
         filein=$fileout
         fileout=$(echo ${filein} | sed 's/[^/]*$/duw.el.sorted/g')
-        ./utils/bin/utils -i $filein -o $fileout -m 6
+        $PROJECT_HOME/utils/bin/utils -i $filein -o $fileout -m 6
 
         # remove isolated nodes, also to 0-based
         filein=$fileout
         fileout=$(echo ${filein} | sed 's/[^/]*$/duw.el/g')
-        ./utils/bin/utils -i $filein -o $fileout -m 5
+        $PROJECT_HOME/utils/bin/utils -i $filein -o $fileout -m 5
 
         # symmetrize
         filein=$fileout
         fileout=$(echo ${filein} | sed 's/[^/]*$/duw.sym.el/g')
-        ./utils/bin/utils -i $filein -o $fileout -m 11
+        $PROJECT_HOME/utils/bin/utils -i $filein -o $fileout -m 11
 
         # duw2uduw
         filein=$fileout
         fileout=$(echo ${filein} | sed 's/[^/]*$/uduw.el/g')
-        ./utils/bin/utils -i $filein -o $fileout -m 1
+        $PROJECT_HOME/utils/bin/utils -i $filein -o $fileout -m 1
     fi
 else
     if [[ $weighted -eq 1 ]]; then # undirected and weighted
@@ -95,17 +95,17 @@ else
         # sort by src then dst
         filein=$fileout
         fileout=$(echo ${filein} | sed 's/[^/]*$/udw.wel.sorted/g')
-        ./utils/bin/utils -i $filein -o $fileout -m 6
+        $PROJECT_HOME/utils/bin/utils -i $filein -o $fileout -m 6
 
         # remove isolated nodes, also to 0-based
         filein=$fileout
         fileout=$(echo ${filein} | sed 's/[^/]*$/udw.wel/g')
-        ./utils/bin/utils -i $filein -o $fileout -m 5
+        $PROJECT_HOME/utils/bin/utils -i $filein -o $fileout -m 5
 
         # udw2dw
         filein=$fileout
         fileout=$(echo ${filein} | sed 's/[^/]*$/dw.wel/g')
-        ./utils/bin/utils -i $filein -o $fileout -m 4
+        $PROJECT_HOME/utils/bin/utils -i $filein -o $fileout -m 4
     else # undirected and unweighted
         # remove lines start with #
         fileout=${filein}_uncomment
@@ -119,17 +119,17 @@ else
         # sort by src then dst
         filein=$fileout
         fileout=$(echo ${filein} | sed 's/[^/]*$/uduw.el.sorted/g')
-        ./utils/bin/utils -i $filein -o $fileout -m 6
+        $PROJECT_HOME/utils/bin/utils -i $filein -o $fileout -m 6
 
         # remove isolated nodes, also to 0-based
         filein=$fileout
         fileout=$(echo ${filein} | sed 's/[^/]*$/uduw.el/g')
-        ./utils/bin/utils -i $filein -o $fileout -m 5
+        $PROJECT_HOME/utils/bin/utils -i $filein -o $fileout -m 5
 
         # uduw2duw
         filein=$fileout
         fileout=$(echo ${filein} | sed 's/[^/]*$/duw.el/g')
-        ./utils/bin/utils -i $filein -o $fileout -m 2
+        $PROJECT_HOME/utils/bin/utils -i $filein -o $fileout -m 2
     fi
 fi
 
