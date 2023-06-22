@@ -51,10 +51,12 @@ We may use the terms ``sparsify`` and ``prune`` interchangably in this doc
 ## Env
 
 Conda is recommendated to manage env. To install necessary packages:
-1. Install conda. [link](https://docs.anaconda.com/free/anaconda/install/index.html)
+1. Install conda following [link](https://docs.anaconda.com/free/anaconda/install/index.html).
 2. Create an env named ``spar`` by running ``conda env create --file env.yaml``
 3. Activate env by running ``conda activate spar``
-4. Setup env by running ``source env.sh``. (Run step 3 and 4 every time a new terminal is started.)
+4. Install ``torch`` following [link](https://pytorch.org/get-started/locally/).
+5. Install ``PyG`` following [link](https://pytorch-geometric.readthedocs.io/en/latest/install/installation.html).
+6. Setup env by running ``source env.sh``. (Run step 3 and 6 every time a new terminal is started.)
 
 
 ## System Requirements
@@ -66,6 +68,7 @@ Conda is recommendated to manage env. To install necessary packages:
 ## Compile util code
 ```bash
 cd $PROJECT_HOME/utils
+mkdir bin
 make
 cd $PROJECT_HOME
 ```
@@ -73,7 +76,7 @@ cd $PROJECT_HOME
 
 ## Dataset Download and Pre-processing
 ```bash
-python utils/data_preparation.py [dataset_name/all]
+python $PROJECT_HOME/utils/data_preparation.py --dataset_name [dataset_name/all]
 ```
 
 This will download data and do necessary data pre-processin. ``all`` will download all data, we recommend start with small datasets. datasets from small to large (by #edge) are *``(smallest) ego-Facebook, ca-HepPh, email-Enron, ca-AstroPh, com-Amazon, com-DBLP, web-NotreDame, ego-Twitter, web-Stanford, wiki-Talk, web-Google, web-BerkStan, human_gene2, ogbn-proteins, Reddit (largest)``*
