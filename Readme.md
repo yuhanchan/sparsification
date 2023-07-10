@@ -54,9 +54,12 @@ Conda is recommendated to manage env. To install necessary packages:
 1. Install conda following [link](https://docs.anaconda.com/free/anaconda/install/index.html).
 2. Create an env named ``spar`` by running ``conda env create --file env.yaml``
 3. Activate env by running ``conda activate spar``
-4. Install ``torch`` following [link](https://pytorch.org/get-started/locally/).
-5. Install ``PyG`` following [link](https://pytorch-geometric.readthedocs.io/en/latest/install/installation.html).
-6. Setup env by running ``source env.sh``. (Run step 3 and 6 every time a new terminal is started.)
+4. Install extra packages by running ``pip install networkit setuptools==52.0.0``. Latest version of setuptool cause weird errors.
+5. Install the current folder by running ``pip install -e .`` (make sure you type the dot (``.``) in the command)
+6. Install ``torch`` following [link](https://pytorch.org/get-started/locally/).
+7. Install ``PyG`` following [link](https://pytorch-geometric.readthedocs.io/en/latest/install/installation.html).
+8. Install additional packages by running ``pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-${TORCH}+${CUDA}.html``, where ``${TORCH}`` and ``${CUDA}`` is the torch and cuda version you use, follow [link](https://pytorch-geometric.readthedocs.io/en/latest/install/installation.html) for more details.
+9. Setup env by running ``source env.sh``. (Run step 3 and 9 every time a new terminal is started.)
 
 
 ## System Requirements
@@ -92,6 +95,8 @@ python $PROJECT_HOME/src/main.py --dataset_name [dataset_name/all] --mode [spars
 ``--mode`` indicates what to run. ``sparsify`` will run all sparsifiers on the given ``dataset_name``. ``eval`` assumed the sparsified files already exists, and evaluate the performance of the sparsified graphs on all metrics, run ``eval`` only if you have run ``sparsify`` on the given dataset. ``all`` will run ``sparsify`` and ``eval`` in tandem.
 
 To run in a finer granularity, e.g. if want to run only a subset of sparsifiers and/or a subset of evaluation metrics, you need to modify the ``$PROJECT_HOME/src/main.py`` file, simply comment out lines for specific sparsifers and evaluation metrics should do.
+
+By default, profiling for sparsifiers are not enabled, to enable profiling, go to ``$PROJECT_HOME/sparsifiers.py`` and enable @profile decorator before each sparsifier function. In the meantime, make sure ``graphSparsifier()`` in ``main.py`` is called with ``multi_process=False``, or it will fail.
 
 
 ## Output
