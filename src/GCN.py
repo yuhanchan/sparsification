@@ -72,11 +72,11 @@ elif args.prune_algo == "empty":
 
 # train on pruned graph, test on full grpah
 else:
-    prune_rates = os.listdir(osp.join(PROJECT_HOME, f"data/{args.dataset_name}/pruned/{args.prune_algo}/"))
+    prune_rates = os.listdir(f"{PROJECT_HOME}/data/{args.dataset_name}/pruned/{args.prune_algo}/")
     print(f"prune rates: {prune_rates}")
     for i, prune_rate in enumerate(prune_rates):
         print(f"dataset: {args.dataset_name}, prune algo: {args.prune_algo}, prune rate: {prune_rate}")
-        if not osp.exists(osp.join(PROJECT_HOME, f"data/{args.dataset_name}/pruned/{args.prune_algo}/{prune_rate}/0/duw.el")):
+        if not osp.exists(f"{PROJECT_HOME}/data/{args.dataset_name}/pruned/{args.prune_algo}/{prune_rate}/0/duw.el"):
             continue
 
         # load pruned data
@@ -84,11 +84,8 @@ else:
         pruned_el = torch.tensor(
             np.transpose(
                 np.loadtxt(
-                    osp.join(
-                        PROJECT_HOME,
-                        f"data/{args.dataset_name}/pruned/{args.prune_algo}/{prune_rate}/0/duw.el",
-                        # f"data/{args.dataset_name}/pruned/{args.prune_algo}/{prune_rate}/0/dw.wel",
-                    ),
+                    f"{PROJECT_HOME}/data/{args.dataset_name}/pruned/{args.prune_algo}/{prune_rate}/0/duw.el",
+                    # f"{PROJECT_HOME}/data/{args.dataset_name}/pruned/{args.prune_algo}/{prune_rate}/0/dw.wel",
                     dtype=float,
                 )
             )

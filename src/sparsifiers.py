@@ -22,21 +22,27 @@ import json
 import sparsifier
 from memory_profiler import memory_usage
 
+PROJECT_HOME = os.getenv(key="PROJECT_HOME")
+if PROJECT_HOME is None:
+    print("PROJECT_HOME is not set, ") 
+    print("please source env.sh at the top level of the project")
+    exit(1)
+
 def getOutputFile(dataset_name, config, sparsifier_name, prune_rate, postfix_folder, undirected_only=False):
     if undirected_only:
         if config[dataset_name]["weighted"]:
-            output_file = f"data/{dataset_name}/pruned/{sparsifier_name}/{prune_rate}/{postfix_folder}/udw.wel"
+            output_file = f"{PROJECT_HOME}/data/{dataset_name}/pruned/{sparsifier_name}/{prune_rate}/{postfix_folder}/udw.wel"
         else:
-            output_file = f"data/{dataset_name}/pruned/{sparsifier_name}/{prune_rate}/{postfix_folder}/uduw.el"
+            output_file = f"{PROJECT_HOME}/data/{dataset_name}/pruned/{sparsifier_name}/{prune_rate}/{postfix_folder}/uduw.el"
     else:
         if config[dataset_name]["directed"] and config[dataset_name]["weighted"]:
-            output_file = f"data/{dataset_name}/pruned/{sparsifier_name}/{prune_rate}/{postfix_folder}/dw.wel"
+            output_file = f"{PROJECT_HOME}/data/{dataset_name}/pruned/{sparsifier_name}/{prune_rate}/{postfix_folder}/dw.wel"
         elif config[dataset_name]["directed"]: 
-            output_file = f"data/{dataset_name}/pruned/{sparsifier_name}/{prune_rate}/{postfix_folder}/duw.el"
+            output_file = f"{PROJECT_HOME}/data/{dataset_name}/pruned/{sparsifier_name}/{prune_rate}/{postfix_folder}/duw.el"
         elif config[dataset_name]["weighted"]:
-            output_file = f"data/{dataset_name}/pruned/{sparsifier_name}/{prune_rate}/{postfix_folder}/udw.wel"
+            output_file = f"{PROJECT_HOME}/data/{dataset_name}/pruned/{sparsifier_name}/{prune_rate}/{postfix_folder}/udw.wel"
         else:
-            output_file = f"data/{dataset_name}/pruned/{sparsifier_name}/{prune_rate}/{postfix_folder}/uduw.el"
+            output_file = f"{PROJECT_HOME}/data/{dataset_name}/pruned/{sparsifier_name}/{prune_rate}/{postfix_folder}/uduw.el"
     return output_file
 
 
@@ -235,15 +241,15 @@ def SCANSparsifier(dataset_name, G, targetRatio, config, postfix_folder="0", pri
     nk.writeGraph(scanGraph, output_file, nk.Format.EdgeListSpaceZero)
 
 
-# @profile
-def SimmelianSparsifier(dataset_name, G, targetRatio):
-    simmelianSparsifier = nk.sparsification.SimmelianSparsifierNonParametric()
-    simmelieanGraph = simmelianSparsifier.getSparsifiedGraphOfSize(G, targetRatio)
-    print(f"\nsimmelian {targetRatio}:")
-    nk.overview(simmelieanGraph)
-    output_file = f"data/{dataset_name}/pruned/simmelian/{round(1-targetRatio, 3)}/uduw.el"
-    os.makedirs(osp.dirname(output_file), exist_ok=True)
-    nk.writeGraph(simmelieanGraph, output_file, nk.Format.EdgeListSpaceZero)
+# # @profile
+# def SimmelianSparsifier(dataset_name, G, targetRatio):
+#     simmelianSparsifier = nk.sparsification.SimmelianSparsifierNonParametric()
+#     simmelieanGraph = simmelianSparsifier.getSparsifiedGraphOfSize(G, targetRatio)
+#     print(f"\nsimmelian {targetRatio}:")
+#     nk.overview(simmelieanGraph)
+#     output_file = f"{PROJECT_HOME}/data/{dataset_name}/pruned/simmelian/{round(1-targetRatio, 3)}/uduw.el"
+#     os.makedirs(osp.dirname(output_file), exist_ok=True)
+#     nk.writeGraph(simmelieanGraph, output_file, nk.Format.EdgeListSpaceZero)
 
 
 # @profile
@@ -324,14 +330,14 @@ def GreedySpannerSparsifier(dataset_name, G, t, config, postfix_folder="0", prin
         
 
 # @profile
-# def Spanner(dataset_name, G, k, config, postfix_folder="0", print_info=False):
-#     spanner_k = GreedySpanner(G, k)
-#     output_file = getOutputFile(dataset_name, config, f"Spanner-{k}", "", postfix_folder, undirected_only=True)
-#     print(f"\nspanner-{k}:")
-#     if print_info:
-#         nk.overview(spanner_k)
-#     os.makedirs(osp.dirname(output_file), exist_ok=True)
-#     nk.writeGraph(spanner_k, output_file, nk.Format.EdgeListSpaceZero)
+def Spanner(dataset_name, G, k, config, postfix_folder="0", print_info=False):
+    spanner_k = GreedySpanner(G, k)
+    output_file = getOutputFile(dataset_name, config, f"Spanner-{k}", "", postfix_folder, undirected_only=True)
+    print(f"\nspanner-{k}:")
+    if print_info:
+        nk.overview(spanner_k)
+    os.makedirs(osp.dirname(output_file), exist_ok=True)
+    nk.writeGraph(spanner_k, output_file, nk.Format.EdgeListSpaceZero)
 
 
 def wrapped_spanner(*args, **kwargs):
@@ -345,16 +351,16 @@ def wrapped_spanner(*args, **kwargs):
 # @profile
 def ERMinSparsifier(dataset_name, config, multi_process=False, postfix_folder="0"):
     if config[dataset_name]["directed"] and config[dataset_name]["weighted"]:
-        file_path = f"data/{dataset_name}/raw/dw.sym.wel"
+        file_path = f"{PROJECT_HOME}/data/{dataset_name}/raw/dw.sym.wel"
     elif config[dataset_name]["directed"]:
-        file_path = f"data/{dataset_name}/raw/duw.sym.el"
+        file_path = f"{PROJECT_HOME}/data/{dataset_name}/raw/duw.sym.el"
     elif config[dataset_name]["weighted"]:
-        file_path = f"data/{dataset_name}/raw/dw.wel" # always use directed graph
+        file_path = f"{PROJECT_HOME}/data/{dataset_name}/raw/dw.wel" # always use directed graph
     else:
-        file_path = f"data/{dataset_name}/raw/duw.el" # always use directed graph
+        file_path = f"{PROJECT_HOME}/data/{dataset_name}/raw/duw.el" # always use directed graph
 
     # if er files are not pre-computed, compute first
-    if not osp.exists(f"data/{dataset_name}/raw/stage3.npz"):
+    if not osp.exists(f"{PROJECT_HOME}/data/{dataset_name}/raw/stage3.npz"):
         epsilon, val = list(config[dataset_name]["ermin_epsilon_to_prune_rate_map"].items())[0]
         sparsifier.python_er_sparsify(
             osp.join(
@@ -428,17 +434,17 @@ def ERMinSparsifier(dataset_name, config, multi_process=False, postfix_folder="0
 # @profile
 def ERMaxSparsifier(dataset_name, config, multi_process=False, postfix_folder="0"):
     if config[dataset_name]["directed"] and config[dataset_name]["weighted"]:
-        file_path = f"data/{dataset_name}/raw/dw.sym.wel"
+        file_path = f"{PROJECT_HOME}/data/{dataset_name}/raw/dw.sym.wel"
     elif config[dataset_name]["directed"]:
-        file_path = f"data/{dataset_name}/raw/duw.sym.el"
-        # file_path = f"data/{dataset_name}/raw/duw.el"
+        file_path = f"{PROJECT_HOME}/data/{dataset_name}/raw/duw.sym.el"
+        # file_path = f"{PROJECT_HOME}/data/{dataset_name}/raw/duw.el"
     elif config[dataset_name]["weighted"]:
-        file_path = f"data/{dataset_name}/raw/dw.wel" # always use directed graph
+        file_path = f"{PROJECT_HOME}/data/{dataset_name}/raw/dw.wel" # always use directed graph
     else:
-        file_path = f"data/{dataset_name}/raw/duw.el" # always use directed graph
+        file_path = f"{PROJECT_HOME}/data/{dataset_name}/raw/duw.el" # always use directed graph
 
     # if er files are not pre-computed, compute first
-    if not osp.exists(f"data/{dataset_name}/raw/stage3.npz"):
+    if not osp.exists(f"{PROJECT_HOME}/data/{dataset_name}/raw/stage3.npz"):
         epsilon, val = list(config[dataset_name]["ermax_epsilon_to_prune_rate_map"].items())[0]
         sparsifier.python_er_sparsify(
             osp.join(

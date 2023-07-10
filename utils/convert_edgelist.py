@@ -31,7 +31,7 @@ def call_proc(cmd):
 pool = ThreadPool(args.num_thread)
 results = []
 
-config = json.load(open("config.json", 'r'))
+config = json.load(open(f"{PROJECT_HOME}/config.json", 'r'))
 
 # Define the names of the datasets to be used.
 if args.dataset_name == "all":
@@ -68,70 +68,70 @@ def convert(src, dst, mode):
 
 for dataset_name in dataset_names:
     for prune_algo in ["LocalDegree", "LSpar", "GSpar", "LocalSimilarity", "SCAN"]:
-        if not osp.exists(f"data/{dataset_name}/pruned/{prune_algo}"):
+        if not osp.exists(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}"):
             continue
-        for prune_rate in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}"):
+        for prune_rate in os.listdir(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}"):
             if config[dataset_name]["directed"] and config[dataset_name]["weighted"]:
-                convert(src=f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/dw.wel", 
-                        dst=f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/udw.wel", 
+                convert(src=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/dw.wel", 
+                        dst=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/udw.wel", 
                         mode=3)
             elif config[dataset_name]["directed"]:
-                convert(src=f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/duw.el",
-                        dst=f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/uduw.el",
+                convert(src=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/duw.el",
+                        dst=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/uduw.el",
                         mode=1)
             elif config[dataset_name]["weighted"]:
-                convert(src=f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/udw.wel",
-                        dst=f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/dw.wel",
+                convert(src=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/udw.wel",
+                        dst=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/dw.wel",
                         mode=4)
             else:
-                convert(src=f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/uduw.el",
-                        dst=f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/duw.el",
+                convert(src=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/uduw.el",
+                        dst=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/duw.el",
                         mode=2)
 
     for prune_algo in ["Random", "KNeighbor", "RankDegree", "ForestFire"]:
-        if not osp.exists(f"data/{dataset_name}/pruned/{prune_algo}"):
+        if not osp.exists(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}"):
             continue
-        for prune_rate in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}"):
-            for run in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}"):
+        for prune_rate in os.listdir(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}"):
+            for run in os.listdir(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}"):
                 if config[dataset_name]["directed"] and config[dataset_name]["weighted"]:
-                    convert(src=f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/dw.wel",
-                            dst=f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/udw.wel",
+                    convert(src=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/dw.wel",
+                            dst=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/udw.wel",
                             mode=3)
                 elif config[dataset_name]["directed"]:
-                    convert(src=f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/duw.el",
-                            dst=f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/uduw.el",
+                    convert(src=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/duw.el",
+                            dst=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/uduw.el",
                             mode=1)
                 elif config[dataset_name]["weighted"]:
-                    convert(src=f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/udw.wel",
-                            dst=f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/dw.wel",
+                    convert(src=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/udw.wel",
+                            dst=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/dw.wel",
                             mode=4)
                 else:
-                    convert(src=f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/uduw.el",
-                            dst=f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/duw.el",
+                    convert(src=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/uduw.el",
+                            dst=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/duw.el",
                             mode=2)
 
     for prune_algo in ["SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7"]:
-        if not osp.exists(f"data/{dataset_name}/pruned/{prune_algo}"):
+        if not osp.exists(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}"):
             continue
         if config[dataset_name]["weighted"]:
-            convert(src=f"data/{dataset_name}/pruned/{prune_algo}/0/udw.wel",
-                    dst=f"data/{dataset_name}/pruned/{prune_algo}/0/dw.wel",
+            convert(src=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/0/udw.wel",
+                    dst=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/0/dw.wel",
                     mode=4)
         else:
-            convert(src=f"data/{dataset_name}/pruned/{prune_algo}/0/uduw.el",
-                    dst=f"data/{dataset_name}/pruned/{prune_algo}/0/duw.el",
+            convert(src=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/0/uduw.el",
+                    dst=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/0/duw.el",
                     mode=2)
 
     for prune_algo in ["ER-Min", "ER-Max"]:
-        if not osp.exists(f"data/{dataset_name}/pruned/{prune_algo}"):
+        if not osp.exists(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}"):
             continue
-        for prune_rate in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}"):
-            for run in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}"):
-                convert(src=f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/duw.el",
-                        dst=f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/uduw.el",
+        for prune_rate in os.listdir(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}"):
+            for run in os.listdir(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}"):
+                convert(src=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/duw.el",
+                        dst=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/uduw.el",
                         mode=1)
-                convert(src=f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/dw.wel",
-                        dst=f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/udw.wel",
+                convert(src=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/dw.wel",
+                        dst=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/udw.wel",
                         mode=3)
 
 

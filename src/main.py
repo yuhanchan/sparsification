@@ -20,11 +20,16 @@ import json
 from metrics_nk import *
 from metrics_gt import *
 from sparsifiers import *
-from datasets import *
+# from datasets import *
 from graph_reader import *
 from memory_profiler import memory_usage
 import argparse
  
+PROJECT_HOME = os.getenv(key="PROJECT_HOME")
+if PROJECT_HOME is None:
+    print("PROJECT_HOME is not set, ")
+    print("please source env.sh at the top level of the project")
+    exit(1)
 
 
 def graphOverview(G):
@@ -49,18 +54,18 @@ def loadOriginalGraph(dataset_name, config, undirected_only=False):
 
     if undirected_only:
         if config[dataset_name]["weighted"]:
-            originalGraph = nk.readGraph(f"data/{dataset_name}/raw/udw.wel", nk.Format.EdgeListSpaceZero, directed=False)
+            originalGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/raw/udw.wel", nk.Format.EdgeListSpaceZero, directed=False)
         else:
-            originalGraph = nk.readGraph(f"data/{dataset_name}/raw/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
+            originalGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/raw/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
     else:
         if config[dataset_name]["directed"] and config[dataset_name]["weighted"]:
-            originalGraph = nk.readGraph(f"data/{dataset_name}/raw/dw.wel", nk.Format.EdgeListSpaceZero, directed=True)
+            originalGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/raw/dw.wel", nk.Format.EdgeListSpaceZero, directed=True)
         elif config[dataset_name]["directed"]:
-            originalGraph = nk.readGraph(f"data/{dataset_name}/raw/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
+            originalGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/raw/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
         elif config[dataset_name]["weighted"]:
-            originalGraph = nk.readGraph(f"data/{dataset_name}/raw/udw.wel", nk.Format.EdgeListSpaceZero, directed=False)
+            originalGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/raw/udw.wel", nk.Format.EdgeListSpaceZero, directed=False)
         else:
-            originalGraph = nk.readGraph(f"data/{dataset_name}/raw/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
+            originalGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/raw/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
 
     nk.overview(originalGraph)
     nk.graph.Graph.indexEdges(originalGraph)
@@ -87,7 +92,12 @@ def graphSparsifier(dataset_names, sparsifiers, targetRatios, config, multi_proc
     if isinstance(targetRatios, float):
         sparseRatios = [targetRatios]
 
+    original_stdout = sys.stdout
     for dataset_name in dataset_names:
+        # redirect output to log file
+        outfile_path = f"{PROJECT_HOME}/output_sparsifier_raw/{dataset_name}.txt"
+        os.makedirs(os.path.dirname(outfile_path), exist_ok=True)
+        sys.stdout = open(outfile_path, "w")
         originalGraph = loadOriginalGraph(dataset_name, config, undirected_only=False)
         originalGraph_ud = loadOriginalGraph(dataset_name, config, undirected_only=True)
         for sparsifier in sparsifiers:
@@ -208,6 +218,9 @@ def graphSparsifier(dataset_names, sparsifiers, targetRatios, config, multi_proc
             
             else:
                 raise ValueError("Unknown sparsifier: {}".format(sparsifier))
+        
+        # reset stdout
+        sys.stdout = original_stdout
 
 
 def main():
@@ -216,7 +229,7 @@ def main():
     parser.add_argument("--mode", choices=["sparsify", "eval", "all"], required=True, help="sparsify: only sparsify graphs; eval: only evaluate metrics (need to have run sparsify first); all: run both sparsify and eval")
     args = parser.parse_args()
 
-    config = json.load(open("config.json", "r"))
+    config = json.load(open(f"{PROJECT_HOME}/config.json", "r"))
 
     if args.dataset_name == "all":
         dataset_names = ["ego-Facebook", 
@@ -240,15 +253,21 @@ def main():
 
 
     if args.mode == "sparsify" or args.mode == "all":
+        # for dataset_name in dataset_names:
+        graphSparsifier(dataset_names=dataset_names, 
+                        sparsifiers=["ER", "Random", "ForestFire", "RankDegree", 
+                                        "LocalDegree", "GSpar", "LocalSimilarity", 
+                                        "SCAN", "KNeighbor", "tSpanner", 
+                                        "SpanningForest", "LSpar"], 
+                        targetRatios=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9], 
+                        config=config,
+                        multi_process=False,
+                        max_workers=8,
+                        num_run=1
+                        )
+        
         for dataset_name in dataset_names:
-            graphSparsifier(dataset_name=dataset_name, 
-                            sparsifiers=["ER", "Random", "ForestFire", "RankDegree", 
-                                         "LocalDegree", "GSpar", "LocalSimilarity", 
-                                         "SCAN", "KNeighbor", "tSpanner", 
-                                         "SpanningForest", "LSpar"], 
-                            targetRatios=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9], 
-                            config=config
-                            )
+            os.system(f"python {PROJECT_HOME}/utils/convert_edgelist.py --dataset_name {dataset_name} --num_thread 8")
 
     if args.mode == "eval" or args.mode == "all":
         for dataset_name in dataset_names:
@@ -263,7 +282,7 @@ def main():
             Centrality_nk(dataset_name, "CoreDecomposition", G_nk_dict, 100, logToFile=True)
             DetectCommunity_nk(dataset_name, G_nk_dict, logToFile=True)
             ClusteringF1Similarity_nk(dataset_name, G_nk_dict, logToFile=True)
-            Centrality_nk(dataset_name, "PageRank", G_nk_dict, 100, logToFile=False)
+            Centrality_nk(dataset_name, "PageRank", G_nk_dict, 100, logToFile=True)
             QuadraticFormSimilarity_nk(dataset_name, G_nk_dict, logToFile=True)
             del G_nk_dict # release memory
 
@@ -297,7 +316,7 @@ if __name__ == "__main__":
             pr = np.array(page_rank(Graph, max_iter=1000)).flatten()
             print(name, 1-Graph.numberOfEdges()/G_nk_dict["original"][0].numberOfEdges(), ranking_precision(baseline, pr, k=100))
 
-    # ClusteringF1SimilarityWithGroundTruth_nk(dataset_name, G_nk_dict, osp.join(PROJECT_HOME, "data/com-Amazon/raw/com-amazon.all.dedup.cmty.remap.txt"), logToFile=False)
+    # ClusteringF1SimilarityWithGroundTruth_nk(dataset_name, G_nk_dict, "{PROJECT_HOME}/data/com-Amazon/raw/com-amazon.all.dedup.cmty.remap.txt", logToFile=False)
 
     # # # basic
     # degreeDistribution_nk(G_nk_dict)

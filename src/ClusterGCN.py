@@ -42,10 +42,10 @@ elif args.prune_algo == "empty":
 
 # train on pruned graph, test on full graph
 else:
-    prune_rates = os.listdir(osp.join(PROJECT_HOME, f"data/Reddit/pruned/{args.prune_algo}/"))
+    prune_rates = os.listdir(f"{PROJECT_HOME}/data/Reddit/pruned/{args.prune_algo}/")
     print(f"prune rates: {prune_rates}")
     for i, prune_rate in enumerate(prune_rates):
-        if not osp.exists(osp.join(PROJECT_HOME, f"data/Reddit/pruned/{args.prune_algo}/{prune_rate}/0/duw.el")):
+        if not osp.exists(f"{PROJECT_HOME}/data/Reddit/pruned/{args.prune_algo}/{prune_rate}/0/duw.el"):
             continue
 
         # load pruned data
@@ -53,7 +53,7 @@ else:
         pruned_el = torch.tensor(
             np.transpose(
                 np.loadtxt(
-                    osp.join(PROJECT_HOME, f"data/Reddit/pruned/{args.prune_algo}/{prune_rate}/0/duw.el"), 
+                    f"{PROJECT_HOME}/data/Reddit/pruned/{args.prune_algo}/{prune_rate}/0/duw.el", 
                     dtype=np.int64
                 )
             )

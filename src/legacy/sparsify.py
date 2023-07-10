@@ -17,7 +17,7 @@ prune_algo = "ermin" # sym_random, sym_degree, er
 logger = myLogger.setup_custom_logger("root")
 logger.debug("debug message")
 
-config = json.load(open("config.json"))
+config = json.load(open(f"{PROJECT_HOME}/config.json"))
 
 # sym_random
 if prune_algo == "sym_random":

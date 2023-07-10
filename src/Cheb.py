@@ -59,7 +59,7 @@ if dataset_name == "ogbn_proteins":
 pools = [ThreadPool(1) for _ in range(4)]  # 1 pool for each GPU
 results = []
 
-dir_list = os.listdir(f"./data/{dataset_name}/pruned/{prune_algo}/")
+dir_list = os.listdir(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/")
 dir_list = [x for x in dir_list if float(x) > 0.95]
 # dir_list = ["0.96"]
 print(f"prune rates: {dir_list}")
@@ -69,11 +69,8 @@ for i, prune_rate in enumerate(dir_list):
     pruned_el = torch.tensor(
         np.transpose(
             np.loadtxt(
-                osp.join(
-                    PROJECT_HOME,
-                    # f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/duw.el",
-                    f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/dw.wel",
-                ),
+                # f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/duw.el",
+                f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/dw.wel",
                 dtype=float,
             )
         )
@@ -198,8 +195,8 @@ for result in results:
 
 # workload.ClusterGCN(reddit_train, reddit_train, "Reddit")
 
-# # list all dir in ./data/Reddit/pruned/random/
-# dir_list = os.listdir("./data/Reddit/pruned/in_degree/")
+# # list all dir in {PROJECT_HOME}/data/Reddit/pruned/random/
+# dir_list = os.listdir(f"{PROJECT_HOME}/data/Reddit/pruned/in_degree/")
 
 # for prune_rate in dir_list:
 #     # for prune_rate in ["0.999"]:
@@ -207,7 +204,7 @@ for result in results:
 #     pruned_el = torch.tensor(
 #         np.transpose(
 #             np.loadtxt(
-#                 f"./data/Reddit/pruned/in_degree/{prune_rate}/uduw.el", dtype=np.int64
+#                 f"{PROJECT_HOME}/data/Reddit/pruned/in_degree/{prune_rate}/uduw.el", dtype=np.int64
 #             )
 #         )
 #     )

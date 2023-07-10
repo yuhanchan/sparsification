@@ -11,78 +11,86 @@ import scipy
 from sklearn.cluster import SpectralClustering
 import time, timeit
 
+PROJECT_HOME = os.getenv(key="PROJECT_HOME")
+if PROJECT_HOME is None:
+    print("PROJECT_HOME is not set, ") 
+    print("please source env.sh at the top level of the project")
+    exit(1)
+
 def readAllGraphsNK(dataset_name, config):
     graphs_dict = {}
 
     if config[dataset_name]["directed"] and config[dataset_name]["weighted"]:
-        originalGraph = nk.readGraph(f"data/{dataset_name}/raw/dw.wel", nk.Format.EdgeListSpaceZero, directed=True)
+        originalGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/raw/dw.wel", nk.Format.EdgeListSpaceZero, directed=True)
     elif config[dataset_name]["directed"]:
-        originalGraph = nk.readGraph(f"data/{dataset_name}/raw/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
+        originalGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/raw/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
     elif config[dataset_name]["weighted"]:
-        originalGraph = nk.readGraph(f"data/{dataset_name}/raw/udw.wel", nk.Format.EdgeListSpaceZero, directed=False)
+        originalGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/raw/udw.wel", nk.Format.EdgeListSpaceZero, directed=False)
     else:
-        originalGraph = nk.readGraph(f"data/{dataset_name}/raw/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
+        originalGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/raw/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
     nk.graph.Graph.indexEdges(originalGraph)
     graphs_dict["original"] = [originalGraph]
 
 
     for prune_algo in ["LocalDegree", "LSpar", "GSpar", "LocalSimilarity", "SCAN"]:
         graphs = []
-        for prune_rate in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}"):
+        for prune_rate in os.listdir(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}"):
             if config[dataset_name]["directed"] and config[dataset_name]["weighted"]:
-                G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/dw.wel", nk.Format.EdgeListSpaceZero, directed=True)
+                G = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/dw.wel", nk.Format.EdgeListSpaceZero, directed=True)
             elif config[dataset_name]["directed"]:
-                G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
+                G = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
             elif config[dataset_name]["weighted"]:
-                G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/udw.wel", nk.Format.EdgeListSpaceZero, directed=False)
+                G = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/udw.wel", nk.Format.EdgeListSpaceZero, directed=False)
             else:
-                G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
+                G = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
             G.addNodes(originalGraph.numberOfNodes()-G.numberOfNodes())
             graphs.append(G)
         graphs_dict[prune_algo] = graphs
 
     for prune_algo in ["Random", "KNeighbor", "RankDegree", "ForestFire"]:
         graphs = []
-        for prune_rate in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}"):
-            for run in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}"):
+        for prune_rate in os.listdir(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}"):
+            for run in os.listdir(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}"):
                 if config[dataset_name]["directed"] and config[dataset_name]["weighted"]:
-                    G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/dw.wel", nk.Format.EdgeListSpaceZero, directed=True)
+                    G = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/dw.wel", nk.Format.EdgeListSpaceZero, directed=True)
                 elif config[dataset_name]["directed"]:
-                    G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
+                    G = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
                 elif config[dataset_name]["weighted"]:
-                    G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/udw.wel", nk.Format.EdgeListSpaceZero, directed=False)
+                    G = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/udw.wel", nk.Format.EdgeListSpaceZero, directed=False)
                 else:
-                    G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
+                    G = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
                 G.addNodes(originalGraph.numberOfNodes()-G.numberOfNodes())
                 graphs.append(G)
         graphs_dict[prune_algo] = graphs
         
-    for prune_algo in ["ER-Min", "ER-Max"]: # weighted er
+    # for prune_algo in ["ER-Min", "ER-Max"]: # weighted er
+    for prune_algo in ["ER-Max"]: # weighted er
         graphs = []
-        for prune_rate in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}"):
-            for run in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}"):
+        for prune_rate in os.listdir(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}"):
+            for run in os.listdir(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}"):
                 if config[dataset_name]["directed"]:
-                    G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/dw.wel", nk.Format.EdgeListSpaceZero, directed=True)
+                    G = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/dw.wel", nk.Format.EdgeListSpaceZero, directed=True)
                 else:
-                    G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/udw.wel", nk.Format.EdgeListSpaceZero, directed=False)
+                    G = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/udw.wel", nk.Format.EdgeListSpaceZero, directed=False)
                 G.addNodes(originalGraph.numberOfNodes()-G.numberOfNodes())
                 graphs.append(G)
         graphs_dict[f"{prune_algo}_weighted"] = graphs
 
-    for prune_algo in ["ER-Min", "ER-Max"]: # unweighted er
+    # for prune_algo in ["ER-Min", "ER-Max"]: # unweighted er
+    for prune_algo in ["ER-Max"]: # weighted er
         graphs = []
-        for prune_rate in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}"):
-            for run in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}"):
+        for prune_rate in os.listdir(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}"):
+            for run in os.listdir(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}"):
                 if config[dataset_name]["directed"]:
-                    G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
+                    G = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
                 else:
-                    G = nk.readGraph(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
+                    G = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
                 G.addNodes(originalGraph.numberOfNodes()-G.numberOfNodes())
                 graphs.append(G)
         graphs_dict[f"{prune_algo}_unweighted"] = graphs
 
     for prune_algo in ["SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7"]:
-        filepath = f"data/{dataset_name}/pruned/{prune_algo}/0/uduw.el"
+        filepath = f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/0/uduw.el"
         if osp.exists(filepath):
             G = nk.readGraph(filepath, nk.Format.EdgeListSpaceZero, directed=False)
             G.addNodes(originalGraph.numberOfNodes()-G.numberOfNodes())
@@ -95,7 +103,7 @@ def readAllGraphsGT(dataset_name, config):
     graphs_dict = {}
 
     if config[dataset_name]["weighted"]:
-        filepath = f"data/{dataset_name}/raw/dw.wel"
+        filepath = f"{PROJECT_HOME}/data/{dataset_name}/raw/dw.wel"
         with open(filepath, "r") as f:
             el = np.loadtxt(f, dtype=float)
             originalGraph = gt.Graph(directed=True)
@@ -103,7 +111,7 @@ def readAllGraphsGT(dataset_name, config):
             originalGraph.add_edge_list(el, eprops=[eweight])
             originalGraph.properties[("e", "weight")] = eweight
     else:
-        filepath = f"data/{dataset_name}/raw/duw.el"
+        filepath = f"{PROJECT_HOME}/data/{dataset_name}/raw/duw.el"
         with open(filepath, "r") as f:
             el = np.loadtxt(f, dtype=int)
             el = np.hstack((el, np.ones((el.shape[0], 1)).astype(dtype=int)))
@@ -116,9 +124,9 @@ def readAllGraphsGT(dataset_name, config):
 
     for prune_algo in ["LocalDegree", "LSpar", "GSpar", "LocalSimilarity", "SCAN"]:
         graphs = []
-        for prune_rate in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}"):
+        for prune_rate in os.listdir(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}"):
             if config[dataset_name]["weighted"]:
-                filepath = f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/dw.wel"
+                filepath = f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/dw.wel"
                 with open(filepath, "r") as f:
                     el = np.loadtxt(f, dtype=float)
                     G = gt.Graph(directed=True)
@@ -127,7 +135,7 @@ def readAllGraphsGT(dataset_name, config):
                     G.properties[("e", "weight")] = eweight
                     G.add_vertex(originalGraph.num_vertices()-G.num_vertices())
             else:
-                filepath = f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/duw.el"
+                filepath = f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/0/duw.el"
                 with open(filepath, "r") as f:
                     el = np.loadtxt(f, dtype=int)
                     el = np.hstack((el, np.ones((el.shape[0], 1)).astype(dtype=int)))
@@ -141,10 +149,10 @@ def readAllGraphsGT(dataset_name, config):
 
     for prune_algo in ["Random", "KNeighbor", "RankDegree", "ForestFire"]:
         graphs = []
-        for prune_rate in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}"):
-            for run in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}"):
+        for prune_rate in os.listdir(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}"):
+            for run in os.listdir(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}"):
                 if config[dataset_name]["weighted"]:
-                    filepath = f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/dw.wel"
+                    filepath = f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/dw.wel"
                     with open(filepath, "r") as f:
                         el = np.loadtxt(f, dtype=float)
                         G = gt.Graph(directed=True)
@@ -153,7 +161,7 @@ def readAllGraphsGT(dataset_name, config):
                         G.properties[("e", "weight")] = eweight
                         G.add_vertex(originalGraph.num_vertices()-G.num_vertices())
                 else:
-                    filepath = f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/duw.el"
+                    filepath = f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/duw.el"
                     with open(filepath, "r") as f:
                         el = np.loadtxt(f, dtype=int)
                         el = np.hstack((el, np.ones((el.shape[0], 1)).astype(dtype=int)))
@@ -165,11 +173,12 @@ def readAllGraphsGT(dataset_name, config):
                 graphs.append(G)
         graphs_dict[prune_algo] = graphs
         
-    for prune_algo in ["ER-Min", "ER-Max"]: # weighted er
+    # for prune_algo in ["ER-Min", "ER-Max"]: # weighted er
+    for prune_algo in ["ER-Max"]: # weighted er
         graphs = []
-        for prune_rate in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}"):
-            for run in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}"):
-                filepath = f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/dw.wel"
+        for prune_rate in os.listdir(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}"):
+            for run in os.listdir(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}"):
+                filepath = f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/dw.wel"
                 with open(filepath, "r") as f:
                     el = np.loadtxt(f, dtype=float)
                     G = gt.Graph(directed=True)
@@ -180,11 +189,12 @@ def readAllGraphsGT(dataset_name, config):
                 graphs.append(G)
         graphs_dict[f"{prune_algo}_weighted"] = graphs
 
-    for prune_algo in ["ER-Min", "ER-Max"]: # unweighted er
+    # for prune_algo in ["ER-Min", "ER-Max"]: # unweighted er
+    for prune_algo in ["ER-Max"]: # weighted er
         graphs = []
-        for prune_rate in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}"):
-            for run in os.listdir(f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}"):
-                filepath = f"data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/duw.el"
+        for prune_rate in os.listdir(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}"):
+            for run in os.listdir(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}"):
+                filepath = f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/{prune_rate}/{run}/duw.el"
                 with open(filepath, "r") as f:
                     el = np.loadtxt(f, dtype=int)
                     el = np.hstack((el, np.ones((el.shape[0], 1)).astype(dtype=int)))
@@ -198,7 +208,7 @@ def readAllGraphsGT(dataset_name, config):
 
 
     for prune_algo in ["SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7"]:
-        filepath = f"data/{dataset_name}/pruned/{prune_algo}/0/duw.el"
+        filepath = f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/0/duw.el"
         if osp.exists(filepath):
             with open(filepath, "r") as f:
                 el = np.loadtxt(f, dtype=int)
@@ -218,25 +228,25 @@ def readGraphs(dataset_name, targetRatio, config, readGTformat=False, er_weighte
     global originalGraph_gt, erMinGraph_gt, erMaxGraph_gt, spanningGraph_gt, fireGraph_gt, localDegGraph_gt, localSimilarityGraph_gt, randomGraph_gt, scanGraph_gt, simmelieanGraph_gt, jaccardGraph_gt, spanner_3_gt, spanner_5_gt, spanner_7_gt
 
     if config[dataset_name]["directed"] and config[dataset_name]["weighted"]:
-        originalGraph = nk.readGraph(f"data/{dataset_name}/raw/dw.wel", nk.Format.EdgeListSpaceZero, directed=True, weighted=True)
+        originalGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/raw/dw.wel", nk.Format.EdgeListSpaceZero, directed=True, weighted=True)
     elif config[dataset_name]["directed"]:
-        originalGraph = nk.readGraph(f"data/{dataset_name}/raw/duw.el", nk.Format.EdgeListSpaceZero, directed=True, weighted=False)
+        originalGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/raw/duw.el", nk.Format.EdgeListSpaceZero, directed=True, weighted=False)
     elif config[dataset_name]["weighted"]:
-        originalGraph = nk.readGraph(f"data/{dataset_name}/raw/udw.wel", nk.Format.EdgeListSpaceZero, directed=False, weighted=True)
+        originalGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/raw/udw.wel", nk.Format.EdgeListSpaceZero, directed=False, weighted=True)
     else:
-        originalGraph = nk.readGraph(f"data/{dataset_name}/raw/uduw.el", nk.Format.EdgeListSpaceZero, directed=False, weighted=False)
+        originalGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/raw/uduw.el", nk.Format.EdgeListSpaceZero, directed=False, weighted=False)
     nk.graph.Graph.indexEdges(originalGraph)
 
     if readGTformat:
         if config[dataset_name]["directed"] and config[dataset_name]["weighted"]:
-            filepath = f"data/{dataset_name}/raw/dw.wel"
+            filepath = f"{PROJECT_HOME}/data/{dataset_name}/raw/dw.wel"
         elif config[dataset_name]["directed"]:
-            filepath = f"data/{dataset_name}/raw/duw.el"
+            filepath = f"{PROJECT_HOME}/data/{dataset_name}/raw/duw.el"
         elif config[dataset_name]["weighted"]:
-            filepath = f"data/{dataset_name}/raw/udw.wel"
+            filepath = f"{PROJECT_HOME}/data/{dataset_name}/raw/udw.wel"
         else:
-            filepath = f"data/{dataset_name}/raw/uduw.el"
-        with open(f"data/{dataset_name}/raw/duw.el", "r") as f:
+            filepath = f"{PROJECT_HOME}/data/{dataset_name}/raw/uduw.el"
+        with open(f"{PROJECT_HOME}/data/{dataset_name}/raw/duw.el", "r") as f:
             el = np.loadtxt(f, dtype=int)
             # el = np.vstack((el, np.vstack((el[:,1], el[:,0])).T)) # symmetrize
             el = np.hstack((el, np.ones((el.shape[0], 1)).astype(dtype=int)))
@@ -248,19 +258,19 @@ def readGraphs(dataset_name, targetRatio, config, readGTformat=False, er_weighte
 
     if er_weighted:
         if config[dataset_name]["directed"]:
-            erMinGraph = nk.readGraph(f"data/{dataset_name}/pruned/er_min/{round(1-targetRatio, 3)}/dw.wel", nk.Format.EdgeListSpaceZero, directed=True)
+            erMinGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/er_min/{round(1-targetRatio, 3)}/dw.wel", nk.Format.EdgeListSpaceZero, directed=True)
         else:
-            erMinGraph = nk.readGraph(f"data/{dataset_name}/pruned/er_min/{round(1-targetRatio, 3)}/udw.wel", nk.Format.EdgeListSpaceZero, directed=False)
+            erMinGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/er_min/{round(1-targetRatio, 3)}/udw.wel", nk.Format.EdgeListSpaceZero, directed=False)
     else:
         if config[dataset_name]["directed"]:
-            erMinGraph = nk.readGraph(f"data/{dataset_name}/pruned/er_min/{round(1-targetRatio, 3)}/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
+            erMinGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/er_min/{round(1-targetRatio, 3)}/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
         else:
-            erMinGraph = nk.readGraph(f"data/{dataset_name}/pruned/er_min/{round(1-targetRatio, 3)}/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
+            erMinGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/er_min/{round(1-targetRatio, 3)}/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
     erMinGraph.addNodes(originalGraph.numberOfNodes()-erMinGraph.numberOfNodes())
 
     if readGTformat:
         if er_weighted:
-            with open(f"data/{dataset_name}/pruned/er_min/{round(1-targetRatio, 3)}/dw.wel", "r") as f:
+            with open(f"{PROJECT_HOME}/data/{dataset_name}/pruned/er_min/{round(1-targetRatio, 3)}/dw.wel", "r") as f:
                 el = np.loadtxt(f, dtype=float)
                 erMinGraph_gt = gt.Graph(directed=True)
                 eweight = erMinGraph_gt.new_edge_property("float")
@@ -268,7 +278,7 @@ def readGraphs(dataset_name, targetRatio, config, readGTformat=False, er_weighte
                 erMinGraph_gt.add_vertex(originalGraph_gt.num_vertices()-erMinGraph_gt.num_vertices())
                 erMinGraph_gt.properties[("e", "weight")] = eweight
         else:
-            with open(f"data/{dataset_name}/pruned/er_min/{round(1-targetRatio, 3)}/duw.el", "r") as f:
+            with open(f"{PROJECT_HOME}/data/{dataset_name}/pruned/er_min/{round(1-targetRatio, 3)}/duw.el", "r") as f:
                 el = np.loadtxt(f, dtype=int)
                 # add a column of 1s for weights
                 el = np.hstack((el, np.ones((el.shape[0], 1)).astype(dtype=int)))
@@ -280,19 +290,19 @@ def readGraphs(dataset_name, targetRatio, config, readGTformat=False, er_weighte
 
     if er_weighted:
         if config[dataset_name]["directed"]:
-            erMaxGraph = nk.readGraph(f"data/{dataset_name}/pruned/er_max/{round(1-targetRatio, 3)}/dw.wel", nk.Format.EdgeListSpaceZero, directed=True)
+            erMaxGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/er_max/{round(1-targetRatio, 3)}/dw.wel", nk.Format.EdgeListSpaceZero, directed=True)
         else:
-            erMaxGraph = nk.readGraph(f"data/{dataset_name}/pruned/er_max/{round(1-targetRatio, 3)}/udw.wel", nk.Format.EdgeListSpaceZero, directed=False)
+            erMaxGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/er_max/{round(1-targetRatio, 3)}/udw.wel", nk.Format.EdgeListSpaceZero, directed=False)
     else:
         if config[dataset_name]["directed"]:
-            erMaxGraph = nk.readGraph(f"data/{dataset_name}/pruned/er_max/{round(1-targetRatio, 3)}/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
+            erMaxGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/er_max/{round(1-targetRatio, 3)}/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
         else:
-            erMaxGraph = nk.readGraph(f"data/{dataset_name}/pruned/er_max/{round(1-targetRatio, 3)}/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
+            erMaxGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/er_max/{round(1-targetRatio, 3)}/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
     erMaxGraph.addNodes(originalGraph.numberOfNodes()-erMaxGraph.numberOfNodes())
 
     if readGTformat:
         if er_weighted:
-            with open(f"data/{dataset_name}/pruned/er_max/{round(1-targetRatio, 3)}/dw.wel", "r") as f:
+            with open(f"{PROJECT_HOME}/data/{dataset_name}/pruned/er_max/{round(1-targetRatio, 3)}/dw.wel", "r") as f:
                 el = np.loadtxt(f, dtype=float)
                 erMaxGraph_gt = gt.Graph(directed=True)
                 eweight = erMaxGraph_gt.new_edge_property("float")
@@ -300,7 +310,7 @@ def readGraphs(dataset_name, targetRatio, config, readGTformat=False, er_weighte
                 erMaxGraph_gt.add_vertex(originalGraph_gt.num_vertices()-erMaxGraph_gt.num_vertices())
                 erMaxGraph_gt.properties[("e", "weight")] = eweight
         else:
-            with open(f"data/{dataset_name}/pruned/er_max/{round(1-targetRatio, 3)}/duw.el", "r") as f:
+            with open(f"{PROJECT_HOME}/data/{dataset_name}/pruned/er_max/{round(1-targetRatio, 3)}/duw.el", "r") as f:
                 el = np.loadtxt(f, dtype=int)
                 # add a column of 1s for weights
                 el = np.hstack((el, np.ones((el.shape[0], 1)).astype(dtype=int)))
@@ -312,12 +322,12 @@ def readGraphs(dataset_name, targetRatio, config, readGTformat=False, er_weighte
 
 
     if config[dataset_name]["directed"]:
-        fireGraph = nk.readGraph(f"data/{dataset_name}/pruned/forestfire/{round(1-targetRatio, 3)}/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
+        fireGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/forestfire/{round(1-targetRatio, 3)}/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
     else:
-        fireGraph = nk.readGraph(f"data/{dataset_name}/pruned/forestfire/{round(1-targetRatio, 3)}/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
+        fireGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/forestfire/{round(1-targetRatio, 3)}/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
     fireGraph.addNodes(originalGraph.numberOfNodes()-fireGraph.numberOfNodes())
     if readGTformat:
-        with open(f"data/{dataset_name}/pruned/forestfire/{round(1-targetRatio, 3)}/duw.el", "r") as f:
+        with open(f"{PROJECT_HOME}/data/{dataset_name}/pruned/forestfire/{round(1-targetRatio, 3)}/duw.el", "r") as f:
             el = np.loadtxt(f, dtype=int)
             el = np.hstack((el, np.ones((el.shape[0], 1)).astype(dtype=int)))
             fireGraph_gt = gt.Graph(directed=True)
@@ -328,12 +338,12 @@ def readGraphs(dataset_name, targetRatio, config, readGTformat=False, er_weighte
 
 
     if config[dataset_name]["directed"]:
-        localDegGraph = nk.readGraph(f"data/{dataset_name}/pruned/localdeg/{round(1-targetRatio, 3)}/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
+        localDegGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/localdeg/{round(1-targetRatio, 3)}/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
     else:
-        localDegGraph = nk.readGraph(f"data/{dataset_name}/pruned/localdeg/{round(1-targetRatio, 3)}/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
+        localDegGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/localdeg/{round(1-targetRatio, 3)}/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
     localDegGraph.addNodes(originalGraph.numberOfNodes()-localDegGraph.numberOfNodes())
     if readGTformat:
-        with open(f"data/{dataset_name}/pruned/localdeg/{round(1-targetRatio, 3)}/duw.el", "r") as f:
+        with open(f"{PROJECT_HOME}/data/{dataset_name}/pruned/localdeg/{round(1-targetRatio, 3)}/duw.el", "r") as f:
             el = np.loadtxt(f, dtype=int)
             el = np.hstack((el, np.ones((el.shape[0], 1)).astype(dtype=int)))
             localDegGraph_gt = gt.Graph(directed=True)
@@ -344,12 +354,12 @@ def readGraphs(dataset_name, targetRatio, config, readGTformat=False, er_weighte
 
 
     if config[dataset_name]["directed"]:
-        localSimilarityGraph = nk.readGraph(f"data/{dataset_name}/pruned/localSimilarity/{round(1-targetRatio, 3)}/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
+        localSimilarityGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/localSimilarity/{round(1-targetRatio, 3)}/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
     else:
-        localSimilarityGraph = nk.readGraph(f"data/{dataset_name}/pruned/localSimilarity/{round(1-targetRatio, 3)}/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
+        localSimilarityGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/localSimilarity/{round(1-targetRatio, 3)}/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
     localSimilarityGraph.addNodes(originalGraph.numberOfNodes()-localSimilarityGraph.numberOfNodes())
     if readGTformat:
-        with open(f"data/{dataset_name}/pruned/localSimilarity/{round(1-targetRatio, 3)}/duw.el", "r") as f:
+        with open(f"{PROJECT_HOME}/data/{dataset_name}/pruned/localSimilarity/{round(1-targetRatio, 3)}/duw.el", "r") as f:
             el = np.loadtxt(f, dtype=int)
             el = np.hstack((el, np.ones((el.shape[0], 1)).astype(dtype=int)))
             localSimilarityGraph_gt = gt.Graph(directed=True)
@@ -360,12 +370,12 @@ def readGraphs(dataset_name, targetRatio, config, readGTformat=False, er_weighte
 
 
     if config[dataset_name]["directed"]:
-        randomGraph = nk.readGraph(f"data/{dataset_name}/pruned/random/{round(1-targetRatio, 3)}/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
+        randomGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/random/{round(1-targetRatio, 3)}/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
     else:
-        randomGraph = nk.readGraph(f"data/{dataset_name}/pruned/random/{round(1-targetRatio, 3)}/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
+        randomGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/random/{round(1-targetRatio, 3)}/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
     randomGraph.addNodes(originalGraph.numberOfNodes()-randomGraph.numberOfNodes())
     if readGTformat:
-        with open(f"data/{dataset_name}/pruned/random/{round(1-targetRatio, 3)}/duw.el", "r") as f:
+        with open(f"{PROJECT_HOME}/data/{dataset_name}/pruned/random/{round(1-targetRatio, 3)}/duw.el", "r") as f:
             el = np.loadtxt(f, dtype=int)
             el = np.hstack((el, np.ones((el.shape[0], 1)).astype(dtype=int)))
             randomGraph_gt = gt.Graph(directed=True)
@@ -376,12 +386,12 @@ def readGraphs(dataset_name, targetRatio, config, readGTformat=False, er_weighte
 
 
     if config[dataset_name]["directed"]:
-        scanGraph = nk.readGraph(f"data/{dataset_name}/pruned/scan/{round(1-targetRatio, 3)}/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
+        scanGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/scan/{round(1-targetRatio, 3)}/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
     else:
-        scanGraph = nk.readGraph(f"data/{dataset_name}/pruned/scan/{round(1-targetRatio, 3)}/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
+        scanGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/scan/{round(1-targetRatio, 3)}/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
     scanGraph.addNodes(originalGraph.numberOfNodes()-scanGraph.numberOfNodes())
     if readGTformat:
-        with open(f"data/{dataset_name}/pruned/scan/{round(1-targetRatio, 3)}/duw.el", "r") as f:
+        with open(f"{PROJECT_HOME}/data/{dataset_name}/pruned/scan/{round(1-targetRatio, 3)}/duw.el", "r") as f:
             el = np.loadtxt(f, dtype=int)
             el = np.hstack((el, np.ones((el.shape[0], 1)).astype(dtype=int)))
             scanGraph_gt = gt.Graph(directed=True)
@@ -408,12 +418,12 @@ def readGraphs(dataset_name, targetRatio, config, readGTformat=False, er_weighte
 
 
     if config[dataset_name]["directed"]:
-        jaccardGraph = nk.readGraph(f"data/{dataset_name}/pruned/jaccard/{round(1-targetRatio, 3)}/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
+        jaccardGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/jaccard/{round(1-targetRatio, 3)}/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
     else:
-        jaccardGraph = nk.readGraph(f"data/{dataset_name}/pruned/jaccard/{round(1-targetRatio, 3)}/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
+        jaccardGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/jaccard/{round(1-targetRatio, 3)}/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
     jaccardGraph.addNodes(originalGraph.numberOfNodes()-jaccardGraph.numberOfNodes())
     if readGTformat:
-        with open(f"data/{dataset_name}/pruned/jaccard/{round(1-targetRatio, 3)}/duw.el", "r") as f:
+        with open(f"{PROJECT_HOME}/data/{dataset_name}/pruned/jaccard/{round(1-targetRatio, 3)}/duw.el", "r") as f:
             el = np.loadtxt(f, dtype=int)
             el = np.hstack((el, np.ones((el.shape[0], 1)).astype(dtype=int)))
             jaccardGraph_gt = gt.Graph(directed=True)
@@ -424,21 +434,21 @@ def readGraphs(dataset_name, targetRatio, config, readGTformat=False, er_weighte
 
 
     if config[dataset_name]["directed"]:
-        spanningGraph = nk.readGraph(f"data/{dataset_name}/pruned/spanning/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
-        spanner_3 = nk.readGraph(f"data/{dataset_name}/pruned/spanner-3/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
-        spanner_5 = nk.readGraph(f"data/{dataset_name}/pruned/spanner-5/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
-        spanner_7 = nk.readGraph(f"data/{dataset_name}/pruned/spanner-7/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
+        spanningGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/spanning/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
+        spanner_3 = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/spanner-3/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
+        spanner_5 = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/spanner-5/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
+        spanner_7 = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/spanner-7/duw.el", nk.Format.EdgeListSpaceZero, directed=True)
     else:
-        spanningGraph = nk.readGraph(f"data/{dataset_name}/pruned/spanning/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
-        spanner_3 = nk.readGraph(f"data/{dataset_name}/pruned/spanner-3/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
-        spanner_5 = nk.readGraph(f"data/{dataset_name}/pruned/spanner-5/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
-        spanner_7 = nk.readGraph(f"data/{dataset_name}/pruned/spanner-7/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
+        spanningGraph = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/spanning/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
+        spanner_3 = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/spanner-3/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
+        spanner_5 = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/spanner-5/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
+        spanner_7 = nk.readGraph(f"{PROJECT_HOME}/data/{dataset_name}/pruned/spanner-7/uduw.el", nk.Format.EdgeListSpaceZero, directed=False)
     spanningGraph.addNodes(originalGraph.numberOfNodes()-spanningGraph.numberOfNodes())
     spanner_3.addNodes(originalGraph.numberOfNodes()-spanner_3.numberOfNodes())
     spanner_5.addNodes(originalGraph.numberOfNodes()-spanner_5.numberOfNodes())
     spanner_7.addNodes(originalGraph.numberOfNodes()-spanner_7.numberOfNodes())
     if readGTformat:
-        with open(f"data/{dataset_name}/pruned/spanning/duw.el", "r") as f:
+        with open(f"{PROJECT_HOME}/data/{dataset_name}/pruned/spanning/duw.el", "r") as f:
             el = np.loadtxt(f, dtype=int)
             el = np.hstack((el, np.ones((el.shape[0], 1)).astype(dtype=int)))
             spanningGraph_gt = gt.Graph(directed=True)
@@ -446,7 +456,7 @@ def readGraphs(dataset_name, targetRatio, config, readGTformat=False, er_weighte
             spanningGraph_gt.add_edge_list(el, eprops=[eweight])
             spanningGraph_gt.add_vertex(originalGraph_gt.num_vertices()-spanningGraph_gt.num_vertices())
             spanningGraph_gt.properties[("e", "weight")] = eweight
-        with open(f"data/{dataset_name}/pruned/spanner-3/duw.el", "r") as f:
+        with open(f"{PROJECT_HOME}/data/{dataset_name}/pruned/spanner-3/duw.el", "r") as f:
             el = np.loadtxt(f, dtype=int)
             el = np.hstack((el, np.ones((el.shape[0], 1)).astype(dtype=int)))
             spanner_3_gt = gt.Graph(directed=True)
@@ -454,7 +464,7 @@ def readGraphs(dataset_name, targetRatio, config, readGTformat=False, er_weighte
             spanner_3_gt.add_edge_list(el, eprops=[eweight])
             spanner_3_gt.add_vertex(originalGraph_gt.num_vertices()-spanner_3_gt.num_vertices())
             spanner_3_gt.properties[("e", "weight")] = eweight
-        with open(f"data/{dataset_name}/pruned/spanner-5/duw.el", "r") as f:
+        with open(f"{PROJECT_HOME}/data/{dataset_name}/pruned/spanner-5/duw.el", "r") as f:
             el = np.loadtxt(f, dtype=int)
             el = np.hstack((el, np.ones((el.shape[0], 1)).astype(dtype=int)))
             spanner_5_gt = gt.Graph(directed=True)
@@ -462,7 +472,7 @@ def readGraphs(dataset_name, targetRatio, config, readGTformat=False, er_weighte
             spanner_5_gt.add_edge_list(el, eprops=[eweight])
             spanner_5_gt.add_vertex(originalGraph_gt.num_vertices()-spanner_5_gt.num_vertices())
             spanner_5_gt.properties[("e", "weight")] = eweight
-        with open(f"data/{dataset_name}/pruned/spanner-7/duw.el", "r") as f:
+        with open(f"{PROJECT_HOME}/data/{dataset_name}/pruned/spanner-7/duw.el", "r") as f:
             el = np.loadtxt(f, dtype=int)
             el = np.hstack((el, np.ones((el.shape[0], 1)).astype(dtype=int)))
             spanner_7_gt = gt.Graph(directed=True)
