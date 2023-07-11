@@ -16,13 +16,7 @@ if PROJECT_HOME is None:
 
 color_map = {
     "RankDegree": "#6baed6",
-    # "ER-Min": "#0570b0",
-    # "ER-Min_unweighted": "#0570b0",
-    # "ER-Min_weighted": "#0570b0",
     "ER": "#0570b0",
-    "ER-Max": "#0570b0",
-    "ER-Max_unweighted": "#0570b0",
-    "ER-Max_weighted": "#addd8e",
     "ER-unweighted": "#0570b0",
     "ER-weighted": "#addd8e",
     "ForestFire": "#238443",
@@ -50,17 +44,19 @@ color_map = {
     "SP-5": "#e31a1c",
     "SP-7": "#ff7f00",
     "SF": "#6a3d9a",
+    "ER-uw": "#0570b0",
+    "ER-w": "#addd8e",
+    # "ER-Min": "#0570b0",
+    # "ER-Min_unweighted": "#0570b0",
+    # "ER-Min_weighted": "#0570b0",
+    # "ER-Max": "#0570b0",
+    # "ER-Max_unweighted": "#0570b0",
+    # "ER-Max_weighted": "#addd8e",
 }
 
 marker_map = {
     "RankDegree": "o",
-    # "ER-Min": "o",
-    # "ER-Min_unweighted": "X",
-    # "ER-Min_weighted": "o",
     "ER": "o",
-    "ER-Max": "o",
-    "ER-Max_unweighted": "o",
-    "ER-Max_weighted": "o",
     "ER-unweighted": "o",
     "ER-weighted": "o",
     "ForestFire": "o",
@@ -88,6 +84,14 @@ marker_map = {
     "SP-5": "^",
     "SP-7": "^",
     "SF": "^",
+    "ER-uw": "o",
+    "ER-w": "o",
+    # "ER-Min": "o",
+    # "ER-Min_unweighted": "X",
+    # "ER-Min_weighted": "o",
+    # "ER-Max": "o",
+    # "ER-Max_unweighted": "o",
+    # "ER-Max_weighted": "o",
 }
 
 text_map = {
@@ -129,10 +133,10 @@ xtickfontsize = 30
 ytickfontsize = 30
 legendfontsize = 25
 gridon = True
-saveformat = "png"
+saveformat = "pdf"
 addTitle = False
 
-def sparsifier_time(dataset_name):
+def sparsifier_time(dataset_name, outdir=None):
     config = json.load(open(osp.join(PROJECT_HOME, "config.json"), "r"))
     original_edges = config[dataset_name]["num_edges"]
     try:
@@ -200,10 +204,10 @@ def sparsifier_time(dataset_name):
     plt.tight_layout()
 
     # save plot
-    if saveformat == "png":
+    if outdir is None:
         figpath = osp.join(PROJECT_HOME, f"output_sparsifier_plot/{dataset_name}_time.{saveformat}")
     else:
-        figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_time.{saveformat}")
+        figpath = osp.join(outdir, f"{dataset_name}_time.{saveformat}")
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
@@ -258,14 +262,14 @@ def sparsifier_time(dataset_name):
     plt.tight_layout()
 
     # save plot
-    if saveformat == "png":
+    if outdir is None:
         figpath = osp.join(PROJECT_HOME, f"output_sparsifier_plot/{dataset_name}_time_bar.{saveformat}")
     else:
-        figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_time_bar.{saveformat}")
+        figpath = osp.join(outdir, f"{dataset_name}_time_bar.{saveformat}")
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
-def degreeDistribution(dataset_name, prune_algos=None):
+def degreeDistribution(dataset_name, outdir=None, prune_algos=None):
     # read csv file, seprated by , and space
     try:
         df = pd.read_csv(osp.join(PROJECT_HOME, f"output_metric_parsed/{dataset_name}/degreeDistribution/log"), header=0, sep=",")
@@ -282,7 +286,7 @@ def degreeDistribution(dataset_name, prune_algos=None):
     df = df[df.prune_rate >= 0]
     df = df[df.prune_rate < 0.93]
 
-    # rename er_min_weighted and er_max_weighted to er_min and er_max
+    # rename
     df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER"
 
     grouped = df.groupby('prune_algo')
@@ -312,7 +316,7 @@ def degreeDistribution(dataset_name, prune_algos=None):
             for key in ["Random", "KNeighbor", "RankDegree", "LocalDegree", "SpanningForest", "Spanner-3", "Spanner-5", 
                         "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER"]:
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
-                                        linewidth=linewidth, label=[key])
+                                        linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
         else:
             for key in prune_algos:
@@ -326,14 +330,14 @@ def degreeDistribution(dataset_name, prune_algos=None):
     plt.tight_layout()
 
     # save plot
-    if saveformat == "png":
+    if outdir is None:
         figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/degreeDistribution/{dataset_name}_degreeDistribution.{saveformat}")
     else:
-        figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_degreeDistribution.{saveformat}")
+        figpath = osp.join(outdir, f"{dataset_name}_degreeDistribution.{saveformat}")
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
-def Diameter(dataset_name, prune_algos=None):
+def Diameter(dataset_name, outdir=None, prune_algos=None):
     # read csv file, seprated by , and space
     for algo in ["Diameter", "ApproximateDiameter"]:
         try:
@@ -398,14 +402,14 @@ def Diameter(dataset_name, prune_algos=None):
         plt.tight_layout()
 
         # save plot
-        if saveformat == "png":
+        if outdir is None:
             figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/{algo}/{dataset_name}_Diameter.{saveformat}")
         else:
-            figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_Diameter.{saveformat}")
+            figpath = osp.join(outdir, f"{dataset_name}_Diameter.{saveformat}")
         os.makedirs(osp.dirname(figpath), exist_ok=True)
         plt.savefig(figpath)
 
-def SPSP_Eccentricity(dataset_name, prune_algos=None):
+def SPSP_Eccentricity(dataset_name, outdir=None, prune_algos=None):
     # read csv file, seprated by , and space
     try:
         df = pd.read_csv(osp.join(PROJECT_HOME, f"output_metric_parsed/{dataset_name}/SPSP_Eccentricity/log"), header=0, sep=",")
@@ -465,10 +469,10 @@ def SPSP_Eccentricity(dataset_name, prune_algos=None):
     plt.tight_layout()
 
     # save plot
-    if saveformat == "png":
+    if outdir is None:
         figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/SPSP_Eccentricity/{dataset_name}_SPSP_unreachable.{saveformat}")
     else:
-        figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_SPSP_unreachable.{saveformat}")
+        figpath = osp.join(outdir, f"{dataset_name}_SPSP_unreachable.{saveformat}")
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
@@ -511,10 +515,10 @@ def SPSP_Eccentricity(dataset_name, prune_algos=None):
     plt.tight_layout()
 
     # save plot
-    if saveformat == "png":
+    if outdir is None:
         figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/SPSP_Eccentricity/{dataset_name}_SPSP_stretch_factor.{saveformat}")
     else:
-        figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_SPSP_stretch_factor.{saveformat}")
+        figpath = osp.join(outdir, f"{dataset_name}_SPSP_stretch_factor.{saveformat}")
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
@@ -560,10 +564,10 @@ def SPSP_Eccentricity(dataset_name, prune_algos=None):
     plt.tight_layout()
 
     # save plot
-    if saveformat == "png":
+    if outdir is None:
         figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/SPSP_Eccentricity/{dataset_name}_SPSP_stretch_factor_with_unreachable_constraint.{saveformat}")
     else:
-        figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_SPSP_stretch_factor_with_unreachable_constraint.{saveformat}")
+        figpath = osp.join(outdir, f"{dataset_name}_SPSP_stretch_factor_with_unreachable_constraint.{saveformat}")
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
@@ -607,10 +611,10 @@ def SPSP_Eccentricity(dataset_name, prune_algos=None):
     plt.tight_layout()
 
     # save plot
-    if saveformat == "png":
+    if outdir is None:
         figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/SPSP_Eccentricity/{dataset_name}_Eccentricity_isolated.{saveformat}")
     else:
-        figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_Eccentricity_isolated.{saveformat}")
+        figpath = osp.join(outdir, f"{dataset_name}_Eccentricity_isolated.{saveformat}")
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
@@ -653,10 +657,10 @@ def SPSP_Eccentricity(dataset_name, prune_algos=None):
     plt.tight_layout()
 
     # save plot
-    if saveformat == "png":
+    if outdir is None:
         figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/SPSP_Eccentricity/{dataset_name}_Eccentricity_stretch_factor.{saveformat}")
     else:
-        figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_Eccentricity_stretch_factor.{saveformat}")
+        figpath = osp.join(outdir, f"{dataset_name}_Eccentricity_stretch_factor.{saveformat}")
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
@@ -702,14 +706,14 @@ def SPSP_Eccentricity(dataset_name, prune_algos=None):
     plt.tight_layout()
 
     # save plot
-    if saveformat == "png":
+    if outdir is None:
         figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/SPSP_Eccentricity/{dataset_name}_Eccentricity_stretch_factor_with_unreachable_constraint.{saveformat}")
     else:
-        figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_Eccentricity_stretch_factor_with_unreachable_constraint.{saveformat}")
+        figpath = osp.join(outdir, f"{dataset_name}_Eccentricity_stretch_factor_with_unreachable_constraint.{saveformat}")
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
-def LocalClusteringCoefficient(dataset_name, prune_algos=None):
+def LocalClusteringCoefficient(dataset_name, outdir=None, prune_algos=None):
     # read csv file, seprated by , and space
     try:
         df = pd.read_csv(osp.join(PROJECT_HOME, f"output_metric_parsed/{dataset_name}/LocalClusteringCoefficient/log"), header=0, sep=",")
@@ -768,14 +772,14 @@ def LocalClusteringCoefficient(dataset_name, prune_algos=None):
     plt.tight_layout()
 
     # save plot
-    if saveformat == "png":
+    if outdir is None:
         figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/LocalClusteringCoefficient/{dataset_name}_MeanClusteringCoefficient.{saveformat}")
     else:
-        figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_MeanClusteringCoefficient.{saveformat}")
+        figpath = osp.join(outdir, f"{dataset_name}_MeanClusteringCoefficient.{saveformat}")
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
-def GlobalClusteringCoefficient(dataset_name, prune_algos=None):
+def GlobalClusteringCoefficient(dataset_name, outdir=None, prune_algos=None):
     # read csv file, seprated by , and space
     try:
         df = pd.read_csv(osp.join(PROJECT_HOME, f"output_metric_parsed/{dataset_name}/GlobalClusteringCoefficient/log"), header=0, sep=",")
@@ -834,14 +838,14 @@ def GlobalClusteringCoefficient(dataset_name, prune_algos=None):
     plt.tight_layout()
 
     # save plot
-    if saveformat == "png":
+    if outdir is None:
         figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/GlobalClusteringCoefficient/{dataset_name}_GlobalClusteringCoefficient.{saveformat}")
     else:
-        figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_GlobalClusteringCoefficient.{saveformat}")
+        figpath = osp.join(outdir, f"{dataset_name}_GlobalClusteringCoefficient.{saveformat}")
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
-def ClusteringF1Similarity(dataset_name, prune_algos=None):
+def ClusteringF1Similarity(dataset_name, outdir=None, prune_algos=None):
     # read csv file, seprated by , and space
     try:
         df = pd.read_csv(osp.join(PROJECT_HOME, f"output_metric_parsed/{dataset_name}/ClusteringF1Similarity/log"), header=0, sep=",")
@@ -901,14 +905,14 @@ def ClusteringF1Similarity(dataset_name, prune_algos=None):
     plt.tight_layout()
 
     # save plot
-    if saveformat == "png":
+    if outdir is None:
         figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/ClusteringF1Similarity/{dataset_name}_ClusteringF1Similarity.{saveformat}")
     else:
-        figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_ClusteringF1Similarity.{saveformat}")
+        figpath = osp.join(outdir, f"{dataset_name}_ClusteringF1Similarity.{saveformat}")
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
-def Centrality(dataset_name, algo, prune_algos=None):
+def Centrality(dataset_name, algo, outdir=None, prune_algos=None):
     # read csv file, seprated by , and space
     try:
         df = pd.read_csv(osp.join(PROJECT_HOME, f"output_metric_parsed/{dataset_name}/{algo}Centrality/log"), header=0, sep=",")
@@ -920,12 +924,12 @@ def Centrality(dataset_name, algo, prune_algos=None):
         df = df[~df.prune_algo.isin(["original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted"])]
     else:
         df = df[df.prune_algo.isin(prune_algos)]
-        df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
-        df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
 
     # remove prune rate < 0
     df = df[df.prune_rate >= 0]
     df = df[df.prune_rate < 0.93]
+    df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
+    df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
 
     grouped = df.groupby('prune_algo')
 
@@ -974,10 +978,10 @@ def Centrality(dataset_name, algo, prune_algos=None):
     plt.tight_layout()
 
     # save plot
-    if saveformat == "png":
+    if outdir is None:
         figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/{algo}Centrality/{dataset_name}_{algo}Centrality_precision.{saveformat}")
     else:
-        figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_{algo}Centrality_precision.{saveformat}")
+        figpath = osp.join(outdir, f"{dataset_name}_{algo}Centrality_precision.{saveformat}")
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
@@ -1026,14 +1030,14 @@ def Centrality(dataset_name, algo, prune_algos=None):
     plt.tight_layout()
 
     # save plot
-    if saveformat == "png":
+    if outdir is None:
         figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/{algo}Centrality/{dataset_name}_{algo}Centrality_correlation.{saveformat}")
     else:
-        figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_{algo}Centrality_correlation.{saveformat}")
+        figpath = osp.join(outdir, f"{dataset_name}_{algo}Centrality_correlation.{saveformat}")
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
-def DetectCommunity(dataset_name, prune_algos=None):
+def DetectCommunity(dataset_name, outdir=None, prune_algos=None):
     # read csv file, seprated by , and space
     try:
         df = pd.read_csv(osp.join(PROJECT_HOME, f"output_metric_parsed/{dataset_name}/DetectCommunity/log"), header=0, sep=",")
@@ -1095,10 +1099,10 @@ def DetectCommunity(dataset_name, prune_algos=None):
     plt.tight_layout()
 
     # save plot
-    if saveformat == "png":
+    if outdir is None:
         figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/DetectCommunity/{dataset_name}_num_community.{saveformat}")
     else:
-        figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_num_community.{saveformat}")
+        figpath = osp.join(outdir, f"{dataset_name}_num_community.{saveformat}")
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
@@ -1142,14 +1146,14 @@ def DetectCommunity(dataset_name, prune_algos=None):
     plt.tight_layout()
 
     # save plot
-    if saveformat == "png":
+    if outdir is None:
         figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/DetectCommunity/{dataset_name}_modularity.{saveformat}")
     else:
-        figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_modularity.{saveformat}")
+        figpath = osp.join(outdir, f"{dataset_name}_modularity.{saveformat}")
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
-def QuadraticFormSimilarity(dataset_name, prune_algos=None):
+def QuadraticFormSimilarity(dataset_name, outdir=None, prune_algos=None):
     # read csv file, seprated by , and space
     try:
         df = pd.read_csv(osp.join(PROJECT_HOME, f"output_metric_parsed/{dataset_name}/QuadraticFormSimilarity/log"), header=0, sep=",")
@@ -1207,14 +1211,14 @@ def QuadraticFormSimilarity(dataset_name, prune_algos=None):
     plt.tight_layout()
 
     # save plot
-    if saveformat == "png":
+    if outdir is None:
         figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/QuadraticFormSimilarity/{dataset_name}_QuadraticFormSimilarity.{saveformat}")
     else:
-        figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_QuadraticFormSimilarity.{saveformat}")
+        figpath = osp.join(outdir, f"{dataset_name}_QuadraticFormSimilarity.{saveformat}")
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
-def MaxFlow(dataset_name, prune_algos=None):
+def MaxFlow(dataset_name, outdir=None, prune_algos=None):
     # read csv file, seprated by , and space
     try:
         df = pd.read_csv(osp.join(PROJECT_HOME, f"output_metric_parsed/{dataset_name}/MaxFlow/log"), header=0, sep=",")
@@ -1273,10 +1277,10 @@ def MaxFlow(dataset_name, prune_algos=None):
     plt.tight_layout()
 
     # save plot
-    if saveformat == "png":
+    if outdir is None:
         figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/MaxFlow/{dataset_name}_MaxFlow_stretch_factor.{saveformat}")
     else:
-        figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_MaxFlow_stretch_factor.{saveformat}")
+        figpath = osp.join(outdir, f"{dataset_name}_MaxFlow_stretch_factor.{saveformat}")
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
@@ -1320,14 +1324,14 @@ def MaxFlow(dataset_name, prune_algos=None):
     plt.tight_layout()
 
     # save plot
-    if saveformat == "png":
+    if outdir is None:
         figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/MaxFlow/{dataset_name}_MaxFLow_unreachable.{saveformat}")
     else:
-        figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_MaxFLow_unreachable.{saveformat}")
+        figpath = osp.join(outdir, f"{dataset_name}_MaxFLow_unreachable.{saveformat}")
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
-def GCN(dataset_name, prune_algos=None):
+def GCN(dataset_name, outdir=None, prune_algos=None):
     # read csv file, seprated by , and space
     try:
         df = pd.read_csv(osp.join(PROJECT_HOME, f"output_metric_parsed/{dataset_name}/GCN/log"), header=0, sep=",")
@@ -1391,14 +1395,14 @@ def GCN(dataset_name, prune_algos=None):
     plt.tight_layout()
 
     # save plot
-    if saveformat == "png":
+    if outdir is None:
         figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/GCN/{dataset_name}_GCN.{saveformat}")
     else:
-        figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_GCN.{saveformat}")
+        figpath = osp.join(outdir, f"{dataset_name}_GCN.{saveformat}")
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
-def ClusterGCN(dataset_name, prune_algos=None):
+def ClusterGCN(dataset_name, outdir=None, prune_algos=None):
     # read csv file, seprated by , and space
     try:
         df = pd.read_csv(osp.join(PROJECT_HOME, f"output_metric_parsed/{dataset_name}/ClusterGCN/log"), header=0, sep=",")
@@ -1462,14 +1466,14 @@ def ClusterGCN(dataset_name, prune_algos=None):
     plt.tight_layout()
 
     # save plot
-    if saveformat == "png":
+    if outdir is None:
         figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/ClusterGCN/{dataset_name}_ClusterGCN.{saveformat}")
     else:
-        figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_ClusterGCN.{saveformat}")
+        figpath = osp.join(outdir, f"{dataset_name}_ClusterGCN.{saveformat}")
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
-def SAGE(dataset_name, prune_algos=None):
+def SAGE(dataset_name, outdir=None, prune_algos=None):
     # read csv file, seprated by , and space
     try:
         df = pd.read_csv(osp.join(PROJECT_HOME, f"output_metric_parsed/{dataset_name}/SAGE/log"), header=0, sep=",")
@@ -1533,10 +1537,10 @@ def SAGE(dataset_name, prune_algos=None):
     plt.tight_layout()
 
     # save plot
-    if saveformat == "png":
+    if outdir is None:
         figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/SAGE/{dataset_name}_SAGE.{saveformat}")
     else:
-        figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_SAGE.{saveformat}")
+        figpath = osp.join(outdir, f"{dataset_name}_SAGE.{saveformat}")
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
@@ -1636,28 +1640,29 @@ if __name__ == "__main__":
 
     elif args.dataset_name == "paper":
         saveformat = "pdf"
+        outdir = osp.join(PROJECT_HOME, "paper_fig")
         addTitle = False
-        SPSP_Eccentricity("ca-AstroPh")
-        Centrality("ca-AstroPh", "TopCloseness", prune_algos=["Random", "LocalDegree", "RankDegree"])
-        ClusteringF1Similarity("ca-HepPh", prune_algos=["Random", "KNeighbor", "LocalSimilarity", "ER-Max_weighted", "ER-Max_unweighted"])
-        ClusteringF1Similarity("com-Amazon")
-        MaxFlow("ca-HepPh", prune_algos=["Random", "KNeighbor", "ForestFire", "ER-Max_weighted", "ER-Max_unweighted"])
-        LocalClusteringCoefficient("com-Amazon", prune_algos=["Random", "GSpar", "LocalSimilarity", "SCAN"])
-        QuadraticFormSimilarity("com-Amazon", prune_algos=["Random", "ER-Max_weighted"])
-        Centrality("com-DBLP", "EstimateBetweenness", prune_algos=["Random", "LocalDegree", "RankDegree"])
-        DetectCommunity("com-DBLP", prune_algos=["Random", "LocalDegree", "KNeighbor", "SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7"])
-        SPSP_Eccentricity("com-DBLP")
-        Diameter("ego-Facebook", prune_algos=["Random", "LocalDegree", "RankDegree"])
-        Centrality("web-Google", "PageRank", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7", "ER-Max_weighted", "ER-Max_unweighted"])
-        Centrality("ego-Facebook", "PageRank", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7", "ER-Max_weighted", "ER-Max_unweighted"])
-        Centrality("ego-Twitter", "Katz", prune_algos=["Random", "KNeighbor", "ER-Max_unweighted"])
-        Centrality("email-Enron", "Eigenvector", prune_algos=["Random", "LocalDegree", "RankDegree"])
-        GlobalClusteringCoefficient("human_gene2", prune_algos=["Random", "GSpar", "LocalSimilarity", "SCAN"])
-        degreeDistribution("ogbn-proteins", prune_algos=["Random", "LocalDegree"])
-        GCN("ogbn-proteins")
-        SAGE("ogbn-proteins")
-        ClusterGCN("Reddit")
-        sparsifier_time("ogbn-proteins")
+        SPSP_Eccentricity("ca-AstroPh", outdir=outdir)
+        Centrality("ca-AstroPh", "TopCloseness", outdir=outdir , prune_algos=["Random", "LocalDegree", "RankDegree"])
+        ClusteringF1Similarity("ca-HepPh", outdir=outdir, prune_algos=["Random", "KNeighbor", "LocalSimilarity", "ER-Max_weighted", "ER-Max_unweighted"])
+        ClusteringF1Similarity("com-Amazon", outdir=outdir)
+        MaxFlow("ca-HepPh", outdir=outdir, prune_algos=["Random", "KNeighbor", "ForestFire", "ER-Max_weighted", "ER-Max_unweighted"])
+        LocalClusteringCoefficient("com-Amazon", outdir=outdir, prune_algos=["Random", "GSpar", "LocalSimilarity", "SCAN"])
+        QuadraticFormSimilarity("com-Amazon", outdir=outdir, prune_algos=["Random", "ER-Max_weighted"])
+        Centrality("com-DBLP", "EstimateBetweenness", outdir=outdir, prune_algos=["Random", "LocalDegree", "RankDegree"])
+        DetectCommunity("com-DBLP", outdir=outdir, prune_algos=["Random", "LocalDegree", "KNeighbor", "SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7"])
+        SPSP_Eccentricity("com-DBLP", outdir=outdir)
+        Diameter("ego-Facebook", outdir=outdir, prune_algos=["Random", "LocalDegree", "RankDegree"])
+        Centrality("web-Google", "PageRank", outdir=outdir, prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7", "ER-Max_weighted", "ER-Max_unweighted"])
+        Centrality("ego-Facebook", "PageRank", outdir=outdir, prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7", "ER-Max_weighted", "ER-Max_unweighted"])
+        Centrality("ego-Twitter", "Katz", outdir=outdir, prune_algos=["Random", "KNeighbor", "ER-Max_unweighted"])
+        Centrality("email-Enron", "Eigenvector", outdir=outdir, prune_algos=["Random", "LocalDegree", "RankDegree"])
+        GlobalClusteringCoefficient("human_gene2", outdir=outdir, prune_algos=["Random", "GSpar", "LocalSimilarity", "SCAN"])
+        degreeDistribution("ogbn-proteins", outdir=outdir, prune_algos=["Random", "LocalDegree"])
+        GCN("ogbn-proteins", outdir=outdir)
+        SAGE("ogbn-proteins", outdir=outdir)
+        ClusterGCN("Reddit", outdir=outdir)
+        sparsifier_time("ogbn-proteins", outdir=outdir)
     else:
         if args.metric == "all":
             degreeDistribution(args.dataset_name)

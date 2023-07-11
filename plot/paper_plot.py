@@ -18,13 +18,7 @@ if PROJECT_HOME is None:
 
 color_map = {
     "RankDegree": "#6baed6",
-    # "ER-Min": "#0570b0",
-    # "ER-Min_unweighted": "#0570b0",
-    # "ER-Min_weighted": "#0570b0",
     "ER": "#0570b0",
-    "ER-Max": "#0570b0",
-    "ER-Max_unweighted": "#0570b0",
-    "ER-Max_weighted": "#addd8e",
     "ER-unweighted": "#0570b0",
     "ER-weighted": "#addd8e",
     "ForestFire": "#238443",
@@ -39,7 +33,6 @@ color_map = {
     "Spanner-5": "#e31a1c",
     "Spanner-7": "#ff7f00",
     "SpanningForest": "#6a3d9a",
-
     "RD": "#6baed6",
     "FF": "#238443",
     "GS": "#e31a1c",
@@ -55,17 +48,17 @@ color_map = {
     "SF": "#6a3d9a",
     "ER-uw": "#0570b0",
     "ER-w": "#addd8e",
+    # "ER-Min": "#0570b0",
+    # "ER-Min_unweighted": "#0570b0",
+    # "ER-Min_weighted": "#0570b0",
+    # "ER-Max": "#0570b0",
+    # "ER-Max_unweighted": "#0570b0",
+    # "ER-Max_weighted": "#addd8e",
 }
 
 marker_map = {
     "RankDegree": "o",
-    # "ER-Min": "o",
-    # "ER-Min_unweighted": "X",
-    # "ER-Min_weighted": "o",
     "ER": "o",
-    "ER-Max": "o",
-    "ER-Max_unweighted": "o",
-    "ER-Max_weighted": "o",
     "ER-unweighted": "o",
     "ER-weighted": "o",
     "ForestFire": "o",
@@ -95,6 +88,12 @@ marker_map = {
     "SF": "^",
     "ER-uw": "o",
     "ER-w": "o",
+    # "ER-Min": "o",
+    # "ER-Min_unweighted": "X",
+    # "ER-Min_weighted": "o",
+    # "ER-Max": "o",
+    # "ER-Max_unweighted": "o",
+    # "ER-Max_weighted": "o",
 }
 
 text_map = {
@@ -121,13 +120,7 @@ text_map = {
 
 hatch_map = {
     "RankDegree": "/",
-    # "ER-Min": "o",
-    # "ER-Min_unweighted": "X",
-    # "ER-Min_weighted": "o",
     "ER": "/",
-    "ER-Max": "",
-    "ER-Max_unweighted": "",
-    "ER-Max_weighted": "",
     "ER-unweighted": "",
     "ER-weighted": "",
     "ForestFire": "",
@@ -157,6 +150,12 @@ hatch_map = {
     "SF": "",
     "ER-uw": "",
     "ER-w": "",
+    # "ER-Min": "o",
+    # "ER-Min_unweighted": "X",
+    # "ER-Min_weighted": "o",
+    # "ER-Max": "",
+    # "ER-Max_unweighted": "",
+    # "ER-Max_weighted": "",
 }
 
 
