@@ -226,7 +226,7 @@ def graphSparsifier(dataset_names, sparsifiers, targetRatios, config, multi_proc
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset_name", type=str, required=True, help="name of the dataset, or 'all'")
-    parser.add_argument("--mode", choices=["sparsify", "eval", "all"], required=True, help="sparsify: only sparsify graphs; eval: only evaluate metrics (need to have run sparsify first); all: run both sparsify and eval")
+    parser.add_argument("--mode", choices=["sparsify", "eval", "all", "clean"], required=True, help="sparsify: only sparsify graphs; eval: only evaluate metrics (need to have run sparsify first); all: run both sparsify and eval; clean: clean all data for given [dataset_name]")
     args = parser.parse_args()
 
     config = json.load(open(f"{PROJECT_HOME}/config.json", "r"))
@@ -250,6 +250,21 @@ def main():
                         ]
     else:
         dataset_names = [args.dataset_name]
+
+    if args.mode == "clean":
+        print(f"About to delete raw graph, sparsified graph, sparsifier results and evaluation results for {dataset_names}. Are you sure? (y/n)")
+        if input() == "y":
+            for dataset_name in dataset_names:
+                os.system(f"rm -rf {PROJECT_HOME}/data/{dataset_name}")
+                os.system(f"rm -rf {PROJECT_HOME}/output_metric_raw/{dataset_name}")
+                os.system(f"rm -rf {PROJECT_HOME}/output_metric_parsed/{dataset_name}")
+                os.system(f"rm -rf {PROJECT_HOME}/output_sparsifier_raw/{dataset_name}.txt")
+                os.system(f"rm -rf {PROJECT_HOME}/output_sparsifier_parsed/{dataset_name}.csv")
+            print(f"Deleted {dataset_names}.")
+        else:
+            print("Aborted.")
+        exit(0)
+
 
 
     if args.mode == "sparsify" or args.mode == "all":
