@@ -87,12 +87,12 @@ This will download data and do necessary data pre-processin. ``all`` will downlo
 
 ## Run
 ```bash
-python $PROJECT_HOME/src/main.py --dataset_name [dataset_name/all] --mode [sparsify/eval/all]
+python $PROJECT_HOME/src/main.py --dataset_name [dataset_name/all] --mode [sparsify/eval/all/clean]
 ```
 
 ``--dataset_name`` indicates the dataset to use, use name instead of the dataset path, ``all`` will run for all datasets. It is recommended not to use ``all`` unless you know what you are doing because it can take a long time and large file space.
 
-``--mode`` indicates what to run. ``sparsify`` will run all sparsifiers on the given ``dataset_name``. ``eval`` assumed the sparsified files already exists, and evaluate the performance of the sparsified graphs on all metrics, run ``eval`` only if you have run ``sparsify`` on the given dataset. ``all`` will run ``sparsify`` and ``eval`` in tandem.
+``--mode`` indicates what to run. ``sparsify`` will run all sparsifiers on the given ``dataset_name``. ``eval`` assumed the sparsified files already exists, and evaluate the performance of the sparsified graphs on all metrics, run ``eval`` only if you have run ``sparsify`` on the given dataset. ``all`` will run ``sparsify`` and ``eval`` in tandem. ``clean`` will delete all files (raw graph, sparsified graphs, metric output, sparsifier output) associated with given dataset_name.
 
 To run in a finer granularity, e.g. if want to run only a subset of sparsifiers and/or a subset of evaluation metrics, you need to modify the ``$PROJECT_HOME/src/main.py`` file, simply comment out lines for specific sparsifers and evaluation metrics should do.
 
