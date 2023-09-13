@@ -48,12 +48,12 @@ color_map = {
     "SF": "#6a3d9a",
     "ER-uw": "#0570b0",
     "ER-w": "#addd8e",
-    # "ER-Min": "#0570b0",
-    # "ER-Min_unweighted": "#0570b0",
-    # "ER-Min_weighted": "#0570b0",
-    # "ER-Max": "#0570b0",
-    # "ER-Max_unweighted": "#0570b0",
-    # "ER-Max_weighted": "#addd8e",
+    "ER-Min": "#0570b0",
+    "ER-Min_unweighted": "#0570b0",
+    "ER-Min_weighted": "#0570b0",
+    "ER-Max": "#0570b0",
+    "ER-Max_unweighted": "#0570b0",
+    "ER-Max_weighted": "#addd8e",
 }
 
 marker_map = {
@@ -88,12 +88,12 @@ marker_map = {
     "SF": "^",
     "ER-uw": "o",
     "ER-w": "o",
-    # "ER-Min": "o",
-    # "ER-Min_unweighted": "X",
-    # "ER-Min_weighted": "o",
-    # "ER-Max": "o",
-    # "ER-Max_unweighted": "o",
-    # "ER-Max_weighted": "o",
+    "ER-Min": "o",
+    "ER-Min_unweighted": "X",
+    "ER-Min_weighted": "o",
+    "ER-Max": "o",
+    "ER-Max_unweighted": "o",
+    "ER-Max_weighted": "o",
 }
 
 text_map = {
@@ -150,12 +150,12 @@ hatch_map = {
     "SF": "",
     "ER-uw": "",
     "ER-w": "",
-    # "ER-Min": "o",
-    # "ER-Min_unweighted": "X",
-    # "ER-Min_weighted": "o",
-    # "ER-Max": "",
-    # "ER-Max_unweighted": "",
-    # "ER-Max_weighted": "",
+    "ER-Min": "o",
+    "ER-Min_unweighted": "X",
+    "ER-Min_weighted": "o",
+    "ER-Max": "",
+    "ER-Max_unweighted": "",
+    "ER-Max_weighted": "",
 }
 
 
@@ -1253,23 +1253,23 @@ if __name__ == "__main__":
     # ["Random", "KNeighbor", "LocalDegree", "RankDegree", "SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7", 
     #  "ForestFire", "LSpar", "GSpar","LocalSimilarity", "SCAN", "ER-Max_weighted", "ER-Max_unweighted"]
 
-    # SPSP_Eccentricity("ca-AstroPh")
+    SPSP_Eccentricity("ca-AstroPh")
     Centrality("ca-AstroPh", "TopCloseness", prune_algos=["Random", "LocalDegree", "RankDegree", "ForestFire", "LSpar", "GSpar", "SCAN"])
-    # ClusteringF1Similarity("ca-HepPh", prune_algos=["Random", "KNeighbor", "LocalDegree", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-Max_weighted", "ER-Max_unweighted"])
-    # MaxFlow("ca-HepPh", prune_algos=["Random", "KNeighbor", "ForestFire", "ER-Max_weighted", "ER-Max_unweighted"])
-    # LocalClusteringCoefficient("com-Amazon", prune_algos=["Random", "KNeighbor", "SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7", "LocalSimilarity", "GSpar", "SCAN"])
-    # QuadraticFormSimilarity("com-Amazon", prune_algos=["Random", "ER-Max_weighted"])
+    ClusteringF1Similarity("ca-HepPh", prune_algos=["Random", "KNeighbor", "LocalDegree", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-Max_weighted", "ER-Max_unweighted"])
+    MaxFlow("ca-HepPh", prune_algos=["Random", "KNeighbor", "ForestFire", "ER-Max_weighted", "ER-Max_unweighted"])
+    LocalClusteringCoefficient("com-Amazon", prune_algos=["Random", "KNeighbor", "SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7", "LocalSimilarity", "GSpar", "SCAN"])
+    QuadraticFormSimilarity("com-Amazon", prune_algos=["Random", "ER-Max_weighted"])
     Centrality("com-DBLP", "EstimateBetweenness", prune_algos=["Random", "LocalDegree", "RankDegree", "ForestFire", "LSpar", "GSpar", "SCAN"])
-    # DetectCommunity("com-DBLP", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7", "GSpar"])
+    DetectCommunity("com-DBLP", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7", "GSpar"])
     # SPSP_Eccentricity("com-DBLP")
-    # Diameter("ego-Facebook", prune_algos=["Random", "LocalDegree", "RankDegree", "GSpar", "LocalSimilarity", "SCAN"])
-    # Centrality("web-Google", "PageRank", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "GSpar", "SCAN", "ER-Max_weighted", "ER-Max_unweighted"])
-    # Centrality("ego-Facebook", "PageRank", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "GSpar", "SCAN", "ER-Max_weighted", "ER-Max_unweighted"])
-    # Centrality("ego-Twitter", "Katz", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "ForestFire", "ER-Max_unweighted"])
-    # Centrality("email-Enron", "Eigenvector", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "ForestFire"])
-    # GlobalClusteringCoefficient("human_gene2", prune_algos=["Random", "KNeighbor", "LocalSimilarity", "GSpar", "SCAN", "ER-Max_weighted"])
-    # degreeDistribution("ogbn-proteins", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "ForestFire"])
+    Diameter("ego-Facebook", prune_algos=["Random", "LocalDegree", "RankDegree", "GSpar", "LocalSimilarity", "SCAN"])
+    Centrality("web-Google", "PageRank", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "GSpar", "SCAN", "ER-Max_weighted", "ER-Max_unweighted"])
+    Centrality("ego-Facebook", "PageRank", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "GSpar", "SCAN", "ER-Max_weighted", "ER-Max_unweighted"])
+    Centrality("ego-Twitter", "Katz", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "ForestFire", "ER-Max_unweighted"])
+    Centrality("email-Enron", "Eigenvector", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "ForestFire"])
+    GlobalClusteringCoefficient("human_gene2", prune_algos=["Random", "KNeighbor", "LocalSimilarity", "GSpar", "SCAN", "ER-Max_weighted"])
+    degreeDistribution("ogbn-proteins", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "ForestFire"])
     # GCN("ogbn-proteins")
-    # SAGE("ogbn-proteins", prune_algos=["Random", "LocalDegree", "RankDegree", "GSpar", "LocalSimilarity", "SCAN"])
-    # ClusterGCN("Reddit", prune_algos=["Random", "LocalDegree", "RankDegree", "ForestFire", "GSpar", "SCAN"])
+    SAGE("ogbn-proteins", prune_algos=["Random", "LocalDegree", "RankDegree", "GSpar", "LocalSimilarity", "SCAN"])
+    ClusterGCN("Reddit", prune_algos=["Random", "LocalDegree", "RankDegree", "ForestFire", "GSpar", "SCAN"])
     # sparsifier_time("ogbn-proteins")

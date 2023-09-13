@@ -131,7 +131,7 @@ xlabelfontsize = 40
 ylabelfontsize = 40
 xtickfontsize = 30
 ytickfontsize = 30
-legendfontsize = 25
+legendfontsize = 20
 gridon = True
 saveformat = "pdf"
 addTitle = False
@@ -150,7 +150,7 @@ def sparsifier_time(dataset_name, outdir=None):
     # df = df[~df.prune_algo.isin(["original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted", "ER-Max_weighted"])]
     
     # remove prune rate < 0
-    df = df[df.prune_rate >= 0]
+    df = df[df.prune_rate >= 0.05]
 
     prune_algo_map = {"randomEdgeSparsifier": "RN",
                       "localDegreeSparsifier": "LD",
@@ -283,7 +283,7 @@ def degreeDistribution(dataset_name, outdir=None, prune_algos=None):
         df = df[df.prune_algo.isin(prune_algos)]
     
     # remove prune rate < 0
-    df = df[df.prune_rate >= 0]
+    df = df[df.prune_rate >= 0.05]
     df = df[df.prune_rate < 0.93]
 
     # rename
@@ -323,8 +323,8 @@ def degreeDistribution(dataset_name, outdir=None, prune_algos=None):
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=key)
                 handles.append(handle)
-        # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-        plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
+        plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+        # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
     else:
         plt.legend().set_visible(False)
     plt.tight_layout()
@@ -349,12 +349,12 @@ def Diameter(dataset_name, outdir=None, prune_algos=None):
         ground_truth = df[df.prune_algo == "original"][f"{algo}_mean"].values[0]
         # remove some algorithms
         if prune_algos is None:
-            df = df[~df.prune_algo.isin(["original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted", "ER-Max_weighted"])]
+            df = df[~df.prune_algo.isin(["original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted"])]
         else:
             df = df[df.prune_algo.isin(prune_algos)]
 
         # remove prune rate < 0
-        df = df[df.prune_rate >= 0]
+        df = df[df.prune_rate >= 0.05]
         df = df[df.prune_rate < 0.93]
         df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
         df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
@@ -386,7 +386,7 @@ def Diameter(dataset_name, outdir=None, prune_algos=None):
             handles = []
             if prune_algos is None:
                 for key in ["Random", "KNeighbor", "RankDegree", "LocalDegree", "SpanningForest", "Spanner-3", "Spanner-5", 
-                            "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-weighted"]:
+                            "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-weighted", "ER-unweighted"]:
                     handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                             linewidth=linewidth, label=text_map[key])
                     handles.append(handle)
@@ -395,8 +395,8 @@ def Diameter(dataset_name, outdir=None, prune_algos=None):
                     handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                             linewidth=linewidth, label=key)
                     handles.append(handle)
-            # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-            plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
+            plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+            # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
         else:
             plt.legend().set_visible(False)
         plt.tight_layout()
@@ -418,19 +418,19 @@ def SPSP_Eccentricity(dataset_name, outdir=None, prune_algos=None):
     original_unreachable = df[df.prune_algo == "original"]["Unreachable_mean"].values[0]
     original_isolated = df[df.prune_algo == "original"]["Isolated_mean"].values[0]
     if prune_algos is None:
-        df = df[~df.prune_algo.isin(["original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted", "ER-Max_weighted"])]
+        df = df[~df.prune_algo.isin(["original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted"])]
     else:
         df = df[df.prune_algo.isin(prune_algos)]
 
     # remove prune rate < 0
-    df = df[df.prune_rate >= 0]
+    df = df[df.prune_rate >= 0.05]
     df = df[df.prune_rate < 0.93]
     df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
     df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
     grouped = df.groupby('prune_algo')
 
     ### plot SPSP unreachable ratio
-    plot_legend = False
+    plot_legend = True
     if plot_legend:
         fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation, figheight+figheight_legend_compensation))
     else:
@@ -453,7 +453,7 @@ def SPSP_Eccentricity(dataset_name, outdir=None, prune_algos=None):
         handles = []
         if prune_algos is None:
             for key in ["Random", "KNeighbor", "RankDegree", "LocalDegree", "SpanningForest", "Spanner-3", "Spanner-5", 
-                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-unweighted"]:
+                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-weighted", "ER-unweighted"]:
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
@@ -477,7 +477,7 @@ def SPSP_Eccentricity(dataset_name, outdir=None, prune_algos=None):
     plt.savefig(figpath)
 
     ### plot SPSP stretch factor
-    plot_legend = False
+    plot_legend = True
     if plot_legend:
         fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation, figheight+figheight_legend_compensation))
     else:
@@ -499,7 +499,7 @@ def SPSP_Eccentricity(dataset_name, outdir=None, prune_algos=None):
         handles = []
         if prune_algos is None:
             for key in ["Random", "KNeighbor", "RankDegree", "LocalDegree", "SpanningForest", "Spanner-3", "Spanner-5", 
-                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-unweighted"]:
+                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-weighted", "ER-unweighted"]:
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
@@ -548,8 +548,8 @@ def SPSP_Eccentricity(dataset_name, outdir=None, prune_algos=None):
         handles = []
         if prune_algos is None:
             for key in ["Random", "KNeighbor", "RankDegree", "LocalDegree", "SpanningForest", "Spanner-3", "Spanner-5", 
-                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-unweighted"]:
-                handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize-5, 
+                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-weighted", "ER-unweighted"]:
+                handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
         else:
@@ -557,7 +557,7 @@ def SPSP_Eccentricity(dataset_name, outdir=None, prune_algos=None):
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
-        plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize-5)
+        plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
         # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
     else:
         plt.legend().set_visible(False)
@@ -572,7 +572,7 @@ def SPSP_Eccentricity(dataset_name, outdir=None, prune_algos=None):
     plt.savefig(figpath)
 
     ### plot Eccentricity isolated ratio
-    plot_legend = False
+    plot_legend = True
     if plot_legend:
         fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation, figheight+figheight_legend_compensation))
     else:
@@ -595,7 +595,7 @@ def SPSP_Eccentricity(dataset_name, outdir=None, prune_algos=None):
         handles = []
         if prune_algos is None:
             for key in ["Random", "KNeighbor", "RankDegree", "LocalDegree", "SpanningForest", "Spanner-3", "Spanner-5", 
-                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-unweighted"]:
+                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-weighted", "ER-unweighted"]:
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
@@ -619,7 +619,7 @@ def SPSP_Eccentricity(dataset_name, outdir=None, prune_algos=None):
     plt.savefig(figpath)
 
     ### plot Eccentricity stretch factor
-    plot_legend = False
+    plot_legend = True
     if plot_legend:
         fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation, figheight+figheight_legend_compensation))
     else:
@@ -641,7 +641,7 @@ def SPSP_Eccentricity(dataset_name, outdir=None, prune_algos=None):
         handles = []
         if prune_algos is None:
             for key in ["Random", "KNeighbor", "RankDegree", "LocalDegree", "SpanningForest", "Spanner-3", "Spanner-5", 
-                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-unweighted"]:
+                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-weighted", "ER-unweighted"]:
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
@@ -690,8 +690,8 @@ def SPSP_Eccentricity(dataset_name, outdir=None, prune_algos=None):
         handles = []
         if prune_algos is None:
             for key in ["Random", "KNeighbor", "RankDegree", "LocalDegree", "SpanningForest", "Spanner-3", "Spanner-5", 
-                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-unweighted"]:
-                handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize-5, 
+                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-weighted", "ER-unweighted"]:
+                handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
         else:
@@ -699,7 +699,7 @@ def SPSP_Eccentricity(dataset_name, outdir=None, prune_algos=None):
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
-        plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize-5)
+        plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
         # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
     else:
         plt.legend().set_visible(False)
@@ -721,14 +721,15 @@ def LocalClusteringCoefficient(dataset_name, outdir=None, prune_algos=None):
         return
     mcc_ground_truth = df[df.prune_algo == "original"]["MeanClusteringCoefficient_mean"].values[0]
     if prune_algos is None:
-        df = df[~df.prune_algo.isin(["original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted", "ER-Max_weighted"])]
+        df = df[~df.prune_algo.isin(["original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted"])]
     else:
         df = df[df.prune_algo.isin(prune_algos)]
 
     # remove prune rate < 0
-    df = df[df.prune_rate >= 0]
+    df = df[df.prune_rate >= 0.05]
     df = df[df.prune_rate < 0.93]
-    df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER"
+    df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
+    df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
 
     grouped = df.groupby('prune_algo')
 
@@ -756,7 +757,7 @@ def LocalClusteringCoefficient(dataset_name, outdir=None, prune_algos=None):
         handles = []
         if prune_algos is None:
             for key in ["Random", "KNeighbor", "RankDegree", "LocalDegree", "SpanningForest", "Spanner-3", "Spanner-5", 
-                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER"]:
+                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-weighted", "ER-unweighted"]:
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
@@ -765,8 +766,8 @@ def LocalClusteringCoefficient(dataset_name, outdir=None, prune_algos=None):
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
-        # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-        plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
+        plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+        # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
     else:
         plt.legend().set_visible(False)
     plt.tight_layout()
@@ -787,14 +788,15 @@ def GlobalClusteringCoefficient(dataset_name, outdir=None, prune_algos=None):
         return
     gcc_ground_truth = df[df.prune_algo == "original"]["GlobalClusteringCoefficient_mean"].values[0]
     if prune_algos is None:
-        df = df[~df.prune_algo.isin(["original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted", "ER-Max_weighted"])]
+        df = df[~df.prune_algo.isin(["original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted"])]
     else:
         df = df[df.prune_algo.isin(prune_algos)]
 
     # remove prune rate < 0
-    df = df[df.prune_rate >= 0]
+    df = df[df.prune_rate >= 0.05]
     df = df[df.prune_rate < 0.93]
-    df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER"
+    df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
+    df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
 
     grouped = df.groupby('prune_algo')
 
@@ -822,7 +824,7 @@ def GlobalClusteringCoefficient(dataset_name, outdir=None, prune_algos=None):
         handles = []
         if prune_algos is None:
             for key in ["Random", "KNeighbor", "RankDegree", "LocalDegree", "SpanningForest", "Spanner-3", "Spanner-5", 
-                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER"]:
+                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-weighted", "ER-unweighted"]:
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
@@ -831,8 +833,8 @@ def GlobalClusteringCoefficient(dataset_name, outdir=None, prune_algos=None):
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
-        # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-        plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
+        plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+        # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
     else:
         plt.legend().set_visible(False)
     plt.tight_layout()
@@ -858,7 +860,7 @@ def ClusteringF1Similarity(dataset_name, outdir=None, prune_algos=None):
         df = df[df.prune_algo.isin(prune_algos)]
 
     # remove prune rate < 0
-    df = df[df.prune_rate >= 0]
+    df = df[df.prune_rate >= 0.05]
     df = df[df.prune_rate < 0.93]
     df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
     df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
@@ -898,8 +900,8 @@ def ClusteringF1Similarity(dataset_name, outdir=None, prune_algos=None):
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
-        # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-        plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
+        plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+        # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
     else:
         plt.legend().set_visible(False)
     plt.tight_layout()
@@ -926,7 +928,7 @@ def Centrality(dataset_name, algo, outdir=None, prune_algos=None):
         df = df[df.prune_algo.isin(prune_algos)]
 
     # remove prune rate < 0
-    df = df[df.prune_rate >= 0]
+    df = df[df.prune_rate >= 0.05]
     df = df[df.prune_rate < 0.93]
     df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
     df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
@@ -971,8 +973,8 @@ def Centrality(dataset_name, algo, outdir=None, prune_algos=None):
                     handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                             linewidth=linewidth, label=key)
                     handles.append(handle)
-        # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-        plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
+        plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+        # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
     else:
         plt.legend().set_visible(False)
     plt.tight_layout()
@@ -1023,8 +1025,8 @@ def Centrality(dataset_name, algo, outdir=None, prune_algos=None):
                     handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                             linewidth=linewidth, label=key)
                     handles.append(handle)
-        # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-        plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
+        plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+        # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
     else:
         plt.legend().set_visible(False)
     plt.tight_layout()
@@ -1051,7 +1053,7 @@ def DetectCommunity(dataset_name, outdir=None, prune_algos=None):
         df = df[df.prune_algo.isin(prune_algos)]
 
     # remove prune rate < 0
-    df = df[df.prune_rate >= 0]
+    df = df[df.prune_rate >= 0.05]
     df = df[df.prune_rate < 0.93]
     df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
     df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
@@ -1061,7 +1063,7 @@ def DetectCommunity(dataset_name, outdir=None, prune_algos=None):
     ### plot number of community
     plot_legend = True
     if plot_legend:
-        fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation, figheight+figheight_legend_compensation+1))
+        fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation, figheight+figheight_legend_compensation))
     else:
         fig, ax = plt.subplots(figsize=(figwidth, figheight))
     for key in grouped.groups.keys():
@@ -1072,7 +1074,7 @@ def DetectCommunity(dataset_name, outdir=None, prune_algos=None):
     if addTitle:
         plt.title(f"Number of Community ({dataset_name})", fontsize=titlefontsize)
     plt.xlabel("Prune Rate", fontsize=xlabelfontsize-5)
-    plt.ylabel("Number of Communities", fontsize=ylabelfontsize-5)
+    plt.ylabel("# Communities", fontsize=ylabelfontsize-5)
     plt.yscale("log")
     plt.xticks(fontsize=xtickfontsize)
     plt.yticks(fontsize=ytickfontsize)
@@ -1092,8 +1094,8 @@ def DetectCommunity(dataset_name, outdir=None, prune_algos=None):
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
-        # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-        plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.4), ncol=5, fontsize=legendfontsize)
+        plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+        # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.4), ncol=5, fontsize=legendfontsize)
     else:
         plt.legend().set_visible(False)
     plt.tight_layout()
@@ -1139,8 +1141,8 @@ def DetectCommunity(dataset_name, outdir=None, prune_algos=None):
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
-        # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-        plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.4), ncol=5, fontsize=legendfontsize)
+        plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+        # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.4), ncol=5, fontsize=legendfontsize)
     else:
         plt.legend().set_visible(False)
     plt.tight_layout()
@@ -1165,7 +1167,7 @@ def QuadraticFormSimilarity(dataset_name, outdir=None, prune_algos=None):
         df = df[df.prune_algo.isin(prune_algos)]
 
     # remove prune rate < 0
-    df = df[df.prune_rate >= 0]
+    df = df[df.prune_rate >= 0.05]
     df = df[df.prune_rate < 0.93]
     df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
     df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
@@ -1204,8 +1206,8 @@ def QuadraticFormSimilarity(dataset_name, outdir=None, prune_algos=None):
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=key)
                 handles.append(handle)
-        # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-        plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
+        plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+        # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
     else:
         plt.legend().set_visible(False)
     plt.tight_layout()
@@ -1231,7 +1233,7 @@ def MaxFlow(dataset_name, outdir=None, prune_algos=None):
         df = df[df.prune_algo.isin(prune_algos)]
 
     # remove prune rate < 0
-    df = df[df.prune_rate >= 0]
+    df = df[df.prune_rate >= 0.05]
     df = df[df.prune_rate < 0.93]
     df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
     df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
@@ -1270,8 +1272,8 @@ def MaxFlow(dataset_name, outdir=None, prune_algos=None):
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
-        # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-        plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
+        plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+        # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
     else:
         plt.legend().set_visible(False)
     plt.tight_layout()
@@ -1317,8 +1319,8 @@ def MaxFlow(dataset_name, outdir=None, prune_algos=None):
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
-        # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-        plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
+        plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+        # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
     else:
         plt.legend().set_visible(False)
     plt.tight_layout()
@@ -1327,7 +1329,53 @@ def MaxFlow(dataset_name, outdir=None, prune_algos=None):
     if outdir is None:
         figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/MaxFlow/{dataset_name}_MaxFLow_unreachable.{saveformat}")
     else:
-        figpath = osp.join(outdir, f"{dataset_name}_MaxFLow_unreachable.{saveformat}")
+        figpath = osp.join(outdir, f"{dataset_name}_MaxFlow_unreachable.{saveformat}")
+    os.makedirs(osp.dirname(figpath), exist_ok=True)
+    plt.savefig(figpath)
+
+    ### plot MaxFlow stretch factor with constraint
+    plot_legend = True
+    if plot_legend:
+        fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation, figheight+figheight_legend_compensation))
+    else:
+        fig, ax = plt.subplots(figsize=(figwidth, figheight))
+    df = df[df.Unreachable_mean < original_unreachable+0.2]
+    grouped = df.groupby('prune_algo')
+    for key in grouped.groups.keys():
+        grouped.get_group(key).plot(x="prune_rate", y="MaxFlow_mean", yerr="MaxFlow_std", 
+                                    ax=ax, marker=marker_map[key], label=key, color=color_map[key], markersize=markersize, 
+                                    linewidth=linewidth, capsize=capsize, capthick=capthick, elinewidth=elinewidth)
+    plt.xlabel("Prune Rate", fontsize=xlabelfontsize)
+    plt.ylabel("Mean Stretch Factor", fontsize=ylabelfontsize)
+    plt.xticks(fontsize=xtickfontsize)
+    plt.yticks(fontsize=ytickfontsize)
+    plt.grid(gridon)
+
+    # make legend without error bar
+    if plot_legend:
+        handles = []
+        if prune_algos is None:
+            for key in ["Random", "KNeighbor", "RankDegree", "LocalDegree", "SpanningForest", "Spanner-3", "Spanner-5", 
+                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-weighted", "ER-unweighted"]:
+                handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
+                                        linewidth=linewidth, label=text_map[key])
+                handles.append(handle)
+        else:
+            for key in prune_algos:
+                handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
+                                        linewidth=linewidth, label=text_map[key])
+                handles.append(handle)
+        # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+        plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+    else:
+        plt.legend().set_visible(False)
+    plt.tight_layout()
+
+    # save plot
+    if outdir is None:
+        figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/MaxFlow/{dataset_name}_MaxFlow_stretch_factor_with_constraint.{saveformat}")
+    else:
+        figpath = osp.join(outdir, f"{dataset_name}_MaxFlow_unreachable.{saveformat}")
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
@@ -1340,12 +1388,12 @@ def GCN(dataset_name, outdir=None, prune_algos=None):
     full_acc = df[df.prune_algo == "original"]["test_acc"].values[0]
     empty_acc = df[df.prune_algo == "empty"]["test_acc"].values[0]
     if prune_algos is None:
-        df = df[~df.prune_algo.isin(["original", "empty", "original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted", "ER-Max_weighted"])]
+        df = df[~df.prune_algo.isin(["original", "empty", "original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted"])]
     else:
         df = df[df.prune_algo.isin(prune_algos)]
 
     # remove prune rate < 0
-    df = df[df.prune_rate >= 0]
+    df = df[df.prune_rate >= 0.05]
     df = df[df.prune_rate < 0.93]
     df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
     df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
@@ -1379,7 +1427,7 @@ def GCN(dataset_name, outdir=None, prune_algos=None):
         handles = []
         if prune_algos is None:
             for key in ["Random", "KNeighbor", "RankDegree", "LocalDegree", "SpanningForest", "Spanner-3", "Spanner-5", 
-                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-unweighted"]:
+                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-weighted", "ER-unweighted"]:
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
@@ -1388,8 +1436,8 @@ def GCN(dataset_name, outdir=None, prune_algos=None):
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
-        # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-        plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
+        plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+        # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
     else:
         plt.legend().set_visible(False)
     plt.tight_layout()
@@ -1411,15 +1459,16 @@ def ClusterGCN(dataset_name, outdir=None, prune_algos=None):
     full_acc = df[df.prune_algo == "original"]["test_acc"].values[0]
     empty_acc = df[df.prune_algo == "empty"]["test_acc"].values[0]
     if prune_algos is None:
-        df = df[~df.prune_algo.isin(["original", "empty", "original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted", "ER-Max_weighted"])]
+        df = df[~df.prune_algo.isin(["original", "empty", "original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted"])]
     else:
         df = df[df.prune_algo.isin(prune_algos)]
 
     # remove prune rate < 0
-    df = df[df.prune_rate >= 0]
+    df = df[df.prune_rate >= 0.05]
     df = df[df.prune_rate < 0.93]
     df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
     df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
+    df.loc[df.prune_algo == "ER-Max", "prune_algo"] = "ER"
 
     # sort df by prune rate
     df = df.sort_values(by=['prune_rate'])
@@ -1450,7 +1499,7 @@ def ClusterGCN(dataset_name, outdir=None, prune_algos=None):
         handles = []
         if prune_algos is None:
             for key in ["Random", "KNeighbor", "RankDegree", "LocalDegree", "SpanningForest", "Spanner-3", "Spanner-5", 
-                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-unweighted"]:
+                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER"]:
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
@@ -1459,8 +1508,8 @@ def ClusterGCN(dataset_name, outdir=None, prune_algos=None):
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
-        # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-        plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
+        plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+        # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
     else:
         plt.legend().set_visible(False)
     plt.tight_layout()
@@ -1482,15 +1531,16 @@ def SAGE(dataset_name, outdir=None, prune_algos=None):
     full_acc = df[df.prune_algo == "original"]["test_acc"].values[0]
     empty_acc = df[df.prune_algo == "empty"]["test_acc"].values[0]
     if prune_algos is None:
-        df = df[~df.prune_algo.isin(["original", "empty", "original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted", "ER-Max_weighted"])]
+        df = df[~df.prune_algo.isin(["original", "empty", "original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted"])]
     else:
         df = df[df.prune_algo.isin(prune_algos)]
 
     # remove prune rate < 0
-    df = df[df.prune_rate >= 0]
+    df = df[df.prune_rate >= 0.05]
     df = df[df.prune_rate < 0.93]
     df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
     df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
+    df.loc[df.prune_algo == "ER-Max", "prune_algo"] = "ER"
 
     # sort df by prune rate
     df = df.sort_values(by=['prune_rate'])
@@ -1521,7 +1571,7 @@ def SAGE(dataset_name, outdir=None, prune_algos=None):
         handles = []
         if prune_algos is None:
             for key in ["Random", "KNeighbor", "RankDegree", "LocalDegree", "SpanningForest", "Spanner-3", "Spanner-5", 
-                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-unweighted"]:
+                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER"]:
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
@@ -1530,8 +1580,8 @@ def SAGE(dataset_name, outdir=None, prune_algos=None):
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
-        # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-        plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
+        plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+        # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
     else:
         plt.legend().set_visible(False)
     plt.tight_layout()
@@ -1560,6 +1610,7 @@ if __name__ == "__main__":
                              "com-DBLP", 
                              "com-LiveJournal", 
                              "com-Amazon", 
+                             "com-friendster", 
                              "email-Enron", 
                              "wiki-Talk", 
                              "cit-HepPh", 

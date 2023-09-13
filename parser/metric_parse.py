@@ -276,7 +276,7 @@ def degreeDistribution(dataset_name):
         # add prune_rate column
         df['prune_rate'] = (1-df['num_edges'].astype(int)/original_edge).round(2)
         # for prune_algo == ForestFire, round prune_rate to closest 0.1 if prune rate is smaller than 0.93
-        df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'] = df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'].round(1)
+        # df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'] = df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'].round(1)
         # group by same prune_algo and prune_rate, count occurance, and calculate mean and std, and add count, mean std columns to df
         df = df.groupby(['prune_algo', 'prune_rate']).agg({'Bhattacharyya_distance': ['count', 'mean', 'std']})
         # flatten multi-index columns, and merge multiple hearders
@@ -308,7 +308,7 @@ def Centrality(dataset_name):
             # add prune_rate column
             df['prune_rate'] = (1-df['num_edges'].astype(int)/original_edge).round(2)
             # for prune_algo == ForestFire, round prune_rate to closest 0.1 if prune rate is smaller than 0.93
-            df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'] = df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'].round(1)
+            # df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'] = df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'].round(1)
             # group by same prune_algo and prune_rate, count occurance, and calculate mean and std, and add count, mean std columns to df
             df = df.groupby(['prune_algo', 'prune_rate']).agg({'top_100_precision': ['count', 'mean', 'std'], 'top_100_correlation': ['count', 'mean', 'std']})
             # flatten multi-index columns, and merge multiple hearders
@@ -339,7 +339,7 @@ def DetectCommunity(dataset_name):
         # add prune_rate column
         df['prune_rate'] = (1-df['num_edges'].astype(int)/original_edge).round(2)
         # for prune_algo == ForestFire, round prune_rate to closest 0.1 if prune rate is smaller than 0.93
-        df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'] = df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'].round(1)
+        # df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'] = df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'].round(1)
         # group by same prune_algo and prune_rate, count occurance, and calculate mean and std, and add count, mean std columns to df
         df = df.groupby(['prune_algo', 'prune_rate']).agg({'num_community': ['count', 'mean', 'std'], 'modularity': ['count', 'mean', 'std']})
         # flatten multi-index columns, and merge multiple hearders
@@ -370,7 +370,7 @@ def ClusteringF1Similarity(dataset_name):
         # add prune_rate column
         df['prune_rate'] = (1-df['num_edges'].astype(int)/original_edge).round(2)
         # for prune_algo == ForestFire, round prune_rate to closest 0.1 if prune rate is smaller than 0.93
-        df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'] = df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'].round(1)
+        # df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'] = df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'].round(1)
         # group by same prune_algo and prune_rate, count occurance, and calculate mean and std, and add count, mean std columns to df
         df = df.groupby(['prune_algo', 'prune_rate']).agg({'F1_Similarity': ['count', 'mean', 'std']})
         # flatten multi-index columns, and merge multiple hearders
@@ -401,7 +401,7 @@ def QuadraticFormSimilarity(dataset_name):
         # add prune_rate column
         df['prune_rate'] = (1-df['num_edges'].astype(int)/original_edge).round(2)
         # for prune_algo == ForestFire, round prune_rate to closest 0.1 if prune rate is smaller than 0.93
-        df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'] = df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'].round(1)
+        # df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'] = df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'].round(1)
         # group by same prune_algo and prune_rate, count occurance, and calculate mean and std, and add count, mean std columns to df
         df = df.groupby(['prune_algo', 'prune_rate']).agg({'QuadraticFormSimilarity': ['count', 'mean', 'std']})
         # flatten multi-index columns, and merge multiple hearders
@@ -432,7 +432,7 @@ def ApproximateDiameter(dataset_name):
         # add prune_rate column
         df['prune_rate'] = (1-df['num_edges'].astype(int)/original_edge).round(2)
         # for prune_algo == ForestFire, round prune_rate to closest 0.1 if prune rate is smaller than 0.93
-        df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'] = df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'].round(1)
+        # df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'] = df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'].round(1)
         # eliminate outliers
         # df = df.groupby(['prune_algo', 'prune_rate']).apply(lambda x: x[(x.ApproximateDiameter-x.ApproximateDiameter.mean()).abs() < 2*x.ApproximateDiameter.std()])
         # df = df.reset_index(drop=True)
@@ -475,7 +475,7 @@ def SPSP_Eccentricity(dataset_name):
         # add prune_rate column
         df['prune_rate'] = (1-df['num_edges'].astype(int)/original_edge).round(2)
         # for prune_algo == ForestFire, round prune_rate to closest 0.1 if prune rate is smaller than 0.93
-        df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'] = df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'].round(1)
+        # df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'] = df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'].round(1)
         # eliminate outliers
         # df = df.groupby(['prune_algo', 'prune_rate']).apply(lambda x: x[(x.ApproximateDiameter-x.ApproximateDiameter.mean()).abs() < 2*x.ApproximateDiameter.std()])
         # df = df.reset_index(drop=True)
@@ -509,7 +509,7 @@ def GlobalClusteringCoefficient(dataset_name):
         # add prune_rate column
         df['prune_rate'] = (1-df['num_edges'].astype(int)/original_edge).round(2)
         # for prune_algo == ForestFire, round prune_rate to closest 0.1 if prune rate is smaller than 0.93
-        df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'] = df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'].round(1)
+        # df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'] = df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'].round(1)
         # group by same prune_algo and prune_rate, count occurance, and calculate mean and std, and add count, mean std columns to df
         df = df.groupby(['prune_algo', 'prune_rate']).agg({'GlobalClusteringCoefficient': ['count', 'mean', 'std']})
         # flatten multi-index columns, and merge multiple hearders
@@ -540,7 +540,7 @@ def LocalClusteringCoefficient(dataset_name):
         # add prune_rate column
         df['prune_rate'] = (1-df['num_edges'].astype(int)/original_edge).round(2)
         # for prune_algo == ForestFire, round prune_rate to closest 0.1 if prune rate is smaller than 0.93
-        df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'] = df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'].round(1)
+        # df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'] = df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'].round(1)
         # group by same prune_algo and prune_rate, count occurance, and calculate mean and std, and add count, mean std columns to df
         df = df.groupby(['prune_algo', 'prune_rate']).agg({'MeanClusteringCoefficient': ['count', 'mean', 'std']})
         # flatten multi-index columns, and merge multiple hearders
@@ -571,7 +571,7 @@ def MaxFlow(dataset_name):
         # add prune_rate column
         df['prune_rate'] = (1-df['num_edges'].astype(int)/original_edge).round(2)
         # for prune_algo == ForestFire, round prune_rate to closest 0.1 if prune rate is smaller than 0.93
-        df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'] = df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'].round(1)
+        # df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'] = df.loc[(df['prune_algo'] == 'ForestFire') & (df['prune_rate'] < 0.93), 'prune_rate'].round(1)
         # group by same prune_algo and prune_rate, count occurance, and calculate mean and std, and add count, mean std columns to df
         df = df.groupby(['prune_algo', 'prune_rate']).agg({'MaxFlow': ['count', 'mean', 'std'], 'Unreachable': ['mean', 'std']})
         # flatten multi-index columns, and merge multiple hearders
@@ -708,6 +708,7 @@ if __name__ == "__main__":
                              "com-DBLP", 
                              "com-LiveJournal", 
                              "com-Amazon", 
+                             "com-friendster", 
                              "email-Enron", 
                              "wiki-Talk", 
                              "cit-HepPh", 
