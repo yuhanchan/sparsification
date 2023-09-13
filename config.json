@@ -1577,25 +1577,22 @@
         }
     },
 
-    "friendster": {
+    "com-friendster": {
         "num_nodes": 65608366,
         "num_edges": 1806067135,
         "directed": false,
         "weighted": false,
         "num_layers": 3,
         "epochs": 50,
-        "degree_thres" : [],
-        "python_er_epsilon": [],
-        "cpp_er_epsilon": [],
-        "degree_thres_to_prune_rate_map": {
+        "kNeighbors": [4,9,17,27,40,57,82,121,206],
+        "LSpar_c": [0.37,0.55,0.64,0.71,0.76,0.81,0.85,0.89,0.93],
+        "sym_random_to_prune_rate_map": {
         },
-        "python_er_epsilon_to_prune_rate_map": {
+        "sym_degree_thres_to_prune_rate_map": {
         },
-        "cpp_er_epsilon_to_prune_rate_map": {
+        "ermin_epsilon_to_prune_rate_map": {
         },
-        "random_prune_inference_batch_size_dict1": {
-        },
-        "degree_prune_inference_batch_size_dict1": {
+        "ermax_epsilon_to_prune_rate_map": {
         }
     }
 }
