@@ -92,6 +92,10 @@ for dataset_name in dataset_names:
         os.system(f"curl https://snap.stanford.edu/data/web-Stanford.txt.gz --create-dirs -o {PROJECT_HOME}/data/web-Stanford/raw/web-Stanford.txt.gz")
         os.system(f"gzip -d {PROJECT_HOME}/data/web-Stanford/raw/web-Stanford.txt.gz")
         os.system(f"bash {PROJECT_HOME}/utils/data_preparation.sh {PROJECT_HOME}/data/web-Stanford/raw/web-Stanford.txt 1 0")
+    if dataset_name == "com-friendster":
+        os.system(f"curl https://snap.stanford.edu/data/bigdata/communities/com-friendster.ungraph.txt.gz --create-dirs -o /data2/chenyh/data/com-friendster/raw/com-friendster.txt.gz")
+        os.system(f"gzip -d /data2/chenyh/data/com-friendster/raw/com-friendster.txt.gz")
+        os.system(f"bash {PROJECT_HOME}/utils/data_preparation.sh /data2/chenyh/data/com-friendster/raw/com-friendster.txt 0 0")
     if dataset_name == "Reddit":
         dataset = PygDataset.Reddit(f"{PROJECT_HOME}/data/Reddit")
         # save test_data.data.edge_index to file
