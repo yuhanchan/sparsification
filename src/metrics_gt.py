@@ -18,6 +18,37 @@ import sys
 import psutil
 import json
 from memory_profiler import memory_usage
+import errno
+import signal
+import functools
+
+
+class TimeoutError(Exception):
+    pass
+
+def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
+    def decorator(func):
+        def _handle_timeout(signum, frame):
+            raise TimeoutError(error_message)
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            signal.signal(signal.SIGALRM, _handle_timeout)
+            signal.alarm(seconds)
+            try:
+                t_s = time.time()
+                result = func(*args, **kwargs)
+                t_e = time.time()
+                print(f"{func.__name__} finished after time: {t_e-t_s:.2f} s")
+            except:
+                print(f"{func.__name__} timeout after {seconds} seconds")
+            finally:
+                signal.alarm(0)
+            return result
+
+        return wrapper
+
+    return decorator
 
 
 PROJECT_HOME = os.getenv(key="PROJECT_HOME")
@@ -27,6 +58,9 @@ if PROJECT_HOME is None:
     exit(1)
 
 
+MAX_TIMEOUT = 86400 # timeout after 1 day
+
+@timeout(MAX_TIMEOUT)
 def ApproximateDiameter_gt(dataset_name, G_dict, logToFile=False):
     if logToFile:
         outfile = osp.join(PROJECT_HOME, "output_metric_raw", dataset_name, f"ApproximateDiameter", "log")
@@ -43,7 +77,7 @@ def ApproximateDiameter_gt(dataset_name, G_dict, logToFile=False):
                 diameters.append(diameter[0])
 
             diameter = np.mean(diameters)
-            print(diameters, diameter)
+            # print(diameters, diameter)
 
             if logToFile:
                 fout.write(f"{name}\t {Graph}\t diameter: {diameter}\n")
@@ -53,6 +87,7 @@ def ApproximateDiameter_gt(dataset_name, G_dict, logToFile=False):
         fout.close()
 
 
+@timeout(MAX_TIMEOUT)
 def SPSP_Eccentricity_gt(dataset_name, G_dict, num_nodes=100, logToFile=False):
     if logToFile:
         outfile = osp.join(PROJECT_HOME, "output_metric_raw", dataset_name, f"SPSP_Eccentricity", "log")
@@ -141,6 +176,7 @@ def SPSP_Eccentricity_gt(dataset_name, G_dict, num_nodes=100, logToFile=False):
         fout.close()
 
 
+@timeout(MAX_TIMEOUT)
 def Centrality_gt(algo_, G_dict, topN):
     print("\n\n-------------------------------")
     print(f"{algo_} Centrality")
@@ -189,6 +225,7 @@ def Centrality_gt(algo_, G_dict, topN):
     print(f"Time: {t_e-t_s:.2f} s\t Process Time: {pt_e-pt_s:.2f} s")
 
 
+@timeout(MAX_TIMEOUT)
 def GlobalClusteringCoefficient_gt(dataset_name, G_dict, logToFile=False):
     if logToFile:
         outfile = osp.join(PROJECT_HOME, "output_metric_raw", dataset_name, f"GlobalClusteringCoefficient", "log")
@@ -206,6 +243,7 @@ def GlobalClusteringCoefficient_gt(dataset_name, G_dict, logToFile=False):
                 print(f"{name}\t{Graph}\tGlobal_Clustering_Coefficient: {gcc[0]:.3f}")
 
 
+@timeout(MAX_TIMEOUT)
 def LocalClusteringCoefficient_gt(dataset_name, G_dict, logToFile=False):
     if logToFile:
         outfile = osp.join(PROJECT_HOME, "output_metric_raw", dataset_name, f"LocalClusteringCoefficient", "log")
@@ -234,6 +272,7 @@ def LocalClusteringCoefficient_gt(dataset_name, G_dict, logToFile=False):
         fout.close()
 
 
+@timeout(MAX_TIMEOUT)
 def MaxFlow_gt(dataset_name, G_dict, logToFile=False):
     if logToFile:
         outfile = osp.join(PROJECT_HOME, "output_metric_raw", dataset_name, f"MaxFlow", "log")
@@ -281,6 +320,7 @@ def MaxFlow_gt(dataset_name, G_dict, logToFile=False):
         fout.close()
 
 
+@timeout(MAX_TIMEOUT)
 def min_st_cut_gt(G_gt):
     print("\n\n-------------------------------")
     print("min_st_cut")
@@ -319,6 +359,7 @@ def min_st_cut_gt(G_gt):
         print(f"{name}\t#nodes: {Graph.num_vertices()}\t#edges: {len(Graph.get_edges())}\t min cut ratio min / max / mean / std: {ratio_min:.3f} / {ratio_max:.3f} / {ratio_mean:.3f} / {ratio_std:.3f}")
 
 
+@timeout(MAX_TIMEOUT)
 def min_cut_gt(G_gt):
     print("\n\n-------------------------------")
     print("min_cut")

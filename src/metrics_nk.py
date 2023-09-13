@@ -17,7 +17,37 @@ import sys
 import psutil
 import json
 from memory_profiler import memory_usage
+import errno
+import signal
+import functools
 
+
+class TimeoutError(Exception):
+    pass
+
+def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
+    def decorator(func):
+        def _handle_timeout(signum, frame):
+            raise TimeoutError(error_message)
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            signal.signal(signal.SIGALRM, _handle_timeout)
+            signal.alarm(seconds)
+            try:
+                t_s = time.time()
+                result = func(*args, **kwargs)
+                t_e = time.time()
+                print(f"{func.__name__} finished after time: {t_e-t_s:.2f} s")
+            except:
+                print(f"{func.__name__} timeout after {seconds} seconds")
+            finally:
+                signal.alarm(0)
+            return result
+
+        return wrapper
+
+    return decorator
 
 PROJECT_HOME = os.getenv(key="PROJECT_HOME")
 if PROJECT_HOME is None:
@@ -25,6 +55,7 @@ if PROJECT_HOME is None:
     print("please source env.sh at the top level of the project")
     exit(1)
 
+MAX_TIMEOUT = 86400 # timeout after 1 day
 
 def compute_transition_matrix(adj_matrix):
     out_degrees = np.sum(adj_matrix, axis=1)
@@ -66,6 +97,7 @@ def ranking_precision(a, b, k=100):
     return len(set(a_rank[:k]).intersection(set(b_rank[:k]))) / k
 
 
+@timeout(MAX_TIMEOUT)
 def degreeDistribution_nk(dataset_name, G_dict, nbin=20, logToFile=False):
     if logToFile:
         outfile = osp.join(PROJECT_HOME, "output_metric_raw", dataset_name, "degreeDistribution", "log")
@@ -96,6 +128,7 @@ def degreeDistribution_nk(dataset_name, G_dict, nbin=20, logToFile=False):
         fout.close()
     
 
+@timeout(MAX_TIMEOUT)
 def EffectiveDiameter_nk(G_dict, approximate=False): # only for undirected graphs
     print("\n\n-------------------------------")
     print("Diameter")
@@ -134,6 +167,7 @@ def EffectiveDiameter_nk(G_dict, approximate=False): # only for undirected graph
     # print()
 
 
+@timeout(MAX_TIMEOUT)
 def Eccentricity_nk(G_dict, num_nodes=100): # only for undiredted graphs
     print("\n\n-------------------------------")
     print("Eccentricity")
@@ -202,6 +236,7 @@ def Eccentricity_nk(G_dict, num_nodes=100): # only for undiredted graphs
     # print()
 
 
+@timeout(MAX_TIMEOUT)
 def SPSP_nk(G_dict, num_nodes=100): # only for undirected graphs
     print("\n\n-------------------------------")
     print("SPSP")
@@ -235,6 +270,7 @@ def SPSP_nk(G_dict, num_nodes=100): # only for undirected graphs
     # print()
 
 
+@timeout(MAX_TIMEOUT)
 def Centrality_nk(dataset_name, algo_, G_dict, topN, logToFile=False):
     t_s, pt_s = time.time(), time.process_time()
 
@@ -334,6 +370,7 @@ def Centrality_nk(dataset_name, algo_, G_dict, topN, logToFile=False):
         fout.close()
     
 
+@timeout(MAX_TIMEOUT)
 def ClusteringCoefficient_nk(algo_, G_dict): # only for undirected graphs
     print("\n\n-------------------------------")
     print(f"{algo_} Clustering Coefficient")
@@ -361,6 +398,7 @@ def ClusteringCoefficient_nk(algo_, G_dict): # only for undirected graphs
     print()
 
 
+@timeout(MAX_TIMEOUT)
 def ClusteringF1Similarity_nk(dataset_name, G_dict, logToFile=False):
     if logToFile:
         outfile = osp.join(PROJECT_HOME, "output_metric_raw", dataset_name, "ClusteringF1Similarity", "log")
@@ -389,6 +427,7 @@ def ClusteringF1Similarity_nk(dataset_name, G_dict, logToFile=False):
         fout.close()
 
 
+@timeout(MAX_TIMEOUT)
 def ClusteringF1SimilarityWithGroundTruth_nk(dataset_name, G_dict, groundTruthFile, logToFile=False):
     if logToFile:
         outfile = osp.join(PROJECT_HOME, "output_metric_raw", dataset_name, "ClusteringF1SimilarityWithGroundTruth", "log")
@@ -428,6 +467,7 @@ def ClusteringF1SimilarityWithGroundTruth_nk(dataset_name, G_dict, groundTruthFi
         fout.close()
 
 
+@timeout(MAX_TIMEOUT)
 def DetectCommunity_nk(dataset_name, G_dict, logToFile=False):
     if logToFile:
         outfile = osp.join(PROJECT_HOME, "output_metric_raw", dataset_name, f"DetectCommunity", "log")
@@ -452,6 +492,7 @@ def DetectCommunity_nk(dataset_name, G_dict, logToFile=False):
         fout.close()
 
 
+@timeout(MAX_TIMEOUT)
 def QuadraticFormSimilarity_nk(dataset_name, G_dict, logToFile=False):
     if logToFile:
         outfile = osp.join(PROJECT_HOME, "output_metric_raw", dataset_name, f"QuadraticFormSimilarity", "log")
