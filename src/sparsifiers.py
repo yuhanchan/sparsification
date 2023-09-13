@@ -90,6 +90,8 @@ def KNeighborSparsifier(dataset_name, G, k, config, postfix_folder="0", print_in
     output_file = getOutputFile(dataset_name, config, "KNeighbor", prune_rate, postfix_folder)
     os.makedirs(osp.dirname(output_file), exist_ok=True)
     nk.writeGraph(new_G, output_file, nk.Format.EdgeListSpaceZero)
+    del new_G
+    return
 
 
 # @profile
@@ -280,6 +282,8 @@ def LSpar(dataset_name, G, config, c=0.1, postfix_folder="0", print_info=False):
     print(f"c: {c:.3} , prune rate: {prune_rate}")
     os.makedirs(osp.dirname(output_file), exist_ok=True)
     nk.writeGraph(new_G, output_file, nk.Format.EdgeListSpaceZero)
+    del new_G
+    return
 
 
 # @profile

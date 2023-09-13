@@ -24,12 +24,26 @@ from sparsifiers import *
 from graph_reader import *
 from memory_profiler import memory_usage
 import argparse
+from functools import wraps
+from multiprocessing.pool import Pool
  
 PROJECT_HOME = os.getenv(key="PROJECT_HOME")
 if PROJECT_HOME is None:
     print("PROJECT_HOME is not set, ")
     print("please source env.sh at the top level of the project")
     exit(1)
+
+
+def timeit(func):
+    @wraps(func)
+    def timeit_wrapper(*args, **kwargs):
+        start_time = time.perf_counter()
+        result = func(*args, **kwargs)
+        end_time = time.perf_counter()
+        total_time = end_time - start_time
+        print(f'Function {func.__name__}{args} {kwargs} Took {total_time:.4f} seconds')
+        return result
+    return timeit_wrapper
 
 
 def graphOverview(G):
@@ -277,36 +291,81 @@ def main():
                         targetRatios=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9], 
                         config=config,
                         multi_process=False,
-                        max_workers=8,
+                        max_workers=3,
                         num_run=1
                         )
-        
+
         for dataset_name in dataset_names:
             os.system(f"python {PROJECT_HOME}/utils/convert_edgelist.py --dataset_name {dataset_name} --num_thread 8")
 
     if args.mode == "eval" or args.mode == "all":
         for dataset_name in dataset_names:
             G_nk_dict = readAllGraphsNK(dataset_name, config)
-            degreeDistribution_nk(dataset_name, G_nk_dict, nbin=100, logToFile=True)
-            Centrality_nk(dataset_name, "EstimateBetweenness", G_nk_dict, 100, logToFile=True)
-            Centrality_nk(dataset_name, "TopCloseness", G_nk_dict, 100, logToFile=True)
-            Centrality_nk(dataset_name, "Degree", G_nk_dict, 100, logToFile=True)
-            Centrality_nk(dataset_name, "Katz", G_nk_dict, 100, logToFile=True)
-            Centrality_nk(dataset_name, "Laplacian", G_nk_dict, 100, logToFile=True)
-            Centrality_nk(dataset_name, "Eigenvector", G_nk_dict, 100, logToFile=True)
-            Centrality_nk(dataset_name, "CoreDecomposition", G_nk_dict, 100, logToFile=True)
-            DetectCommunity_nk(dataset_name, G_nk_dict, logToFile=True)
-            ClusteringF1Similarity_nk(dataset_name, G_nk_dict, logToFile=True)
-            Centrality_nk(dataset_name, "PageRank", G_nk_dict, 100, logToFile=True)
-            QuadraticFormSimilarity_nk(dataset_name, G_nk_dict, logToFile=True)
+            # check how much memory is used by this program
+            # print(f"Memory usage: {psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2} MB")
+            # exit(0)
+            try:
+                degreeDistribution_nk(dataset_name, G_nk_dict, nbin=100, logToFile=True) # single core
+            except:
+                pass
+            try:
+                Centrality_nk(dataset_name, "EstimateBetweenness", G_nk_dict, 100, logToFile=True) # single core
+            except:
+                pass
+            try:
+                Centrality_nk(dataset_name, "TopCloseness", G_nk_dict, 100, logToFile=True) # 50%
+            except:
+                pass
+            try:
+                Centrality_nk(dataset_name, "Katz", G_nk_dict, 100, logToFile=True) # 50%
+            except:
+                pass
+            try:
+                Centrality_nk(dataset_name, "Eigenvector", G_nk_dict, 100, logToFile=True) # 50%
+            except:
+                pass
+            try:
+                DetectCommunity_nk(dataset_name, G_nk_dict, logToFile=True) # 50%
+            except:
+                pass
+            try:
+                ClusteringF1Similarity_nk(dataset_name, G_nk_dict, logToFile=True) # single core
+            except:
+                pass
+            try:
+                Centrality_nk(dataset_name, "PageRank", G_nk_dict, 100, logToFile=True) # 50%
+            except:
+                pass
+            try:
+                QuadraticFormSimilarity_nk(dataset_name, G_nk_dict, logToFile=True) # 25%
+            except:
+                pass
+            # Centrality_nk(dataset_name, "Degree", G_nk_dict, 100, logToFile=True)
+            # Centrality_nk(dataset_name, "Laplacian", G_nk_dict, 100, logToFile=True) # 50%
+            # Centrality_nk(dataset_name, "CoreDecomposition", G_nk_dict, 100, logToFile=True)
             del G_nk_dict # release memory
 
             G_gt_dict = readAllGraphsGT(dataset_name, config) 
-            ApproximateDiameter_gt(dataset_name, G_gt_dict, logToFile=True)
-            SPSP_Eccentricity_gt(dataset_name, G_gt_dict, num_nodes=100, logToFile=True)
-            GlobalClusteringCoefficient_gt(dataset_name, G_gt_dict, logToFile=True)
-            LocalClusteringCoefficient_gt(dataset_name, G_gt_dict, logToFile=True)
-            MaxFlow_gt(dataset_name, G_gt_dict, logToFile=True)
+            try:
+                SPSP_Eccentricity_gt(dataset_name, G_gt_dict, num_nodes=100, logToFile=True) # single core
+            except:
+                pass
+            try:
+                GlobalClusteringCoefficient_gt(dataset_name, G_gt_dict, logToFile=True) # 50%
+            except:
+                pass
+            try:
+                LocalClusteringCoefficient_gt(dataset_name, G_gt_dict, logToFile=True) # 50%
+            except:
+                pass
+            try:
+                MaxFlow_gt(dataset_name, G_gt_dict, logToFile=True) # single core
+            except:
+                pass
+            try:
+                ApproximateDiameter_gt(dataset_name, G_gt_dict, logToFile=True) # single core
+            except:
+                pass
             del G_gt_dict # release memory
 
 
@@ -315,7 +374,7 @@ if __name__ == "__main__":
     main() 
 
 
-""" unused code
+""" lagacy code
 
     G_nk_dict["er_min_weighted"] = []
     G_nk_dict["er_max_weighted"] = []
