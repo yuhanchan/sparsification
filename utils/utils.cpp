@@ -21,7 +21,7 @@ void dw_to_udw(ifstream &in, ofstream &out) {
   float w;
   while (in >> u >> v >> w) {
     if (u < v) {
-      out << u << " " << v << " " << w << endl;
+      out << u << " " << v << " " << w << "\n";
     }
   }
 }
@@ -30,8 +30,8 @@ void udw_to_dw(ifstream &in, ofstream &out) {
   int u, v;
   float w;
   while (in >> u >> v >> w) {
-    out << u << " " << v << " " << w << endl;
-    out << v << " " << u << " " << w << endl;
+    out << u << " " << v << " " << w << "\n";
+    out << v << " " << u << " " << w << "\n";
   }
 }
 
@@ -39,7 +39,7 @@ void duw_to_uduw(ifstream &in, ofstream &out) {
   int u, v;
   while (in >> u >> v) {
     if (u < v) {
-      out << u << " " << v << endl;
+      out << u << " " << v << "\n";
     }
   }
 }
@@ -47,8 +47,8 @@ void duw_to_uduw(ifstream &in, ofstream &out) {
 void uduw_to_duw(ifstream &in, ofstream &out) {
   int u, v;
   while (in >> u >> v) {
-    out << u << " " << v << endl;
-    out << v << " " << u << endl;
+    out << u << " " << v << "\n";
+    out << v << " " << u << "\n";
   }
 }
 
@@ -56,7 +56,7 @@ void unweight(ifstream &in, ofstream &out) {
   int u, v;
   float w;
   while (in >> u >> v >> w) {
-    out << u << " " << v << endl;
+    out << u << " " << v << "\n";
   }
 }
 
@@ -85,7 +85,7 @@ void symmetrize(ifstream &in, ofstream &out) {
       edges.insert(edge_t(v, u));
     }
     for (auto it : edges) {
-      out << it.first << " " << it.second << endl;
+      out << it.first << " " << it.second << "\n";
     }
   } else if (num_count_per_line == 3) {
     set<wedge_t> edges;
@@ -98,7 +98,7 @@ void symmetrize(ifstream &in, ofstream &out) {
     }
     for (auto it : edges) {
       out << it.first.first << " " << it.first.second << " " << it.second
-          << endl;
+          << "\n";
     }
   }
 }
@@ -138,7 +138,7 @@ void sort_by_src_then_dst(ifstream &in, ofstream &out) {
     }
     sort(edges.begin(), edges.end(), Comp_edge());
     for (const edge_t &e : edges) {
-      out << e.first << " " << e.second << endl;
+      out << e.first << " " << e.second << "\n";
     }
   } else if (num_count_per_line == 3) {
     cout << "Input file has 3 numbers per line, treat as weighted." << endl;
@@ -150,7 +150,7 @@ void sort_by_src_then_dst(ifstream &in, ofstream &out) {
     }
     sort(edges.begin(), edges.end(), Comp_wedge());
     for (const wedge_t &e : edges) {
-      out << e.first.first << " " << e.first.second << " " << e.second << endl;
+      out << e.first.first << " " << e.first.second << " " << e.second << "\n";
     }
   }
 }
@@ -178,7 +178,7 @@ void zero_base_to_one_base(ifstream &in, ofstream &out) {
       edges.push_back(make_pair(u, v));
     }
     for (const edge_t &e : edges) {
-      out << e.first + 1 << " " << e.second + 1 << endl;
+      out << e.first + 1 << " " << e.second + 1 << "\n";
     }
   } else if (num_count_per_line == 3) {
     cout << "Input file has 3 numbers per line, treat as weighted." << endl;
@@ -189,7 +189,7 @@ void zero_base_to_one_base(ifstream &in, ofstream &out) {
       edges.push_back(make_pair(make_pair(u, v), w));
     }
     for (const wedge_t &e : edges) {
-      out << e.first.first + 1 << " " << e.first.second + 1 << e.second << endl;
+      out << e.first.first + 1 << " " << e.first.second + 1 << e.second << "\n";
     }
   }
 }
@@ -252,19 +252,19 @@ void elim_disconnected_nodes(ifstream &in, ofstream &out,
   if (edge_map_file.size()) {
     ofstream out_edge_map(edge_map_file);
     for (auto &e : ind_map) {
-      out_edge_map << e.first << " " << e.second << endl;
+      out_edge_map << e.first << " " << e.second << "\n";
     }
   }
 
   // output
   if (num_count_per_line == 2) {
     for (int i = 0; i < row_ind.size(); i++) {
-      out << ind_map[row_ind[i]] << " " << ind_map[col_ind[i]] << endl;
+      out << ind_map[row_ind[i]] << " " << ind_map[col_ind[i]] << "\n";
     }
   } else if (num_count_per_line == 3) {
     for (int i = 0; i < row_ind.size(); i++) {
       out << ind_map[row_ind[i]] << " " << ind_map[col_ind[i]] << " "
-          << weight[i] << endl;
+          << weight[i] << "\n";
     }
   }
 }
@@ -398,7 +398,7 @@ void match_ref(ifstream &in, ifstream &ref, ofstream &out){
     }
 
     for (const edge_t &e : edges) {
-      out << e.first << " " << e.second << endl;
+      out << e.first << " " << e.second << "\n";
     }
   } else if (num_count_per_line == 3) {
     cout << "Input file has 3 numbers per line, treat as weighted." << endl;
@@ -410,7 +410,7 @@ void match_ref(ifstream &in, ifstream &ref, ofstream &out){
     }
 
     for (const wedge_t &e : edges) {
-      out << e.first.first << " " << e.first.second << " " << e.second << endl;
+      out << e.first.first << " " << e.first.second << " " << e.second << "\n";
     }
   }
 
