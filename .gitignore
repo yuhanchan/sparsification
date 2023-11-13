@@ -37,3 +37,7 @@ output_sparsifier_parsed/
 paper_fig/
 paper_fig_full/
 run_gnn.sh
+appendix.zip
+latex_gen.py
+paper_fig.zip
+tmp_logs/
