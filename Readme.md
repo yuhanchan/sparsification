@@ -5,9 +5,8 @@ We may use the terms ``sparsify`` and ``prune`` interchangably in this doc
 ## Folder structure
 ``` bash
 .
-├── analysis # legacy code, do not use
 ├── config.json # config file for sparsification params
-├── data # datasets raw files and pruned files
+├── data # datasets raw files and pruned files, auto-created
     ├──...
           ├── # graphs are stored in edgelist format.
               # uduw.el, duw.el, udw.wel, dw.wel means 
@@ -26,11 +25,9 @@ We may use the terms ``sparsify`` and ``prune`` interchangably in this doc
 ├── paper_fig # reproduced fig same as the ones in the paper
 ├── parser # parser code for parsing raw outputs and generate parsed otuput
 ├── plot # ploter code
-├── profile.sh # legacy code, do not use
 ├── setup.py # setup file for this sparsifiction lib
 ├── sparsifier # code for ER sparsifier and some legacy sparsifiers
 ├── src
-│   ├── legacy # folder containing legacy code, do not use
 │   ├── Cheb.py  # code for running Cheb GNN
 │   ├── ClusterGCN.py # code for running Cluseter GCN
 │   ├── GCN.py # code for running GCN
@@ -40,9 +37,7 @@ We may use the terms ``sparsify`` and ``prune`` interchangably in this doc
 │   ├── metrics_gt.py # metric evaluaters using graph-tool
 │   ├── metrics_nk.py # metric evaluaters using Networkit
 │   └── sparsifiers.py # lib invoking all sparsifiers
-├── tests # test files
-├── utils # helper functions and binaries
-└── workload # legacy workload code, do not use
+└── utils # helper functions and binaries
 ```
 
 
