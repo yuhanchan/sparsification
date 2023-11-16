@@ -4,6 +4,7 @@ import os
 import os.path as osp
 import pandas as pd
 import numpy as np
+import matplotlib
 import matplotlib.lines as mlines
 import json
 import numpy as np
@@ -171,7 +172,7 @@ def sparsifier_time(dataset_name):
     df["prune_rate"] = 1 - df["num_edge"] / original_edges
 
     # remove prune rate < 0
-    df = df[df.prune_rate >= 0]
+    df = df[df.prune_rate >= 0.05]
 
     prune_algo_map = {"randomEdgeSparsifier": "RN",
                       "localDegreeSparsifier": "LD",
@@ -192,35 +193,6 @@ def sparsifier_time(dataset_name):
 
     df = df.sort_values(by=["prune_rate"])
     grouped = df.groupby('prune_algo')
-
-    # plot
-    fig, ax = plt.subplots(figsize=(figwidth, figheight))
-    for key in grouped.groups.keys():
-        grouped.get_group(key).plot(x="prune_rate", y="wall_time", ax=ax, marker=marker_map[key], label=key, 
-                                    color=color_map[key], markersize=markersize, linewidth=linewidth)
-    plt.xlabel("Prune Rate", fontsize=xlabelfontsize)
-    plt.ylabel("Time (s)", fontsize=ylabelfontsize)
-    plt.xticks(fontsize=xtickfontsize)
-    plt.yticks(fontsize=ytickfontsize)
-    # plt.yscale("log")
-    plt.grid(gridon)
-
-    # make legend without error bar
-    handles = []
-    # for key in ["Random", "KNeighbor", "RankDegree", "LocalDegree", "SpanningForest", "Spanner-3", "Spanner-5", 
-    #             "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER"]:
-    for key in ["Random", "KNeighbor", "LSpar", "GSpar", "LocalDegree", "SCAN", "LocalSimilarity", "ForestFire", "RankDegree", "ER"]:
-        handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
-                                linewidth=linewidth, label=text_map[key])
-        handles.append(handle)
-    # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-    plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=4, fontsize=legendfontsize)
-    plt.tight_layout()
-
-    # save plot
-    figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_time.{saveformat}")
-    os.makedirs(osp.dirname(figpath), exist_ok=True)
-    plt.savefig(figpath)
 
     ### plot bar chart with all sparsifier with prune rate 0.1, 0.5, 0.9
     prune_rate_list = [0.1, 0.5, 0.9]
@@ -290,7 +262,8 @@ def degreeDistribution(dataset_name, prune_algos=None):
     grouped = df.groupby('prune_algo')
 
     # plot
-    fig, ax = plt.subplots(figsize=(figwidth, figheight+1.5))
+    # fig, ax = plt.subplots(figsize=(figwidth, figheight+1.5))
+    fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation, figheight))
     for key in grouped.groups.keys():
         grouped.get_group(key).plot(x="prune_rate", y="Bhattacharyya_distance_mean", yerr="Bhattacharyya_distance_std", 
                                     ax=ax, marker=marker_map[key], label=key, color=color_map[key], markersize=markersize, 
@@ -313,8 +286,8 @@ def degreeDistribution(dataset_name, prune_algos=None):
             handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                     linewidth=linewidth, label=key)
             handles.append(handle)
-    # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-    plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.35), ncol=4, fontsize=legendfontsize)
+    plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+    # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.35), ncol=4, fontsize=legendfontsize)
     plt.tight_layout()
 
     figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_degreeDistribution.{saveformat}")
@@ -409,6 +382,7 @@ def SPSP_Eccentricity(dataset_name, prune_algos=None):
     grouped = df.groupby('prune_algo')
 
     ### plot SPSP unreachable ratio
+    # fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation, figheight))
     fig, ax = plt.subplots(figsize=(figwidth, figheight))
     for key in grouped.groups.keys():
         grouped.get_group(key).plot(x="prune_rate", y="Unreachable_mean", yerr="Unreachable_std", 
@@ -593,14 +567,15 @@ def LocalClusteringCoefficient(dataset_name, prune_algos=None):
     grouped = df.groupby('prune_algo')
 
     # plot
-    fig, ax = plt.subplots(figsize=(figwidth, figheight+figheight_legend_compensation*2))
+    fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation, figheight))
+    # fig, ax = plt.subplots(figsize=(figwidth, figheight+figheight_legend_compensation*2))
     for key in grouped.groups.keys():
         grouped.get_group(key).plot(x="prune_rate", y="MeanClusteringCoefficient_mean", yerr="MeanClusteringCoefficient_std", 
                                     ax=ax, marker=marker_map[key], label=key, color=color_map[key], markersize=markersize, 
                                     linewidth=linewidth, capsize=capsize, capthick=capthick, elinewidth=elinewidth)
     ax.axhline(y=mcc_ground_truth, color='g', linestyle='--', linewidth=linewidth)
     plt.xlabel("Prune Rate", fontsize=xlabelfontsize)
-    plt.ylabel("Mean Clustering Coeff", fontsize=ylabelfontsize)
+    plt.ylabel("MCC", fontsize=ylabelfontsize)
     plt.xticks(fontsize=xtickfontsize)
     plt.yticks(fontsize=ytickfontsize)
     plt.grid(gridon)
@@ -617,8 +592,8 @@ def LocalClusteringCoefficient(dataset_name, prune_algos=None):
             handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                     linewidth=linewidth, label=key)
             handles.append(handle)
-    # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-    plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.5), ncol=4, fontsize=legendfontsize-3)
+    plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+    # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.5), ncol=4, fontsize=legendfontsize-3)
     plt.tight_layout()
 
     # save plot
@@ -646,7 +621,8 @@ def GlobalClusteringCoefficient(dataset_name, prune_algos=None):
     grouped = df.groupby('prune_algo')
 
     # plot
-    fig, ax = plt.subplots(figsize=(figwidth, figheight+figheight_legend_compensation))
+    fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation, figheight))
+    # fig, ax = plt.subplots(figsize=(figwidth, figheight+figheight_legend_compensation))
     for key in grouped.groups.keys():
         grouped.get_group(key).plot(x="prune_rate", y="GlobalClusteringCoefficient_mean", yerr="GlobalClusteringCoefficient_std", 
                                     ax=ax, marker=marker_map[key], label=key, color=color_map[key], markersize=markersize, 
@@ -655,7 +631,7 @@ def GlobalClusteringCoefficient(dataset_name, prune_algos=None):
     if addTitle:
         plt.title(f"Global Clustering Coefficient ({dataset_name})", fontsize=titlefontsize)
     plt.xlabel("Prune Rate", fontsize=xlabelfontsize)
-    plt.ylabel("Global Clustering Coeff", fontsize=ylabelfontsize)
+    plt.ylabel("GCC", fontsize=ylabelfontsize)
     plt.xticks(fontsize=xtickfontsize)
     plt.yticks(fontsize=ytickfontsize)
     plt.grid(gridon)
@@ -672,8 +648,8 @@ def GlobalClusteringCoefficient(dataset_name, prune_algos=None):
             handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                     linewidth=linewidth, label=key)
             handles.append(handle)
-    # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-    plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.32), ncol=4, fontsize=legendfontsize-3)
+    plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+    # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.32), ncol=4, fontsize=legendfontsize-3)
     plt.tight_layout()
 
     # save plot
@@ -701,7 +677,8 @@ def ClusteringF1Similarity(dataset_name, prune_algos=None):
     grouped = df.groupby('prune_algo')
 
     # plot
-    fig, ax = plt.subplots(figsize=(figwidth, figheight+figheight_legend_compensation*2))
+    fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation, figheight))
+    # fig, ax = plt.subplots(figsize=(figwidth, figheight+figheight_legend_compensation*2))
     for key in grouped.groups.keys():
         grouped.get_group(key).plot(x="prune_rate", y="F1_Similarity_mean", yerr="F1_Similarity_std", 
                                     ax=ax, marker=marker_map[key], label=key, color=color_map[key], markersize=markersize, 
@@ -725,8 +702,8 @@ def ClusteringF1Similarity(dataset_name, prune_algos=None):
             handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                     linewidth=linewidth, label=key)
             handles.append(handle)
-    # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-    plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.43), ncol=4, fontsize=legendfontsize-3)
+    plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+    # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.43), ncol=4, fontsize=legendfontsize-3)
     plt.tight_layout()
 
     # save plot
@@ -755,7 +732,8 @@ def Centrality(dataset_name, algo, prune_algos=None):
     grouped = df.groupby('prune_algo')
 
     ### precision plot
-    fig, ax = plt.subplots(figsize=(figwidth, figheight+figheight_legend_compensation))
+    fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation, figheight))
+    # fig, ax = plt.subplots(figsize=(figwidth, figheight+figheight_legend_compensation))
     for key in grouped.groups.keys():
         grouped.get_group(key).plot(x="prune_rate", y="top_100_precision_mean", yerr="top_100_precision_std", 
                                     ax=ax, marker=marker_map[key], label=key, color=color_map[key], markersize=markersize, 
@@ -778,11 +756,11 @@ def Centrality(dataset_name, algo, prune_algos=None):
             handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                     linewidth=linewidth, label=key)
             handles.append(handle)
-    # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+    plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
     # if algo == "Katz":
     #     plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=4, fontsize=legendfontsize-3)
     # else:
-    plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.35), ncol=4, fontsize=legendfontsize-3)
+    # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.35), ncol=4, fontsize=legendfontsize-3)
     plt.tight_layout()
 
     # save plot
@@ -811,7 +789,8 @@ def DetectCommunity(dataset_name, prune_algos=None):
     grouped = df.groupby('prune_algo')
 
     ### plot number of community
-    fig, ax = plt.subplots(figsize=(figwidth, figheight+figheight_legend_compensation+1))
+    fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation, figheight))
+    # fig, ax = plt.subplots(figsize=(figwidth, figheight+figheight_legend_compensation+1))
     for key in grouped.groups.keys():
         grouped.get_group(key).plot(x="prune_rate", y="num_community_mean", yerr="num_community_std", 
                                     ax=ax, marker=marker_map[key], label=key, color=color_map[key], markersize=markersize, 
@@ -836,8 +815,8 @@ def DetectCommunity(dataset_name, prune_algos=None):
             handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                     linewidth=linewidth, label=key)
             handles.append(handle)
-    # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-    plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.45), ncol=4, fontsize=legendfontsize-3)
+    plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+    # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.45), ncol=4, fontsize=legendfontsize-3)
     plt.tight_layout()
 
     # save plot
@@ -919,7 +898,8 @@ def MaxFlow(dataset_name, prune_algos=None):
     grouped = df.groupby('prune_algo')
 
     ### plot MaxFlow stretch factor
-    fig, ax = plt.subplots(figsize=(figwidth, figheight+figheight_legend_compensation))
+    fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation, figheight))
+    # fig, ax = plt.subplots(figsize=(figwidth, figheight+figheight_legend_compensation))
     for key in grouped.groups.keys():
         grouped.get_group(key).plot(x="prune_rate", y="MaxFlow_mean", yerr="MaxFlow_std", 
                                     ax=ax, marker=marker_map[key], label=key, color=color_map[key], markersize=markersize, 
@@ -942,8 +922,8 @@ def MaxFlow(dataset_name, prune_algos=None):
             handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                     linewidth=linewidth, label=key)
             handles.append(handle)
-    # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-    plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.3), ncol=4, fontsize=legendfontsize-5)
+    plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+    # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.3), ncol=4, fontsize=legendfontsize-5)
     plt.tight_layout()
 
     # save plot
@@ -952,7 +932,8 @@ def MaxFlow(dataset_name, prune_algos=None):
     plt.savefig(figpath)
 
     ### plot MaxFlow unreachable ratio
-    fig, ax = plt.subplots(figsize=(figwidth, figheight+figheight_legend_compensation))
+    fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation, figheight))
+    # fig, ax = plt.subplots(figsize=(figwidth, figheight+figheight_legend_compensation))
     for key in grouped.groups.keys():
         grouped.get_group(key).plot(x="prune_rate", y="Unreachable_mean", yerr="Unreachable_std", 
                                     ax=ax, marker=marker_map[key], label=key, color=color_map[key], markersize=markersize, 
@@ -976,8 +957,8 @@ def MaxFlow(dataset_name, prune_algos=None):
             handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                     linewidth=linewidth, label=key)
             handles.append(handle)
-    # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-    plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.3), ncol=4, fontsize=legendfontsize-5)
+    plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+    # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.3), ncol=4, fontsize=legendfontsize-5)
     plt.tight_layout()
 
     # save plot
@@ -986,7 +967,8 @@ def MaxFlow(dataset_name, prune_algos=None):
     plt.savefig(figpath)
 
     ### plot MaxFlow stretch factor with constraint
-    fig, ax = plt.subplots(figsize=(figwidth, figheight+figheight_legend_compensation))
+    fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation+1, figheight))
+    # fig, ax = plt.subplots(figsize=(figwidth, figheight+figheight_legend_compensation))
     df = df[df.Unreachable_mean < original_unreachable+0.2]
     grouped = df.groupby('prune_algo')
     for key in grouped.groups.keys():
@@ -1011,8 +993,8 @@ def MaxFlow(dataset_name, prune_algos=None):
             handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                     linewidth=linewidth, label=key)
             handles.append(handle)
-    # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-    plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.3), ncol=4, fontsize=legendfontsize-5)
+    plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+    # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.3), ncol=4, fontsize=legendfontsize-5)
     plt.tight_layout()
 
     # save plot
@@ -1048,7 +1030,8 @@ def GCN(dataset_name, prune_algos=None):
     ### plot MaxFlow stretch factor
     plot_legend = True
     if plot_legend:
-        fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation, figheight+figheight_legend_compensation))
+        fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation, figheight))
+        # fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation, figheight+figheight_legend_compensation))
     else:
         fig, ax = plt.subplots(figsize=(figwidth, figheight))
     for key in grouped.groups.keys():
@@ -1121,7 +1104,8 @@ def ClusterGCN(dataset_name, prune_algos=None):
     ### plot MaxFlow stretch factor
     plot_legend = True
     if plot_legend:
-        fig, ax = plt.subplots(figsize=(figwidth, figheight+figheight_legend_compensation))
+        fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation+1, figheight))
+        # fig, ax = plt.subplots(figsize=(figwidth, figheight+figheight_legend_compensation))
     else:
         fig, ax = plt.subplots(figsize=(figwidth, figheight))
     for key in grouped.groups.keys():
@@ -1131,7 +1115,7 @@ def ClusterGCN(dataset_name, prune_algos=None):
     plt.axhline(y=full_acc, color='g', linestyle='--', linewidth=linewidth)
     plt.axhline(y=empty_acc, color='r', linestyle='--', linewidth=linewidth)
     plt.xlabel("Prune Rate", fontsize=xlabelfontsize)
-    plt.ylabel("Accuracy (%)", fontsize=ylabelfontsize)
+    plt.ylabel("Accuracy (\%)", fontsize=ylabelfontsize)
     plt.xticks(fontsize=xtickfontsize)
     plt.yticks(fontsize=ytickfontsize)
     plt.grid(gridon)
@@ -1150,8 +1134,8 @@ def ClusterGCN(dataset_name, prune_algos=None):
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
-        # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-        plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.35), ncol=4, fontsize=legendfontsize-3)
+        plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+        # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.35), ncol=4, fontsize=legendfontsize-3)
     else:
         plt.legend().set_visible(False)
     plt.tight_layout()
@@ -1189,7 +1173,8 @@ def SAGE(dataset_name, prune_algos=None):
     ### plot MaxFlow stretch factor
     plot_legend = True
     if plot_legend:
-        fig, ax = plt.subplots(figsize=(figwidth, figheight+figheight_legend_compensation))
+        fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation+1, figheight))
+        # fig, ax = plt.subplots(figsize=(figwidth, figheight+figheight_legend_compensation))
     else:
         fig, ax = plt.subplots(figsize=(figwidth, figheight))
     for key in grouped.groups.keys():
@@ -1218,8 +1203,8 @@ def SAGE(dataset_name, prune_algos=None):
                 handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
                                         linewidth=linewidth, label=text_map[key])
                 handles.append(handle)
-        # plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-        plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.35), ncol=4, fontsize=legendfontsize-3)
+        plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
+        # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.35), ncol=4, fontsize=legendfontsize-3)
     else:
         plt.legend().set_visible(False)
     plt.tight_layout()
@@ -1231,6 +1216,7 @@ def SAGE(dataset_name, prune_algos=None):
 
 
 if __name__ == "__main__":
+    # set plot parameters
     figwidth = 10
     figwidth_legend_compensation = 1
     figheight = 5.5
@@ -1240,6 +1226,7 @@ if __name__ == "__main__":
     capsize = 3 # error bar cap size
     capthick = 1
     elinewidth = 1
+    fontname = ''
     titlefontsize = 30
     xlabelfontsize = 35
     ylabelfontsize = 35
@@ -1250,9 +1237,14 @@ if __name__ == "__main__":
     saveformat = "pdf"
     addTitle = False
 
-    # ["Random", "KNeighbor", "LocalDegree", "RankDegree", "SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7", 
-    #  "ForestFire", "LSpar", "GSpar","LocalSimilarity", "SCAN", "ER-Max_weighted", "ER-Max_unweighted"]
+    # font setup for VLDB format requirement
+    matplotlib.rcParams['pdf.fonttype'] = 42
+    matplotlib.rcParams['ps.fonttype']= 42
+    matplotlib.rcParams['text.usetex'] = True #Let TeX do the typsetting
+    matplotlib.rcParams['font.family'] = 'sans-serif'# ... for regular text
+    matplotlib.rcParams['font.sans-serif'] = 'Helvetica, Avant 6arde, Computer Modern Sans serif' # Choose a nice font here
 
+    # generate plots used in the paper
     SPSP_Eccentricity("ca-AstroPh")
     Centrality("ca-AstroPh", "TopCloseness", prune_algos=["Random", "LocalDegree", "RankDegree", "ForestFire", "LSpar", "GSpar", "SCAN"])
     ClusteringF1Similarity("ca-HepPh", prune_algos=["Random", "KNeighbor", "LocalDegree", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-Max_weighted", "ER-Max_unweighted"])
@@ -1261,7 +1253,6 @@ if __name__ == "__main__":
     QuadraticFormSimilarity("com-Amazon", prune_algos=["Random", "ER-Max_weighted"])
     Centrality("com-DBLP", "EstimateBetweenness", prune_algos=["Random", "LocalDegree", "RankDegree", "ForestFire", "LSpar", "GSpar", "SCAN"])
     DetectCommunity("com-DBLP", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7", "GSpar"])
-    # SPSP_Eccentricity("com-DBLP")
     Diameter("ego-Facebook", prune_algos=["Random", "LocalDegree", "RankDegree", "GSpar", "LocalSimilarity", "SCAN"])
     Centrality("web-Google", "PageRank", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "GSpar", "SCAN", "ER-Max_weighted", "ER-Max_unweighted"])
     Centrality("ego-Facebook", "PageRank", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "GSpar", "SCAN", "ER-Max_weighted", "ER-Max_unweighted"])
@@ -1269,7 +1260,56 @@ if __name__ == "__main__":
     Centrality("email-Enron", "Eigenvector", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "ForestFire"])
     GlobalClusteringCoefficient("human_gene2", prune_algos=["Random", "KNeighbor", "LocalSimilarity", "GSpar", "SCAN", "ER-Max_weighted"])
     degreeDistribution("ogbn-proteins", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "ForestFire"])
-    # GCN("ogbn-proteins")
     SAGE("ogbn-proteins", prune_algos=["Random", "LocalDegree", "RankDegree", "GSpar", "LocalSimilarity", "SCAN"])
     ClusterGCN("Reddit", prune_algos=["Random", "LocalDegree", "RankDegree", "ForestFire", "GSpar", "SCAN"])
-    # sparsifier_time("ogbn-proteins")
+    sparsifier_time("ogbn-proteins")
+
+    # rename figures to match with the paper
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ca-AstroPh_Eccentricity_isolated.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Fig_1b_ca-AstroPh_Eccentricity_isolated.{saveformat}"))
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ca-AstroPh_Eccentricity_stretch_factor.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Unused_ca-AstroPh_Eccentricity_stretch_factor.{saveformat}"))
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ca-AstroPh_Eccentricity_stretch_factor_with_unreachable_constraint.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Fig_4b_ca-AstroPh_Eccentricity_stretch_factor_with_unreachable_constraint.{saveformat}"))
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ca-AstroPh_SPSP_stretch_factor.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Unused_ca-AstroPh_SPSP_stretch_factor.{saveformat}"))
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ca-AstroPh_SPSP_stretch_factor_with_unreachable_constraint.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Fig_4a_ca-AstroPh_SPSP_stretch_factor_with_unreachable_constraint.{saveformat}"))
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ca-AstroPh_SPSP_unreachable.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Fig_1a_ca-AstroPh_SPSP_unreachable.{saveformat}"))
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ca-AstroPh_TopClosenessCentrality_precision.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Fig_5b_ca-AstroPh_TopClosenessCentrality_precision.{saveformat}"))
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ca-HepPh_ClusteringF1Similarity.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Fig_10_ca-HepPh_ClusteringF1Similarity.{saveformat}"))
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ca-HepPh_MaxFlow_stretch_factor.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Unused_ca-HepPh_MaxFlow_stretch_factor.{saveformat}"))
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ca-HepPh_MaxFlow_stretch_factor_with_constraint.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Fig_12_ca-HepPh_MaxFlow_stretch_factor_with_constraint.{saveformat}"))
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ca-HepPh_MaxFLow_unreachable.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Unused_ca-HepPh_MaxFLow_unreachable.{saveformat}"))
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/com-Amazon_MeanClusteringCoefficient.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Fig_9a_com-Amazon_MeanClusteringCoefficient.{saveformat}"))
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/com-Amazon_QuadraticFormSimilarity.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Fig_3_com-Amazon_QuadraticFormSimilarity.{saveformat}"))
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/com-DBLP_EstimateBetweennessCentrality_precision.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Fig_5a_com-DBLP_EstimateBetweennessCentrality_precision.{saveformat}"))
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/com-DBLP_num_community.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Fig_8_com-DBLP_num_community.{saveformat}"))
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ego-Facebook_Diameter.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Fig_4c_ego-Facebook_Diameter.{saveformat}"))
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ego-Facebook_PageRankCentrality_precision.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Fig_11b_ego-Facebook_PageRankCentrality_precision.{saveformat}"))
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ego-Twitter_KatzCentrality_precision.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Fig_7_ego-Twitter_KatzCentrality_precision.{saveformat}"))
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/email-Enron_EigenvectorCentrality_precision.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Fig_6_email-Enron_EigenvectorCentrality_precision.{saveformat}"))
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/human_gene2_GlobalClusteringCoefficient.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Fig_9b_human_gene2_GlobalClusteringCoefficient.{saveformat}"))
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ogbn-proteins_degreeDistribution.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Fig_2_ogbn-proteins_degreeDistribution.{saveformat}"))
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ogbn-proteins_SAGE.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Fig_13a_ogbn-proteins_SAGE.{saveformat}"))
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/Reddit_ClusterGCN.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Fig_13b_Reddit_ClusterGCN.{saveformat}"))
+    os.rename(osp.join(PROJECT_HOME, f"paper_fig/web-Google_PageRankCentrality_precision.{saveformat}"), 
+              osp.join(PROJECT_HOME, f"paper_fig/Fig_11a_web-Google_PageRankCentrality_precision.{saveformat}"))

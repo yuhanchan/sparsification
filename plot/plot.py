@@ -46,12 +46,6 @@ color_map = {
     "SF": "#6a3d9a",
     "ER-uw": "#0570b0",
     "ER-w": "#addd8e",
-    # "ER-Min": "#0570b0",
-    # "ER-Min_unweighted": "#0570b0",
-    # "ER-Min_weighted": "#0570b0",
-    # "ER-Max": "#0570b0",
-    # "ER-Max_unweighted": "#0570b0",
-    # "ER-Max_weighted": "#addd8e",
 }
 
 marker_map = {
@@ -86,12 +80,6 @@ marker_map = {
     "SF": "^",
     "ER-uw": "o",
     "ER-w": "o",
-    # "ER-Min": "o",
-    # "ER-Min_unweighted": "X",
-    # "ER-Min_weighted": "o",
-    # "ER-Max": "o",
-    # "ER-Max_unweighted": "o",
-    # "ER-Max_weighted": "o",
 }
 
 text_map = {
@@ -1688,32 +1676,6 @@ if __name__ == "__main__":
                 MaxFlow(dataset_name)
             else:
                 print("Invalid argument")
-
-    elif args.dataset_name == "paper":
-        saveformat = "pdf"
-        outdir = osp.join(PROJECT_HOME, "paper_fig")
-        addTitle = False
-        SPSP_Eccentricity("ca-AstroPh", outdir=outdir)
-        Centrality("ca-AstroPh", "TopCloseness", outdir=outdir , prune_algos=["Random", "LocalDegree", "RankDegree"])
-        ClusteringF1Similarity("ca-HepPh", outdir=outdir, prune_algos=["Random", "KNeighbor", "LocalSimilarity", "ER-Max_weighted", "ER-Max_unweighted"])
-        ClusteringF1Similarity("com-Amazon", outdir=outdir)
-        MaxFlow("ca-HepPh", outdir=outdir, prune_algos=["Random", "KNeighbor", "ForestFire", "ER-Max_weighted", "ER-Max_unweighted"])
-        LocalClusteringCoefficient("com-Amazon", outdir=outdir, prune_algos=["Random", "GSpar", "LocalSimilarity", "SCAN"])
-        QuadraticFormSimilarity("com-Amazon", outdir=outdir, prune_algos=["Random", "ER-Max_weighted"])
-        Centrality("com-DBLP", "EstimateBetweenness", outdir=outdir, prune_algos=["Random", "LocalDegree", "RankDegree"])
-        DetectCommunity("com-DBLP", outdir=outdir, prune_algos=["Random", "LocalDegree", "KNeighbor", "SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7"])
-        SPSP_Eccentricity("com-DBLP", outdir=outdir)
-        Diameter("ego-Facebook", outdir=outdir, prune_algos=["Random", "LocalDegree", "RankDegree"])
-        Centrality("web-Google", "PageRank", outdir=outdir, prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7", "ER-Max_weighted", "ER-Max_unweighted"])
-        Centrality("ego-Facebook", "PageRank", outdir=outdir, prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7", "ER-Max_weighted", "ER-Max_unweighted"])
-        Centrality("ego-Twitter", "Katz", outdir=outdir, prune_algos=["Random", "KNeighbor", "ER-Max_unweighted"])
-        Centrality("email-Enron", "Eigenvector", outdir=outdir, prune_algos=["Random", "LocalDegree", "RankDegree"])
-        GlobalClusteringCoefficient("human_gene2", outdir=outdir, prune_algos=["Random", "GSpar", "LocalSimilarity", "SCAN"])
-        degreeDistribution("ogbn-proteins", outdir=outdir, prune_algos=["Random", "LocalDegree"])
-        GCN("ogbn-proteins", outdir=outdir)
-        SAGE("ogbn-proteins", outdir=outdir)
-        ClusterGCN("Reddit", outdir=outdir)
-        sparsifier_time("ogbn-proteins", outdir=outdir)
     else:
         if args.metric == "all":
             degreeDistribution(args.dataset_name)
