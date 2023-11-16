@@ -243,17 +243,6 @@ def SCANSparsifier(dataset_name, G, targetRatio, config, postfix_folder="0", pri
     nk.writeGraph(scanGraph, output_file, nk.Format.EdgeListSpaceZero)
 
 
-# # @profile
-# def SimmelianSparsifier(dataset_name, G, targetRatio):
-#     simmelianSparsifier = nk.sparsification.SimmelianSparsifierNonParametric()
-#     simmelieanGraph = simmelianSparsifier.getSparsifiedGraphOfSize(G, targetRatio)
-#     print(f"\nsimmelian {targetRatio}:")
-#     nk.overview(simmelieanGraph)
-#     output_file = f"{PROJECT_HOME}/data/{dataset_name}/pruned/simmelian/{round(1-targetRatio, 3)}/uduw.el"
-#     os.makedirs(osp.dirname(output_file), exist_ok=True)
-#     nk.writeGraph(simmelieanGraph, output_file, nk.Format.EdgeListSpaceZero)
-
-
 # @profile
 def LSpar(dataset_name, G, config, c=0.1, postfix_folder="0", print_info=False):
     jaccardSimilaritySparsifier = nk.sparsification.JaccardSimilaritySparsifier()
