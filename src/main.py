@@ -20,7 +20,6 @@ import json
 from metrics_nk import *
 from metrics_gt import *
 from sparsifiers import *
-# from datasets import *
 from graph_reader import *
 from memory_profiler import memory_usage
 import argparse
@@ -372,81 +371,3 @@ def main():
 if __name__ == "__main__":
     set_start_method("spawn") # must write this line under if __name__ == "__main__":, otherwise it will not work
     main() 
-
-
-""" lagacy code
-
-    G_nk_dict["er_min_weighted"] = []
-    G_nk_dict["er_max_weighted"] = []
-    for name, Graphs in G_nk_dict.items():
-        for Graph in Graphs:
-            diameter = nk.distance.Diameter(Graph, algo=nk.distance.DiameterAlgo.Exact).run().getDiameter()
-            print(f"{name}\t#nodes: {Graph.numberOfNodes()}\t #edges: {Graph.numberOfEdges()}\t diameter: {diameter}")
-
-    nk.overview(G_nk_dict["original"][0])
-    baseline = np.array(page_rank(G_nk_dict["original"][0], max_iter=1000)).flatten()
-    for name, Graphs in G_nk_dict.items():
-        for Graph in Graphs:
-            pr = np.array(page_rank(Graph, max_iter=1000)).flatten()
-            print(name, 1-Graph.numberOfEdges()/G_nk_dict["original"][0].numberOfEdges(), ranking_precision(baseline, pr, k=100))
-
-    # ClusteringF1SimilarityWithGroundTruth_nk(dataset_name, G_nk_dict, "{PROJECT_HOME}/data/com-Amazon/raw/com-amazon.all.dedup.cmty.remap.txt", logToFile=False)
-
-    # # # basic
-    # degreeDistribution_nk(G_nk_dict)
-
-    # # # disatance, road network
-    # # EffectiveDiameter_nk(G_nk_dict)
-    # # Eccentricity_nk(G_nk_dict, num_nodes=10000)
-    # # SPSP_nk(G_nk_dict, num_nodes=100)
-
-    # # # Centrality, social network
-    # # Centrality_nk("Betweenness", G_nk_dict, 100, Approximate=False)
-    # Centrality_nk("EstimateBetweenness", G_nk_dict, 100)
-    # # Centrality_nk("DynBetweenness", G_nk_dict, 100, Approximate=True)
-    # # Centrality_nk("Closeness", G_nk_dict, 100, Approximate=False)
-    # Centrality_nk("Closeness", G_nk_dict, 100, Approximate=True)
-    # Centrality_nk("Degree", G_nk_dict, 100)
-    # Centrality_nk("KPath", G_nk_dict, 100)
-    # Centrality_nk("Katz", G_nk_dict, 100)
-    # Centrality_nk("Laplacian", G_nk_dict, 100)
-    # # Centrality_nk("LocalClusteringCoefficient", G_nk_dict, 100)
-    # Centrality_nk("Eigenvector", G_nk_dict, 100)
-    # Centrality_nk("CoreDecomposition", G_nk_dict, 100)
-
-    # # # Clustering
-    # DetectCommunity_nk(G_nk_dict)
-    # # ClusteringCoefficient_nk("mean", G_nk_dict)
-    # # ClusteringCoefficient_nk("global", G_nk_dict)
-    # ClusteringF1Similarity_nk(G_nk_dict)
-    
-    # # # Application level
-    # Centrality_nk("PageRank", G_nk_dict, 100)
-    # # Centrality_gt("PageRank", G_gt_dict, 100)
-    # # max_flow_gt(G_gt_dict)
-    # # min_st_cut_gt(G_gt_dict)
-    
-    # # # Misc
-    # QuadraticFormSimilarity_nk(G_nk_dict)
-    
-
-    # G_gt_dict = readAllGraphsGT(dataset_name, config) 
-    # print(G_gt_dict)
-
-    # ApproximateDiameter_gt(G_gt_dict)
-    # SPSP_gt(G_gt_dict, num_nodes=100)
-    # GlobalClusteringCoefficient_gt(G_gt_dict)
-    # LocalClusteringCoefficient_gt(G_gt_dict)
-
-    # Centrality_gt("Betweenness", G_gt_dict, 100)
-    # Centrality_gt("Closeness", G_gt_dict, 100)
-    # Centrality_gt("Katz", G_gt_dict, 100)
-    # Centrality_gt("Eigenvector", G_gt_dict, 100)
-
-    # NOT USED
-    # Centrality("SciPyPageRank", 10)
-    # Centrality("SciPyEVZ", 10)
-    # Centrality("ApproxElectricalCloseness", 10)
-    # min_cut(G_gt)
-    # EigenValueSimilarity(G)
-"""
