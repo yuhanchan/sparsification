@@ -342,90 +342,7 @@ def wrapped_spanner(*args, **kwargs):
 
 
 # @profile
-def ERMinSparsifier(dataset_name, config, multi_process=False, postfix_folder="0"):
-    if config[dataset_name]["directed"] and config[dataset_name]["weighted"]:
-        file_path = f"{PROJECT_HOME}/data/{dataset_name}/raw/dw.sym.wel"
-    elif config[dataset_name]["directed"]:
-        file_path = f"{PROJECT_HOME}/data/{dataset_name}/raw/duw.sym.el"
-    elif config[dataset_name]["weighted"]:
-        file_path = f"{PROJECT_HOME}/data/{dataset_name}/raw/dw.wel" # always use directed graph
-    else:
-        file_path = f"{PROJECT_HOME}/data/{dataset_name}/raw/duw.el" # always use directed graph
-
-    # if er files are not pre-computed, compute first
-    if not osp.exists(f"{PROJECT_HOME}/data/{dataset_name}/raw/stage3.npz"):
-        epsilon, val = list(config[dataset_name]["ermin_epsilon_to_prune_rate_map"].items())[0]
-        sparsifier.python_er_sparsify(
-            osp.join(
-                osp.dirname(osp.realpath(__file__)),
-                file_path,
-            ),
-            dataset_name=dataset_name,
-            dataset_type="el",
-            epsilon=float(epsilon),
-            prune_rate_val=val,
-            reuse=True,
-            method="min",
-            config=config,
-            postfix_folder=postfix_folder,
-        )
-        print("done computing effective resistance, now rerun to do sampling for all epsilon in config file")
-        return
-
-    if multi_process:
-        with ProcessPoolExecutor(max_workers=128) as executor:
-            futures = {}
-            for epsilon, val in config[dataset_name][
-                "ermin_epsilon_to_prune_rate_map"
-            ].items():
-                futures[
-                    executor.submit(
-                        sparsifier.python_er_sparsify,
-                        osp.join(
-                            osp.dirname(osp.realpath(__file__)),
-                            file_path,
-                        ),
-                        dataset_name=dataset_name,
-                        dataset_type="el",
-                        epsilon=float(epsilon),
-                        prune_rate_val=val,
-                        reuse=True,
-                        method="min",
-                        config=config,
-                        postfix_folder=postfix_folder,
-                    )
-                ] = epsilon
-
-            for future in futures:
-                print(f"start {futures[future]}")
-                try:
-                    future.result()
-                except Exception as e:
-                    print(e)
-                    print(f"failed {futures[future]}")
-                    sys.exit(1)
-    else:
-        for epsilon, val in config[dataset_name][
-            "ermin_epsilon_to_prune_rate_map"
-        ].items():
-            sparsifier.python_er_sparsify(
-                osp.join(
-                        osp.dirname(osp.realpath(__file__)),
-                        file_path,
-                    ),
-                    dataset_name=dataset_name,
-                    dataset_type="el",
-                    epsilon=float(epsilon),
-                    prune_rate_val=val,
-                    reuse=True,
-                    method="min",
-                    config=config,
-                    postfix_folder=postfix_folder,
-            )
-
-
-# @profile
-def ERMaxSparsifier(dataset_name, config, multi_process=False, postfix_folder="0"):
+def ERSparsifier(dataset_name, config, multi_process=False, postfix_folder="0"):
     if config[dataset_name]["directed"] and config[dataset_name]["weighted"]:
         file_path = f"{PROJECT_HOME}/data/{dataset_name}/raw/dw.sym.wel"
     elif config[dataset_name]["directed"]:
@@ -438,7 +355,7 @@ def ERMaxSparsifier(dataset_name, config, multi_process=False, postfix_folder="0
 
     # if er files are not pre-computed, compute first
     if not osp.exists(f"{PROJECT_HOME}/data/{dataset_name}/raw/stage3.npz"):
-        epsilon, val = list(config[dataset_name]["ermax_epsilon_to_prune_rate_map"].items())[0]
+        epsilon, val = list(config[dataset_name]["er_epsilon_to_prune_rate_map"].items())[0]
         sparsifier.python_er_sparsify(
             osp.join(
                 osp.dirname(osp.realpath(__file__)),
@@ -449,7 +366,6 @@ def ERMaxSparsifier(dataset_name, config, multi_process=False, postfix_folder="0
             epsilon=float(epsilon),
             prune_rate_val=val,
             reuse=True,
-            method="max",
             config=config,
             postfix_folder=postfix_folder,
         )
@@ -461,7 +377,7 @@ def ERMaxSparsifier(dataset_name, config, multi_process=False, postfix_folder="0
         with ProcessPoolExecutor(max_workers=128) as executor:
             futures = {}
             for epsilon, val in config[dataset_name][
-                "ermax_epsilon_to_prune_rate_map"
+                "er_epsilon_to_prune_rate_map"
             ].items():
                 futures[
                     executor.submit(
@@ -475,7 +391,6 @@ def ERMaxSparsifier(dataset_name, config, multi_process=False, postfix_folder="0
                         epsilon=float(epsilon),
                         prune_rate_val=val,
                         reuse=True,
-                        method="max",
                         config=config,
                         postfix_folder=postfix_folder,
                     )
@@ -491,7 +406,7 @@ def ERMaxSparsifier(dataset_name, config, multi_process=False, postfix_folder="0
                     sys.exit(1)
     else:    
         for epsilon, val in config[dataset_name][
-            "ermax_epsilon_to_prune_rate_map"
+            "er_epsilon_to_prune_rate_map"
             ].items():
             sparsifier.python_er_sparsify(
                 osp.join(
@@ -503,7 +418,6 @@ def ERMaxSparsifier(dataset_name, config, multi_process=False, postfix_folder="0
                     epsilon=float(epsilon),
                     prune_rate_val=val,
                     reuse=True,
-                    method="max",
                     config=config,
                     postfix_folder=postfix_folder,
             )

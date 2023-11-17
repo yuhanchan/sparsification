@@ -25,6 +25,8 @@ from memory_profiler import memory_usage
 import argparse
 from functools import wraps
 from multiprocessing.pool import Pool
+import rich
+
  
 PROJECT_HOME = os.getenv(key="PROJECT_HOME")
 if PROJECT_HOME is None:
@@ -115,10 +117,21 @@ def graphSparsifier(dataset_names, sparsifiers, targetRatios, config, multi_proc
         originalGraph_ud = loadOriginalGraph(dataset_name, config, undirected_only=True)
         for sparsifier in sparsifiers:
             if sparsifier == "ER":
-                for i in range(num_run):
-                    ERMaxSparsifier(dataset_name, config, multi_process=True, postfix_folder=str(i))
+                sys.stdout, original_stdout = original_stdout, sys.stdout
+                rich.print("[bold green]Running ER sparsifier...[/bold green]")
+                sys.stdout, original_stdout = original_stdout, sys.stdout
+                if not osp.exists(f"{PROJECT_HOME}/data/{dataset_name}/raw/stage3.npz"):
+                    ERSparsifier(dataset_name, config, multi_process=False, postfix_folder=0)
+                    for i in range(num_run):
+                        ERSparsifier(dataset_name, config, multi_process=True, postfix_folder=str(i))
+                else:
+                    for i in range(num_run):
+                        ERSparsifier(dataset_name, config, multi_process=True, postfix_folder=str(i))
 
             elif sparsifier == "Random":
+                sys.stdout, original_stdout = original_stdout, sys.stdout
+                rich.print("[bold green]Running Random sparsifier...[/bold green]")
+                sys.stdout, original_stdout = original_stdout, sys.stdout
                 if multi_process:
                     with ProcessPoolExecutor(max_workers=max_workers) as executor:
                         for targetRatio in targetRatios:
@@ -132,6 +145,9 @@ def graphSparsifier(dataset_names, sparsifiers, targetRatios, config, multi_proc
                             RandomEdgeSparsifier(dataset_name, originalGraph, targetRatio, config, postfix_folder=str(i))
 
             elif sparsifier == "ForestFire":
+                sys.stdout, original_stdout = original_stdout, sys.stdout
+                rich.print("[bold green]Running ForestFire sparsifier...[/bold green]")
+                sys.stdout, original_stdout = original_stdout, sys.stdout
                 if multi_process:
                     with ProcessPoolExecutor(max_workers=max_workers) as executor:
                         for targetRatio in targetRatios:
@@ -145,6 +161,9 @@ def graphSparsifier(dataset_names, sparsifiers, targetRatios, config, multi_proc
                             ForestFireSparsifier(dataset_name, originalGraph, targetRatio, config, postfix_folder=str(i))
 
             elif sparsifier == "RankDegree":
+                sys.stdout, original_stdout = original_stdout, sys.stdout
+                rich.print("[bold green]Running RankDegree sparsifier...[/bold green]")
+                sys.stdout, original_stdout = original_stdout, sys.stdout
                 if multi_process:
                     with ProcessPoolExecutor(max_workers=max_workers) as executor:
                         for targetRatio in targetRatios:
@@ -158,6 +177,9 @@ def graphSparsifier(dataset_names, sparsifiers, targetRatios, config, multi_proc
                             RankDegreeSparsifier(dataset_name, originalGraph, targetRatio, config, postfix_folder=str(i))
 
             elif sparsifier == "LocalDegree":
+                sys.stdout, original_stdout = original_stdout, sys.stdout
+                rich.print("[bold green]Running LocalDegree sparsifier...[/bold green]")
+                sys.stdout, original_stdout = original_stdout, sys.stdout
                 if multi_process:
                     with ProcessPoolExecutor(max_workers=max_workers) as executor:
                         for targetRatio in targetRatios:
@@ -169,6 +191,9 @@ def graphSparsifier(dataset_names, sparsifiers, targetRatios, config, multi_proc
                         LocalDegreeSparsifier(dataset_name, originalGraph, targetRatio, config, postfix_folder="0")
 
             elif sparsifier == "GSpar":
+                sys.stdout, original_stdout = original_stdout, sys.stdout
+                rich.print("[bold green]Running GSpar sparsifier...[/bold green]")
+                sys.stdout, original_stdout = original_stdout, sys.stdout
                 if multi_process:
                     with ProcessPoolExecutor(max_workers=max_workers) as executor:
                         for targetRatio in targetRatios:
@@ -180,6 +205,9 @@ def graphSparsifier(dataset_names, sparsifiers, targetRatios, config, multi_proc
                         GSpar(dataset_name, originalGraph, targetRatio, config, postfix_folder="0")
 
             elif sparsifier == "LocalSimilarity":
+                sys.stdout, original_stdout = original_stdout, sys.stdout
+                rich.print("[bold green]Running Local Similarity sparsifier...[/bold green]")
+                sys.stdout, original_stdout = original_stdout, sys.stdout
                 if multi_process:
                     with ProcessPoolExecutor(max_workers=max_workers) as executor:
                         for targetRatio in targetRatios:
@@ -191,6 +219,9 @@ def graphSparsifier(dataset_names, sparsifiers, targetRatios, config, multi_proc
                         LocalSimilaritySparsifier(dataset_name, originalGraph, targetRatio, config, postfix_folder="0")
 
             elif sparsifier == "SCAN":
+                sys.stdout, original_stdout = original_stdout, sys.stdout
+                rich.print("[bold green]Running SCAN sparsifier...[/bold green]")
+                sys.stdout, original_stdout = original_stdout, sys.stdout
                 if multi_process:
                     with ProcessPoolExecutor(max_workers=max_workers) as executor:
                         for targetRatio in targetRatios:
@@ -202,6 +233,9 @@ def graphSparsifier(dataset_names, sparsifiers, targetRatios, config, multi_proc
                         SCANSparsifier(dataset_name, originalGraph, targetRatio, config, postfix_folder="0")
 
             elif sparsifier == "KNeighbor":
+                sys.stdout, original_stdout = original_stdout, sys.stdout
+                rich.print("[bold green]Running KNeighbor sparsifier...[/bold green]")
+                sys.stdout, original_stdout = original_stdout, sys.stdout
                 if multi_process:
                     for k in config[dataset_name]["kNeighbors"]:
                         for i in range(num_run):
@@ -213,14 +247,23 @@ def graphSparsifier(dataset_names, sparsifiers, targetRatios, config, multi_proc
                             KNeighborSparsifier(dataset_name, originalGraph, k, config, postfix_folder=str(i))
 
             elif sparsifier == "tSpanner":
+                sys.stdout, original_stdout = original_stdout, sys.stdout
+                rich.print("[bold green]Running t-spanner sparsifier...[/bold green]")
+                sys.stdout, original_stdout = original_stdout, sys.stdout
                 with ProcessPoolExecutor(max_workers=max_workers) as executor:
                     for t in [3, 5, 7]:
                         executor.submit(executor.submit(wrapped_spanner, dataset_name, originalGraph_ud, t, config, "0"))
 
             elif sparsifier == "SpanningForest":
+                sys.stdout, original_stdout = original_stdout, sys.stdout
+                rich.print("[bold green]Running Spanning Forest sparsifier...[/bold green]")
+                sys.stdout, original_stdout = original_stdout, sys.stdout
                 SpanningForestSparsifier(dataset_name, originalGraph_ud, config, postfix_folder="0")
 
             elif sparsifier == "LSpar":
+                sys.stdout, original_stdout = original_stdout, sys.stdout
+                rich.print("[bold green]Running LSpar sparsifier...[/bold green]")
+                sys.stdout, original_stdout = original_stdout, sys.stdout
                 if multi_process:
                     with ProcessPoolExecutor(max_workers=max_workers) as executor:
                         for c in config[dataset_name]["LSpar_c"]:
@@ -251,7 +294,6 @@ def main():
                         "com-DBLP", 
                         "com-Amazon", 
                         "email-Enron", 
-                        "wiki-Talk", 
                         "ca-AstroPh", 
                         "ca-HepPh", 
                         "web-BerkStan", 
@@ -282,6 +324,7 @@ def main():
 
     if args.mode == "sparsify" or args.mode == "all":
         # for dataset_name in dataset_names:
+        rich.print("[bold green]Running sparsifier...[/bold green]")
         graphSparsifier(dataset_names=dataset_names, 
                         sparsifiers=["ER", "Random", "ForestFire", "RankDegree", 
                                         "LocalDegree", "GSpar", "LocalSimilarity", 
@@ -294,8 +337,11 @@ def main():
                         num_run=1
                         )
 
+        rich.print("[bold green]\nRunning sparsifier done...[/bold green]")
+        rich.print("[bold green]\nConverting pruned graph...[/bold green]")
         for dataset_name in dataset_names:
             os.system(f"python {PROJECT_HOME}/utils/convert_edgelist.py --dataset_name {dataset_name} --num_thread 8")
+        rich.print("[bold green]Converting pruned graph done...[/bold green]")
 
     if args.mode == "eval" or args.mode == "all":
         for dataset_name in dataset_names:
@@ -304,65 +350,76 @@ def main():
             # print(f"Memory usage: {psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2} MB")
             # exit(0)
             try:
-                degreeDistribution_nk(dataset_name, G_nk_dict, nbin=100, logToFile=True) # single core
+                rich.print("[bold green]Evaluating Degree Distribution...[/bold green]")
+                degreeDistribution_nk(dataset_name, G_nk_dict, nbin=100, logToFile=True) 
             except:
                 pass
             try:
-                Centrality_nk(dataset_name, "EstimateBetweenness", G_nk_dict, 100, logToFile=True) # single core
+                rich.print("[bold green]Evaluating Betweenness Centrality...[/bold green]")
+                Centrality_nk(dataset_name, "EstimateBetweenness", G_nk_dict, 100, logToFile=True)
             except:
                 pass
             try:
-                Centrality_nk(dataset_name, "TopCloseness", G_nk_dict, 100, logToFile=True) # 50%
+                rich.print("[bold green]Evaluating Closeness Centrality...[/bold green]")
+                Centrality_nk(dataset_name, "TopCloseness", G_nk_dict, 100, logToFile=True) 
             except:
                 pass
             try:
-                Centrality_nk(dataset_name, "Katz", G_nk_dict, 100, logToFile=True) # 50%
+                rich.print("[bold green]Evaluating Katz Centrality...[/bold green]")
+                Centrality_nk(dataset_name, "Katz", G_nk_dict, 100, logToFile=True) 
             except:
                 pass
             try:
-                Centrality_nk(dataset_name, "Eigenvector", G_nk_dict, 100, logToFile=True) # 50%
+                rich.print("[bold green]Evaluating Eigenvector Centrality...[/bold green]")
+                Centrality_nk(dataset_name, "Eigenvector", G_nk_dict, 100, logToFile=True) 
             except:
                 pass
             try:
-                DetectCommunity_nk(dataset_name, G_nk_dict, logToFile=True) # 50%
+                rich.print("[bold green]Evaluating Community...[/bold green]")
+                DetectCommunity_nk(dataset_name, G_nk_dict, logToFile=True) 
             except:
                 pass
             try:
-                ClusteringF1Similarity_nk(dataset_name, G_nk_dict, logToFile=True) # single core
+                rich.print("[bold green]Evaluating Clustering F1 Similarity...[/bold green]")
+                ClusteringF1Similarity_nk(dataset_name, G_nk_dict, logToFile=True) 
             except:
                 pass
             try:
-                Centrality_nk(dataset_name, "PageRank", G_nk_dict, 100, logToFile=True) # 50%
+                rich.print("[bold green]Evaluating Page Rank...[/bold green]")
+                Centrality_nk(dataset_name, "PageRank", G_nk_dict, 100, logToFile=True) 
             except:
                 pass
             try:
-                QuadraticFormSimilarity_nk(dataset_name, G_nk_dict, logToFile=True) # 25%
+                rich.print("[bold green]Evaluating Quadratic Form Similarity...[/bold green]")
+                QuadraticFormSimilarity_nk(dataset_name, G_nk_dict, logToFile=True) 
             except:
                 pass
-            # Centrality_nk(dataset_name, "Degree", G_nk_dict, 100, logToFile=True)
-            # Centrality_nk(dataset_name, "Laplacian", G_nk_dict, 100, logToFile=True) # 50%
-            # Centrality_nk(dataset_name, "CoreDecomposition", G_nk_dict, 100, logToFile=True)
             del G_nk_dict # release memory
 
             G_gt_dict = readAllGraphsGT(dataset_name, config) 
             try:
-                SPSP_Eccentricity_gt(dataset_name, G_gt_dict, num_nodes=100, logToFile=True) # single core
+                rich.print("[bold green]Evaluating SPSP and Eccentricity stretch factor...[/bold green]")
+                SPSP_Eccentricity_gt(dataset_name, G_gt_dict, num_nodes=100, logToFile=True) 
             except:
                 pass
             try:
-                GlobalClusteringCoefficient_gt(dataset_name, G_gt_dict, logToFile=True) # 50%
+                rich.print("[bold green]Evaluating Global Clustering Coefficient...[/bold green]")
+                GlobalClusteringCoefficient_gt(dataset_name, G_gt_dict, logToFile=True) 
             except:
                 pass
             try:
-                LocalClusteringCoefficient_gt(dataset_name, G_gt_dict, logToFile=True) # 50%
+                rich.print("[bold green]Evaluating Local Clustering Coefficient...[/bold green]")
+                LocalClusteringCoefficient_gt(dataset_name, G_gt_dict, logToFile=True) 
             except:
                 pass
             try:
-                MaxFlow_gt(dataset_name, G_gt_dict, logToFile=True) # single core
+                rich.print("[bold green]Evaluating Min Cut / Max Flow...[/bold green]")
+                MaxFlow_gt(dataset_name, G_gt_dict, logToFile=True) 
             except:
                 pass
             try:
-                ApproximateDiameter_gt(dataset_name, G_gt_dict, logToFile=True) # single core
+                rich.print("[bold green]Evaluating Diameter...[/bold green]")
+                ApproximateDiameter_gt(dataset_name, G_gt_dict, logToFile=True) 
             except:
                 pass
             del G_gt_dict # release memory
