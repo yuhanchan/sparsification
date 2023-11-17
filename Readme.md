@@ -78,7 +78,7 @@ cd $PROJECT_HOME
 python $PROJECT_HOME/utils/data_preparation.py --dataset_name [dataset_name/all]
 ```
 
-This will download data and do necessary data pre-processin. ``all`` will download all data, we recommend start with small datasets. datasets from small to large (by #edge) are *``(smallest) ego-Facebook, ca-HepPh, email-Enron, ca-AstroPh, com-Amazon, com-DBLP, web-NotreDame, ego-Twitter, web-Stanford, wiki-Talk, web-Google, web-BerkStan, human_gene2, ogbn-proteins, Reddit (largest)``*
+This will download data and do necessary data pre-processin. ``all`` will download all data, we recommend start with small datasets. datasets from small to large (by #edge) are *``(smallest) ego-Facebook, ca-HepPh, email-Enron, ca-AstroPh, com-Amazon, com-DBLP, web-NotreDame, ego-Twitter, web-Stanford, web-Google, web-BerkStan, human_gene2, ogbn-proteins, Reddit (largest)``*
 
 
 ## Run
