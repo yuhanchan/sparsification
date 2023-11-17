@@ -28,9 +28,7 @@ We may use the terms ``sparsify`` and ``prune`` interchangably in this doc
 ├── setup.py # setup file for this sparsifiction lib
 ├── sparsifier # code for ER sparsifier and some legacy sparsifiers
 ├── src
-│   ├── Cheb.py  # code for running Cheb GNN
-│   ├── ClusterGCN.py # code for running Cluseter GCN
-│   ├── GCN.py # code for running GCN
+│   ├── ClusterGCN.py # code for running CluseterGCN
 │   ├── graph_reader.py # helper code for reading graphs
 │   ├── logger.py # helpper code for logging GNN
 │   ├── main.py # enter point
@@ -49,12 +47,15 @@ Conda is recommendated to manage env. To install necessary packages:
 1. Install conda following [link](https://docs.anaconda.com/free/anaconda/install/index.html).
 2. Create an env named ``spar`` by running ``conda env create --file env.yaml``
 3. Activate env by running ``conda activate spar``
-4. Install extra packages by running ``pip install networkit setuptools==52.0.0``. Latest version of setuptool cause weird errors.
-5. Install the current folder by running ``pip install -e .`` (make sure you type the dot (``.``) in the command)
-6. Install ``torch`` following [link](https://pytorch.org/get-started/locally/).
-7. Install ``PyG`` following [link](https://pytorch-geometric.readthedocs.io/en/latest/install/installation.html).
-8. Install additional packages by running ``pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-${TORCH}+${CUDA}.html``, where ``${TORCH}`` and ``${CUDA}`` is the torch and cuda version you use, follow [link](https://pytorch-geometric.readthedocs.io/en/latest/install/installation.html) for more details.
-9. Setup env by running ``source env.sh``. (Run step 3 and 9 every time a new terminal is started.)
+4. Setup env by running ``source env.sh``. (Run step 3 and 9 every time a new terminal is started.)
+
+## Dependencies
+1. Install the current folder by running ``pip install -e .`` (make sure you type the dot (``.``) in the command)
+2. Install extra packages by running ``pip install networkit ogb networkx rich setuptools==52.0.0``. Latest version of setuptool cause weird errors.
+3. Install ``torch`` following [link](https://pytorch.org/get-started/locally/). Use your own cuda version. ``pip`` recommended, ``conda`` had some issues for me.
+4. Install ``PyG`` following [link](https://pytorch-geometric.readthedocs.io/en/latest/install/installation.html). Use your own cuda version. ``pip`` recommended, ``conda`` had some issues for me.
+5. Install additional packages by running ``pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-${TORCH}+${CUDA}.html``, where ``${TORCH}`` and ``${CUDA}`` is the torch and cuda version you use, follow [link](https://pytorch-geometric.readthedocs.io/en/latest/install/installation.html) for more details.
+6. Install julia following [link](https://julialang.org/downloads/).
 
 
 ## System Requirements
