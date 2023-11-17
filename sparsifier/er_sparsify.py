@@ -212,7 +212,6 @@ def sampling(
     end_nodes,
     N,
     dataset_name,
-    method="max", # max: high Pe has higher chance to be sampled, min: low Pe has higher chance to be sampled
     postfix_folder="0",
 ):
     """
@@ -226,27 +225,11 @@ def sampling(
     logger.info(f"Stage 3b: sampling edges based on Reff")
     t_s = time()
     q = round(N * np.log(N) * 9 * C**2 / (epsilon**2))
-    if method == "max":
-        np.random.seed(time_ns()%1000000000)
-        results = np.random.choice(np.arange(np.shape(Pe)[0]), int(q), p=list(Pe))
-    elif method == "min":
-        Pe_inverse = [1/x for x in Pe]
-        Pe_inverse = Pe_inverse/np.sum(Pe_inverse)
-        np.random.seed(time_ns()%1000000000)
-        results = np.random.choice(np.arange(np.shape(Pe)[0]), int(q), p=Pe_inverse)
-    else:
-        logger.error(f"method must be one of the type: max, min")
-        sys.exit(1)
+    np.random.seed(time_ns()%1000000000)
+    results = np.random.choice(np.arange(np.shape(Pe)[0]), int(q), p=list(Pe))
     spin_counts = stats.itemfreq(results).astype(int)
 
     per_spin_weights = weights / (q * Pe)
-    # if method == "max":
-    #     per_spin_weights = weights / (q * Pe)
-    # elif method == "min":
-    #     per_spin_weights = weights / (q * Pe_inverse)
-    # else:
-    #     logger.error(f"method must be one of the type: max, min")
-    #     sys.exit(1)
     per_spin_weights[per_spin_weights == inf] = 0
 
     counts = np.zeros(np.shape(weights)[0])
@@ -324,7 +307,6 @@ def stage3(
     isPygDataset=False,
     max_workers=64,
     reuse=True,
-    method="max", # max: high Pe has higher chance to be sampled, min: low Pe has higher chance to be sampled
     postfix_folder="0",
 ):
     logger.info(f"Stage 3: Pruning edges")
@@ -397,7 +379,6 @@ def stage3(
             end_nodes,
             N,
             dataset_name,
-            method,
             postfix_folder=postfix_folder,
         )
     elif isinstance(epsilon, list):
@@ -416,7 +397,6 @@ def stage3(
                     end_nodes,
                     N,
                     dataset_name,
-                    method,
                     postfix_folder,
                 ): epsilon_
                 for epsilon_, prune_rate_val_ in zip(epsilon, prune_rate_val)
@@ -440,7 +420,6 @@ def python_er_sparsify(
     epsilon: Union[int, float, list],
     prune_rate_val,
     reuse=True,
-    method="max", # max: high Pe has higher chance to be sampled, min: low Pe has higher chance to be sampled
     config=None,
     postfix_folder="1",
 ):
@@ -473,17 +452,10 @@ def python_er_sparsify(
         osp.dirname(osp.abspath(__file__)), f"../data/{dataset_name}/raw/stage3.npz"
     )
 
-    if method == "max":
-        prune_file_dir = osp.join(
-            osp.dirname(osp.abspath(__file__)), f"../data/{dataset_name}/pruned/ER-Max"
-        )
-    elif method == "min":
-        prune_file_dir = osp.join(
-            osp.dirname(osp.abspath(__file__)), f"../data/{dataset_name}/pruned/ER-Min"
-        )
-    else:
-        logger.error(f"method must be one of the type: max, min")
-        exit(1)
+    prune_file_dir = osp.join(
+        osp.dirname(osp.abspath(__file__)), f"../data/{dataset_name}/pruned/ER"
+    )
+
     os.makedirs(prune_file_dir, exist_ok=True)
 
     # load dataset
@@ -536,7 +508,6 @@ def python_er_sparsify(
                     prune_rate_val,
                     isPygDataset=True,
                     reuse=reuse,
-                    method=method,
                     postfix_folder=postfix_folder,
                 )
             else:
@@ -553,7 +524,6 @@ def python_er_sparsify(
                     prune_rate_val,
                     isPygDataset=False,
                     reuse=reuse,
-                    method=method,
                     postfix_folder=postfix_folder,
                 )
 
@@ -573,7 +543,6 @@ def python_er_sparsify(
                 prune_rate_val,
                 isPygDataset=True,
                 reuse=reuse,
-                method=method,
                 postfix_folder=postfix_folder,
             )
         else:
@@ -590,7 +559,6 @@ def python_er_sparsify(
                 prune_rate_val,
                 isPygDataset=False,
                 reuse=reuse,
-                method=method,
                 postfix_folder=postfix_folder,
             )
 
@@ -605,43 +573,3 @@ def python_er_sparsify(
             data.edge_weight = edge_weight
         dataset.data = data
     return dataset
-
-
-# def gsparse_er_sparsify(dataset_name, epsilon, config):
-#     """
-#     This is the gSparse version of ER pruning.
-
-#     Input:
-#         dataset_name: str, name of the dataset
-#         epsilon: int | float -> return edge_index, edge_weight
-#                  list -> compute each epsilon, no return
-#         config: config dict
-#     """
-#     if str(epsilon) in config[dataset_name]["cpp_er_epsilon_to_drop_rate_map"]:
-#         prune_file_dir = osp.join(
-#             osp.dirname(osp.abspath(__file__)), f"../data/{dataset_name}/pruned/er"
-#         )
-#         input_path = osp.join(
-#             osp.dirname(osp.abspath(__file__)), f"../data/{dataset_name}/raw/uduw.el"
-#         )
-#         er_path = osp.join(
-#             osp.dirname(osp.abspath(__file__)), f"../data/{dataset_name}/raw/er.txt"
-#         )
-#         el_path = osp.join(
-#             prune_file_dir,
-#             str(config[dataset_name]["cpp_er_epsilon_to_drop_rate_map"][str(epsilon)]),
-#             "udw.el_noweight",
-#         )
-#         weight_path = osp.join(
-#             prune_file_dir,
-#             str(config[dataset_name]["cpp_er_epsilon_to_drop_rate_map"][str(epsilon)]),
-#             "udw.weight",
-#         )
-#     os.makedirs(osp.dirname(el_path), exist_ok=True)
-#     Popen(
-#         osp.join(
-#             osp.dirname(osp.abspath(__file__)),
-#             f"./gSparse/bin/er {epsilon} {input_path} {el_path} {weight_path} {er_path}",
-#         ),
-#         shell=True,
-#     ).wait()
