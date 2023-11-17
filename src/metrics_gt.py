@@ -66,14 +66,16 @@ def ApproximateDiameter_gt(dataset_name, G_dict, logToFile=False):
         outfile = osp.join(PROJECT_HOME, "output_metric_raw", dataset_name, f"ApproximateDiameter", "log")
         os.makedirs(osp.dirname(outfile), exist_ok=True)
         fout = open(outfile, "w")
-    print("\n\n-------------------------------")
-    print("ApproximateDiameter")
     for name, Graphs in G_dict.items():
         for Graph in Graphs:
             # diameter = graph_tool.topology.pseudo_diameter(Graph, source=None, weights=Graph.edge_properties["weight"])
             diameters = []
             for i in range(10):
-                diameter = graph_tool.topology.pseudo_diameter(Graph, source=random.randint(0, Graph.num_vertices()), weights=Graph.edge_properties["weight"])
+                s = random.randint(0, Graph.num_vertices())
+                # print(s, Graph.vertex(s).out_degree())
+                # while Graph.vertex(s).out_degree() == 0:
+                    # s = random.randint(0, Graph.num_vertices())
+                diameter = graph_tool.topology.pseudo_diameter(Graph, source=s, weights=Graph.edge_properties["weight"])
                 diameters.append(diameter[0])
 
             diameter = np.mean(diameters)
@@ -93,8 +95,6 @@ def SPSP_Eccentricity_gt(dataset_name, G_dict, num_nodes=100, logToFile=False):
         outfile = osp.join(PROJECT_HOME, "output_metric_raw", dataset_name, f"SPSP_Eccentricity", "log")
         os.makedirs(osp.dirname(outfile), exist_ok=True)
         fout = open(outfile, "w")
-    print("\n\n-------------------------------")
-    print("SPSP and Eccentricity")
 
     srcs = random.sample(list(range(0, G_dict["original"][0].num_vertices())), num_nodes)
     trgs = random.sample(list(range(0, G_dict["original"][0].num_vertices())), 1000)
@@ -178,7 +178,6 @@ def SPSP_Eccentricity_gt(dataset_name, G_dict, num_nodes=100, logToFile=False):
 
 @timeout(MAX_TIMEOUT)
 def Centrality_gt(algo_, G_dict, topN):
-    print("\n\n-------------------------------")
     print(f"{algo_} Centrality")
     t_s, pt_s = time.time(), time.process_time()
 
@@ -232,8 +231,6 @@ def GlobalClusteringCoefficient_gt(dataset_name, G_dict, logToFile=False):
         os.makedirs(osp.dirname(outfile), exist_ok=True)
         fout = open(outfile, "w")
         
-    print("\n\n-------------------------------")
-    print(f"Global Clustering Coefficient")
     for name, Graphs in G_dict.items():
         for Graph in Graphs:
             gcc = list(graph_tool.clustering.global_clustering(Graph, weight=Graph.edge_properties["weight"]))
@@ -250,8 +247,6 @@ def LocalClusteringCoefficient_gt(dataset_name, G_dict, logToFile=False):
         os.makedirs(osp.dirname(outfile), exist_ok=True)
         fout = open(outfile, "w")
 
-    print("\n\n-------------------------------")
-    print(f"Local Clustering Coefficient")
     baseline = list(graph_tool.clustering.local_clustering(G_dict["original"][0], weight=G_dict["original"][0].edge_properties["weight"], undirected=False))
     for name, Graphs in G_dict.items():
         for Graph in Graphs:
@@ -279,8 +274,6 @@ def MaxFlow_gt(dataset_name, G_dict, logToFile=False):
         os.makedirs(osp.dirname(outfile), exist_ok=True)
         fout = open(outfile, "w")
 
-    print("\n\n-------------------------------")
-    print("MaxFlow")
     x = np.random.randint(0, G_dict["original"][0].num_vertices(), size=(100, 2))
     x = np.delete(x, np.where(x[:,0] == x[:,1]), axis=0)
     cap = G_dict["original"][0].edge_properties["weight"]
@@ -322,8 +315,6 @@ def MaxFlow_gt(dataset_name, G_dict, logToFile=False):
 
 @timeout(MAX_TIMEOUT)
 def min_st_cut_gt(G_gt):
-    print("\n\n-------------------------------")
-    print("min_st_cut")
     x = np.random.randint(0, originalGraph_gt.num_vertices(), size=(100, 2))
     x = np.delete(x, np.where(x[:,0] == x[:,1]), axis=0)
     cap = originalGraph_gt.edge_properties["weight"]
@@ -361,8 +352,6 @@ def min_st_cut_gt(G_gt):
 
 @timeout(MAX_TIMEOUT)
 def min_cut_gt(G_gt):
-    print("\n\n-------------------------------")
-    print("min_cut")
     ranks = []
     for name, Graph in G_gt.items():
         Graph.set_directed(False)

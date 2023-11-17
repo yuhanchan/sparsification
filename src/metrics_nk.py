@@ -104,8 +104,6 @@ def degreeDistribution_nk(dataset_name, G_dict, nbin=20, logToFile=False):
         os.makedirs(osp.dirname(outfile), exist_ok=True)
         fout = open(outfile, "w")
 
-    print("\n\n-------------------------------")
-    print(f"degreeDistribution")
 
     degrees = nk.centrality.DegreeCentrality(G_dict["original"][0], normalized=True, outDeg=True, ignoreSelfLoops=True).run().scores()
     histogram = np.histogram(degrees, bins=nbin)
@@ -130,8 +128,6 @@ def degreeDistribution_nk(dataset_name, G_dict, nbin=20, logToFile=False):
 
 @timeout(MAX_TIMEOUT)
 def EffectiveDiameter_nk(G_dict, approximate=False): # only for undirected graphs
-    print("\n\n-------------------------------")
-    print("Diameter")
     print("90 percent Effective Diameter, set approximate=True to use approximate algorithm (faster)")
     print("Warn: Only showing the diameter of the largest connected component")
     ranks = []
@@ -150,27 +146,17 @@ def EffectiveDiameter_nk(G_dict, approximate=False): # only for undirected graph
                 cc.run()
                 largestCC = cc.extractLargestConnectedComponent(Graph, True)
 
-            # largestCC = cc.extractLargestConnectedComponent(Graph, True)
             if approximate:
                 diameter = nk.distance.EffectiveDiameterApproximation(largestCC, ratio=0.9).run().getEffectiveDiameter()
             else:
                 diameter = nk.distance.EffectiveDiameter(largestCC, ratio=0.9).run().getEffectiveDiameter()
-                # diameter = nk.distance.Diameter(largestCC, algo=nk.distance.DiameterAlgo.Exact).run().getDiameter()
-            # print(f"{name}\t#edges: {Graph.numberOfEdges()},\t diameter: {nk.distance.Diameter(largestCC, algo=nk.distance.DiameterAlgo.Exact).getDiameter()}")
-            # print(f"{name}\t#edges: {Graph.numberOfEdges()},\t diameter: {nk.distance.EffectiveDiameter(largestCC, ratio=0.9).run().getEffectiveDiameter()}")
             ranks.append((name, diameter))
             print(f"{name}\t#nodes: {largestCC.numberOfNodes()} ({largestCC.numberOfNodes()*100.0/Graph.numberOfNodes():.2f}%)\t #edges: {largestCC.numberOfEdges()} ({largestCC.numberOfEdges()*100.0/Graph.numberOfEdges():.2f}%)\t diameter: {diameter}")
 
-    # # print rankings
-    # print("\n-------Ranking:-------\n")
-    # print("\n".join([f"{r[0]}\t{r[1]:.3f}" for r in sorted(ranks, key=lambda x: x[1], reverse=True)]))
-    # print()
 
 
 @timeout(MAX_TIMEOUT)
 def Eccentricity_nk(G_dict, num_nodes=100): # only for undiredted graphs
-    print("\n\n-------------------------------")
-    print("Eccentricity")
 
     # pick random nodes
     num_nodes = num_nodes if num_nodes < G_dict["original"][0].numberOfNodes() else G_dict["original"][0].numberOfNodes()
@@ -186,25 +172,8 @@ def Eccentricity_nk(G_dict, num_nodes=100): # only for undiredted graphs
         baseline_dist_grouped.append(np.sum(baseline_dist[int(i*len(baseline_dist)/20):int((i+1)*len(baseline_dist)/20)]))
     baseline_dist_grouped = np.array(baseline_dist_grouped)
     
-    # baseline = [nk.distance.Eccentricity().getValue(originalGraph, src)[1] for src in range(0, originalGraph.numberOfNodes())]
-    # cc = nk.components.ConnectedComponents(originalGraph)
-    # cc.run()
-    # largestCC = cc.extractLargestConnectedComponent(originalGraph)
-    # baseline = [nk.distance.Eccentricity().getValue(originalGraph, src)[1] if largestCC.hasNode(src) else float("inf") for src in range(0, originalGraph.numberOfNodes())]
-    # print(baseline)
-
     ranks = []
     for name, Graphs in G_dict.items():
-        # cc = nk.components.ConnectedComponents(Graph)
-        # cc.run()
-        # largestCC = cc.extractLargestConnectedComponent(Graph)
-
-        # eccentricity = [nk.distance.Eccentricity().getValue(Graph, src)[1] for src in range(0, Graph.numberOfNodes())]
-        # eccentricity = [nk.distance.Eccentricity().getValue(Graph, src)[1] if largestCC.hasNode(src) else np.nan for src in range(0, Graph.numberOfNodes())]
-        
-        # count the number of valid values in eccentricity
-        # print(f"#valid values: {len(list(filter(lambda x: not np.isnan(x), eccentricity)))}")
-
         for Graph in Graphs:
             eccentricity = [nk.distance.Eccentricity().getValue(Graph, src)[1] for src in srcs]
 
@@ -227,19 +196,12 @@ def Eccentricity_nk(G_dict, num_nodes=100): # only for undiredted graphs
             ratio_std = np.ma.masked_invalid(ratio).std()
             ranks.append((name, ratio_mean))
         
-            # print(f"{name}\t#nodes: {Graph.numberOfNodes()}\t #edges: {Graph.numberOfEdges()},\t #nodes in largestCC: {largestCC.numberOfNodes()},\t ratio min / max / mean: {ratio_min:.2f} / {ratio_max:.2f} / {ratio_mean:.2f}")
             print(f"{name}\t#nodes: {Graph.numberOfNodes()}\t #edges: {Graph.numberOfEdges()}\t ratio min / max / mean / std: {ratio_min:.2f} / {ratio_max:.2f} / {ratio_mean:.2f} / {ratio_std:.2f}\t Bhattacharyya distance: {Bhattacharyya_distance:.3f}")
 
-    # # print rankings
-    # print("\n-------Ranking:-------\n")
-    # print("\n".join([f"{r[0]}\t{r[1]:.2f}" for r in sorted(ranks, key=lambda x: x[1])]))
-    # print()
 
 
 @timeout(MAX_TIMEOUT)
 def SPSP_nk(G_dict, num_nodes=100): # only for undirected graphs
-    print("\n\n-------------------------------")
-    print("SPSP")
     # generate num_nodes different random int 
     srcs = random.sample(list(range(0, G_dict["original"][0].numberOfNodes())), num_nodes)
     baseline = nk.distance.SPSP(G_dict["original"][0], srcs).run().getDistances()
@@ -263,11 +225,6 @@ def SPSP_nk(G_dict, num_nodes=100): # only for undirected graphs
             ratio_std = np.ma.masked_invalid(ratio).std()
             ranks.append((name, ratio_mean))
             print(f"{name}\t#nodes: {Graph.numberOfNodes()}\t #edges: {Graph.numberOfEdges()},\t ratio min / max / mean / std: {ratio_min:.2f} / {ratio_max:.2f} / {ratio_mean:.2f} / {ratio_std:.2f}\t unreachable ratio: {distances.count(float('inf'))/len(ratio):.3f}")
-
-    # # print rankings
-    # print("\n-------Ranking:-------\n")
-    # print("\n".join([f"{r[0]}\t{r[1]:.2f}" for r in sorted(ranks, key=lambda x: x[1])]))
-    # print()
 
 
 @timeout(MAX_TIMEOUT)
@@ -327,7 +284,6 @@ def Centrality_nk(dataset_name, algo_, G_dict, topN, logToFile=False):
         os.makedirs(osp.dirname(outfile), exist_ok=True)
         fout = open(outfile, "w")
 
-    print("\n\n-------------------------------")
     print(f"{algo_} Centrality")
     
     if algo_ == "CoreDecomposition":
@@ -372,8 +328,6 @@ def Centrality_nk(dataset_name, algo_, G_dict, topN, logToFile=False):
 
 @timeout(MAX_TIMEOUT)
 def ClusteringCoefficient_nk(algo_, G_dict): # only for undirected graphs
-    print("\n\n-------------------------------")
-    print(f"{algo_} Clustering Coefficient")
     if algo_ == "mean": # mean of local clustering coefficient
         ranks = []
         for name, Graphs in G_dict.items():
@@ -382,9 +336,6 @@ def ClusteringCoefficient_nk(algo_, G_dict): # only for undirected graphs
                 res = np.mean(nk.centrality.LocalClusteringCoefficient(Graph).run().scores())
                 ranks.append((name, res))
                 print(f"{name}\t#nodes: {Graph.numberOfNodes()}\t #edges: {Graph.numberOfEdges()},\t mean Clustering Coefficient: {res:.3f}")
-        # # print rankings
-        # print("\n-------Ranking:-------\n")
-        # print("\n".join([f"{r[0]}\t{r[1]:.3f}" for r in sorted(ranks, key=lambda x: x[1], reverse=True)]))
     elif algo_ == "global":
         ranks = []
         for name, Graphs in G_dict.items():
@@ -392,9 +343,6 @@ def ClusteringCoefficient_nk(algo_, G_dict): # only for undirected graphs
                 res = nk.globals.ClusteringCoefficient(Graph).exactGlobal(Graph)
                 ranks.append((name, res))
                 print(f"{name}\t#nodes: {Graph.numberOfNodes()}\t #edges: {Graph.numberOfEdges()},\t global Clustering Coefficient: {res:.3f}")
-        # # print rankings
-        # print("\n-------Ranking:-------\n")
-        # print("\n".join([f"{r[0]}\t{r[1]:.3f}" for r in sorted(ranks, key=lambda x: x[1], reverse=True)]))
     print()
 
 
@@ -405,8 +353,6 @@ def ClusteringF1Similarity_nk(dataset_name, G_dict, logToFile=False):
         os.makedirs(osp.dirname(outfile), exist_ok=True)
         fout = open(outfile, "w")
 
-    print("\n\n-------------------------------")
-    print("Clustering F1 Similarity")
     reference_C = nk.community.LFM(G_dict["original"][0], nk.scd.LFMLocal(G_dict["original"][0])).run().getCover()
 
     for name, Graphs in G_dict.items():
@@ -416,12 +362,6 @@ def ClusteringF1Similarity_nk(dataset_name, G_dict, logToFile=False):
                 fout.write(f"{name}\t#nodes: {Graph.numberOfNodes()}\t#edges: {Graph.numberOfEdges()}\tF1_Similarity: {nk.community.CoverF1Similarity(Graph, C, reference_C).run().getUnweightedAverage()}\n")
             else:
                 print(f"{name}\t#nodes: {Graph.numberOfNodes()}\t#edges: {Graph.numberOfEdges()}\tF1_Similarity: {nk.community.CoverF1Similarity(Graph, C, reference_C).run().getUnweightedAverage()}")
-            # l = [list(C.getMembers(i)) for i in range(C.numberOfSubsets())]
-            # found = {l[i][0]: l[i] for i in range(len(l))}
-            # # comparator = nk.scd.SCDGroundTruthComparison(G_dict["original"][0], reference_C, found, False)
-            # comparator = nk.scd.SCDGroundTruthComparison(G_dict["original"][0], reference_C, found, True)
-            # comparator.run()
-            # print(f"{name}\t #nodes: {Graph.numberOfNodes()}\t #edges: {Graph.numberOfEdges()}\t Average F1: {comparator.getAverageF1():.3f},\t Average Precision: {comparator.getAveragePrecision():.3f},\t Average Recall: {comparator.getAverageRecall():.3f},\t Average Jaccard: {comparator.getAverageJaccard():.3f}")
 
     if logToFile:
         fout.close()
@@ -434,8 +374,6 @@ def ClusteringF1SimilarityWithGroundTruth_nk(dataset_name, G_dict, groundTruthFi
         os.makedirs(osp.dirname(outfile), exist_ok=True)
         fout = open(outfile, "w")
 
-    print("\n\n-------------------------------")
-    print("Clustering F1 Similarity")
     # reference_C = nk.community.LFM(G_dict["original"][0], nk.scd.LFMLocal(G_dict["original"][0])).run().getCover()
     reference_C = nk.Cover(n=G_dict["original"][0].numberOfNodes())
     reference_C.setUpperBound(G_dict["original"][0].numberOfNodes())
@@ -456,12 +394,6 @@ def ClusteringF1SimilarityWithGroundTruth_nk(dataset_name, G_dict, groundTruthFi
                 fout.write(f"{name}\t#nodes: {Graph.numberOfNodes()}\t#edges: {Graph.numberOfEdges()}\tF1_Similarity: {nk.community.CoverF1Similarity(Graph, C, reference_C).run().getUnweightedAverage()}\n")
             else:
                 print(f"{name}\t#nodes: {Graph.numberOfNodes()}\t#edges: {Graph.numberOfEdges()}\tF1_Similarity: {nk.community.CoverF1Similarity(Graph, C, reference_C).run().getUnweightedAverage()}")
-            # l = [list(C.getMembers(i)) for i in range(C.numberOfSubsets())]
-            # found = {l[i][0]: l[i] for i in range(len(l))}
-            # # comparator = nk.scd.SCDGroundTruthComparison(G_dict["original"][0], reference_C, found, False)
-            # comparator = nk.scd.SCDGroundTruthComparison(G_dict["original"][0], reference_C, found, True)
-            # comparator.run()
-            # print(f"{name}\t #nodes: {Graph.numberOfNodes()}\t #edges: {Graph.numberOfEdges()}\t Average F1: {comparator.getAverageF1():.3f},\t Average Precision: {comparator.getAveragePrecision():.3f},\t Average Recall: {comparator.getAverageRecall():.3f},\t Average Jaccard: {comparator.getAverageJaccard():.3f}")
         
     if logToFile:
         fout.close()
@@ -474,8 +406,6 @@ def DetectCommunity_nk(dataset_name, G_dict, logToFile=False):
         os.makedirs(osp.dirname(outfile), exist_ok=True)
         fout = open(outfile, "w")
 
-    print("\n\n-------------------------------")
-    print("Detect Community")
     for name, Graphs in G_dict.items():
         print(name)
         for Graph in Graphs:
@@ -499,8 +429,6 @@ def QuadraticFormSimilarity_nk(dataset_name, G_dict, logToFile=False):
         os.makedirs(osp.dirname(outfile), exist_ok=True)
         fout = open(outfile, "w")
 
-    print("\n\n-------------------------------")
-    print("Quadratic Form Similarity")
     x = np.random.normal(size=(G_dict["original"][0].numberOfNodes(), 100))
 
     L_G = nk.algebraic.laplacianMatrix(G_dict["original"][0])
@@ -521,110 +449,3 @@ def QuadraticFormSimilarity_nk(dataset_name, G_dict, logToFile=False):
                 fout.write(f"{name}\t#nodes: {Graph.numberOfNodes()}\t#edges {Graph.numberOfEdges()}\tratio min / max / mean / std: {ratio_min:.3f} / {ratio_max:.3f} / {ratio_mean:.3f} / {ratio_std:.3f}\n")
             else:
                 print(f"{name}\t#nodes: {Graph.numberOfNodes()}\t#edges {Graph.numberOfEdges()}\tratio min / max / mean / std: {ratio_min:.3f} / {ratio_max:.3f} / {ratio_mean:.3f} / {ratio_std:.3f}")
-
-
-
-
-# NOT USED
-def SpectralClusteringF1Similarity():
-    # originalGraph = nk.readGraph("data/email-Eu-core/raw/uduw.el", nk.Format.EdgeListSpaceZero)
-    # A = nk.algebraic.adjacencyMatrix(originalGraph)
-    # sc = 
-    print("SpectralClustering F1 Similarity")
-    reference_C = nk.community.SpectralPartitioner(originalGraph, nk.scd.LFMLocal(originalGraph)).run().getCover()
-    # reference_C = nk.community.LFM(originalGraph, nk.scd.LFMLocal(originalGraph)).run().getCover()
-    # print(reference_C)
-
-
-def EigenValueSimilarity(G):
-    """
-        xTLX
-        ||lambda_G - lambda_H||
-        ||PR_G - PR_H||
-        topK(G) - topK(H)
-    """
-
-    print("EigenValueSimilarity")
-    baseline = []
-    # nodes = random.sample(list(range(0, originalGraph.numberOfNodes())), 10)
-    # for node in nodes:
-    # for node in range(0, originalGraph.numberOfNodes()-1):
-        # print(node, nk.algebraic.adjacencyEigenvectors(originalGraph))
-        # baseline.append(nk.algebraic.adjacencyEigenvector(originalGraph, node)[0])
-
-    # baseline = nk.algebraic.laplacianEigenvectors(originalGraph)[0]
-
-    # print(len(baseline))
-    # normalize baseline
-    # baseline = np.array(baseline)
-    # baseline = baseline / np.linalg.norm(baseline)
-    # baseline = baseline[:30000]
-
-    D = np.diag(1/np.array(np.sum(nk.algebraic.adjacencyMatrix(originalGraph).todense(), axis=0))[0])
-    baseline = sorted(np.real(scipy.linalg.eig(D@nk.algebraic.laplacianMatrix(originalGraph).todense())[0]))
-
-    ranks = []
-    for name, Graph in G.items():
-        # eigenvalues = []
-        # for node in range(0, originalGraph.numberOfNodes()-1):
-        # for node in nodes:
-            # eigenvalues.append(nk.algebraic.adjacencyEigenvector(Graph, node)[0])
-
-        D = np.diag(1/np.array(np.sum(nk.algebraic.adjacencyMatrix(Graph).todense()+0.0000000001, axis=0))[0])
-        eigenvalues = sorted(np.real(scipy.linalg.eig(D@nk.algebraic.laplacianMatrix(Graph).todense())[0]))
-    
-        # eigenvalues = sorted(nk.algebraic.laplacianEigenvectors(Graph)[0])
-        # normalize eigenvalues
-        # eigenvalues = np.array(eigenvalues)
-        # eigenvalues = eigenvalues / np.linalg.norm(eigenvalues)
-        # eigenvalues = eigenvalues[:30000]
-
-        # compute distance between baseline and eigenvalues
-        distance = np.linalg.norm(np.array(baseline) - np.array(eigenvalues))
-        ranks.append((name, distance))
-        print(f"{name}\t #edges {Graph.numberOfEdges()}\t distance: {distance}")
-    print("\n".join([f"{r[0]}\t{r[1]:.3f}" for r in sorted(ranks, key=lambda x: x[1])]))
-    print()
-
-
-def scipy_max_flow():
-    print("\n\n-------------------------------")
-    print("scipy max_flow")
-    x = np.random.randint(0, originalGraph.numberOfNodes(), size=(500, 2))
-    x = np.delete(x, np.where(x[:,0] == x[:,1]), axis=0)
-    # print(x)
-
-    A_G = nk.algebraic.adjacencyMatrix(originalGraph).astype(int)
-    baseline = np.array([scipy.sparse.csgraph.maximum_flow(A_G, src, dst).flow_value for (src, dst) in x])
-
-    ranks = []
-    for name, Graph in {"G         ": G, 
-                        "erMinGraph   ": erMinGraph, 
-                        "erMaxGraph   ": erMaxGraph, 
-                        "spanner_3": spanner_3,
-                        "spanner_5": spanner_5,
-                        "spanner_7": spanner_7,
-                        "spanningGraph": spanningGraph, 
-                        "fireGraph": fireGraph, 
-                        "localDegGraph": localDegGraph, 
-                        "similarityGraph": similarityGraph, 
-                        "randomGraph": randomGraph, 
-                        "scanGraph": scanGraph, 
-                        "simmelieanGraph": simmelieanGraph, 
-                        "jaccardGraph": jaccardGraph}.items():
-    
-        A_H = nk.algebraic.adjacencyMatrix(Graph).astype(int)
-        res = np.array([scipy.sparse.csgraph.maximum_flow(A_H, src, dst).flow_value for (src, dst) in x])
-        
-        ratio = np.ma.divide(res, baseline)
-        ratio_min = np.min(ratio)
-        ratio_max = np.max(ratio)
-        ratio_mean = np.mean(ratio)
-        ratio_std = np.std(ratio)
-
-        ranks.append((name, ratio_mean))
-
-        print(f"{name}\t #edges {Graph.numberOfEdges()}\t ratio min / max / mean: {ratio_min:.3f} / {ratio_max:.3f} / {ratio_mean:.3f} +- {ratio_std:.3f}")
-    print("\n".join([f"{r[0]}\t{r[1]:.5f}" for r in sorted(ranks, key=lambda x: x[1], reverse=True)]))
-    print()
-
