@@ -17,6 +17,8 @@ if PROJECT_HOME is None:
 color_map = {
     "RankDegree": "#6baed6",
     "ER": "#0570b0",
+    "ER_unweighted": "#0570b0",
+    "ER_weighted": "#addd8e",
     "ER-unweighted": "#0570b0",
     "ER-weighted": "#addd8e",
     "ForestFire": "#238443",
@@ -51,6 +53,8 @@ color_map = {
 marker_map = {
     "RankDegree": "o",
     "ER": "o",
+    "ER_unweighted": "o",
+    "ER_weighted": "o",
     "ER-unweighted": "o",
     "ER-weighted": "o",
     "ForestFire": "o",
@@ -85,9 +89,8 @@ marker_map = {
 text_map = {
     "RankDegree": "RD",
     "ER": "ER",
-    "ER-Max": "ER",
-    "ER-Max_unweighted": "ER-uw",
-    "ER-Max_weighted": "ER-w",
+    "ER_unweighted": "ER-uw",
+    "ER_weighted": "ER-w",
     "ER-unweighted": "ER-uw",
     "ER-weighted": "ER-w",
     "ForestFire": "FF",
@@ -134,9 +137,6 @@ def sparsifier_time(dataset_name, outdir=None):
     
     df["prune_rate"] = 1 - df["num_edge"] / original_edges
 
-    # remove some algorithms
-    # df = df[~df.prune_algo.isin(["original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted", "ER-Max_weighted"])]
-    
     # remove prune rate < 0
     df = df[df.prune_rate >= 0.05]
 
@@ -266,7 +266,7 @@ def degreeDistribution(dataset_name, outdir=None, prune_algos=None):
 
     # remove some algorithms
     if prune_algos is None:
-        df = df[~df.prune_algo.isin(["original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted", "ER-Max_weighted"])]
+        df = df[~df.prune_algo.isin(["original"])]
     else:
         df = df[df.prune_algo.isin(prune_algos)]
     
@@ -275,7 +275,7 @@ def degreeDistribution(dataset_name, outdir=None, prune_algos=None):
     df = df[df.prune_rate < 0.93]
 
     # rename
-    df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER"
+    df.loc[df.prune_algo == "ER_unweighted", "prune_algo"] = "ER"
 
     grouped = df.groupby('prune_algo')
 
@@ -337,15 +337,15 @@ def Diameter(dataset_name, outdir=None, prune_algos=None):
         ground_truth = df[df.prune_algo == "original"][f"{algo}_mean"].values[0]
         # remove some algorithms
         if prune_algos is None:
-            df = df[~df.prune_algo.isin(["original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted"])]
+            df = df[~df.prune_algo.isin(["original"])]
         else:
             df = df[df.prune_algo.isin(prune_algos)]
 
         # remove prune rate < 0
         df = df[df.prune_rate >= 0.05]
         df = df[df.prune_rate < 0.93]
-        df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
-        df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
+        df.loc[df.prune_algo == "ER_weighted", "prune_algo"] = "ER-weighted"
+        df.loc[df.prune_algo == "ER_unweighted", "prune_algo"] = "ER-unweighted"
 
         grouped = df.groupby('prune_algo')
 
@@ -406,15 +406,15 @@ def SPSP_Eccentricity(dataset_name, outdir=None, prune_algos=None):
     original_unreachable = df[df.prune_algo == "original"]["Unreachable_mean"].values[0]
     original_isolated = df[df.prune_algo == "original"]["Isolated_mean"].values[0]
     if prune_algos is None:
-        df = df[~df.prune_algo.isin(["original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted"])]
+        df = df[~df.prune_algo.isin(["original"])]
     else:
         df = df[df.prune_algo.isin(prune_algos)]
 
     # remove prune rate < 0
     df = df[df.prune_rate >= 0.05]
     df = df[df.prune_rate < 0.93]
-    df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
-    df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
+    df.loc[df.prune_algo == "ER_weighted", "prune_algo"] = "ER-weighted"
+    df.loc[df.prune_algo == "ER_unweighted", "prune_algo"] = "ER-unweighted"
     grouped = df.groupby('prune_algo')
 
     ### plot SPSP unreachable ratio
@@ -709,15 +709,15 @@ def LocalClusteringCoefficient(dataset_name, outdir=None, prune_algos=None):
         return
     mcc_ground_truth = df[df.prune_algo == "original"]["MeanClusteringCoefficient_mean"].values[0]
     if prune_algos is None:
-        df = df[~df.prune_algo.isin(["original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted"])]
+        df = df[~df.prune_algo.isin(["original"])]
     else:
         df = df[df.prune_algo.isin(prune_algos)]
 
     # remove prune rate < 0
     df = df[df.prune_rate >= 0.05]
     df = df[df.prune_rate < 0.93]
-    df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
-    df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
+    df.loc[df.prune_algo == "ER_weighted", "prune_algo"] = "ER-weighted"
+    df.loc[df.prune_algo == "ER_unweighted", "prune_algo"] = "ER-unweighted"
 
     grouped = df.groupby('prune_algo')
 
@@ -776,15 +776,15 @@ def GlobalClusteringCoefficient(dataset_name, outdir=None, prune_algos=None):
         return
     gcc_ground_truth = df[df.prune_algo == "original"]["GlobalClusteringCoefficient_mean"].values[0]
     if prune_algos is None:
-        df = df[~df.prune_algo.isin(["original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted"])]
+        df = df[~df.prune_algo.isin(["original"])]
     else:
         df = df[df.prune_algo.isin(prune_algos)]
 
     # remove prune rate < 0
     df = df[df.prune_rate >= 0.05]
     df = df[df.prune_rate < 0.93]
-    df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
-    df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
+    df.loc[df.prune_algo == "ER_weighted", "prune_algo"] = "ER-weighted"
+    df.loc[df.prune_algo == "ER_unweighted", "prune_algo"] = "ER-unweighted"
 
     grouped = df.groupby('prune_algo')
 
@@ -843,15 +843,15 @@ def ClusteringF1Similarity(dataset_name, outdir=None, prune_algos=None):
         return
     ground_truth = df[df.prune_algo == "original"]["F1_Similarity_mean"].values[0]
     if prune_algos is None:
-        df = df[~df.prune_algo.isin(["original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted"])]
+        df = df[~df.prune_algo.isin(["original"])]
     else:
         df = df[df.prune_algo.isin(prune_algos)]
 
     # remove prune rate < 0
     df = df[df.prune_rate >= 0.05]
     df = df[df.prune_rate < 0.93]
-    df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
-    df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
+    df.loc[df.prune_algo == "ER_weighted", "prune_algo"] = "ER-weighted"
+    df.loc[df.prune_algo == "ER_unweighted", "prune_algo"] = "ER-unweighted"
 
     grouped = df.groupby('prune_algo')
 
@@ -911,15 +911,15 @@ def Centrality(dataset_name, algo, outdir=None, prune_algos=None):
 
     # remove some algorithms
     if prune_algos is None:
-        df = df[~df.prune_algo.isin(["original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted"])]
+        df = df[~df.prune_algo.isin(["original"])]
     else:
         df = df[df.prune_algo.isin(prune_algos)]
 
     # remove prune rate < 0
     df = df[df.prune_rate >= 0.05]
     df = df[df.prune_rate < 0.93]
-    df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
-    df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
+    df.loc[df.prune_algo == "ER_weighted", "prune_algo"] = "ER-weighted"
+    df.loc[df.prune_algo == "ER_unweighted", "prune_algo"] = "ER-unweighted"
 
     grouped = df.groupby('prune_algo')
 
@@ -1036,15 +1036,15 @@ def DetectCommunity(dataset_name, outdir=None, prune_algos=None):
     num_community_ground_truth = df[df.prune_algo == "original"]["num_community_mean"].values[0]
     modularity_ground_truth = df[df.prune_algo == "original"]["modularity_mean"].values[0]
     if prune_algos is None:
-        df = df[~df.prune_algo.isin(["original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted"])]
+        df = df[~df.prune_algo.isin(["original"])]
     else:
         df = df[df.prune_algo.isin(prune_algos)]
 
     # remove prune rate < 0
     df = df[df.prune_rate >= 0.05]
     df = df[df.prune_rate < 0.93]
-    df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
-    df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
+    df.loc[df.prune_algo == "ER_weighted", "prune_algo"] = "ER-weighted"
+    df.loc[df.prune_algo == "ER_unweighted", "prune_algo"] = "ER-unweighted"
 
     grouped = df.groupby('prune_algo')
 
@@ -1150,15 +1150,15 @@ def QuadraticFormSimilarity(dataset_name, outdir=None, prune_algos=None):
     except:
         return
     if prune_algos is None:
-        df = df[~df.prune_algo.isin(["original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted"])]
+        df = df[~df.prune_algo.isin(["original"])]
     else:
         df = df[df.prune_algo.isin(prune_algos)]
 
     # remove prune rate < 0
     df = df[df.prune_rate >= 0.05]
     df = df[df.prune_rate < 0.93]
-    df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
-    df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
+    df.loc[df.prune_algo == "ER_weighted", "prune_algo"] = "ER-weighted"
+    df.loc[df.prune_algo == "ER_unweighted", "prune_algo"] = "ER-unweighted"
 
     grouped = df.groupby('prune_algo')
 
@@ -1216,15 +1216,15 @@ def MaxFlow(dataset_name, outdir=None, prune_algos=None):
         return
     original_unreachable = df[df.prune_algo == "original"]["Unreachable_mean"].values[0]
     if prune_algos is None:
-        df = df[~df.prune_algo.isin(["original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted"])]
+        df = df[~df.prune_algo.isin(["original"])]
     else:
         df = df[df.prune_algo.isin(prune_algos)]
 
     # remove prune rate < 0
     df = df[df.prune_rate >= 0.05]
     df = df[df.prune_rate < 0.93]
-    df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
-    df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
+    df.loc[df.prune_algo == "ER_weighted", "prune_algo"] = "ER-weighted"
+    df.loc[df.prune_algo == "ER_unweighted", "prune_algo"] = "ER-unweighted"
 
     grouped = df.groupby('prune_algo')
 
@@ -1367,76 +1367,6 @@ def MaxFlow(dataset_name, outdir=None, prune_algos=None):
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
-def GCN(dataset_name, outdir=None, prune_algos=None):
-    # read csv file, seprated by , and space
-    try:
-        df = pd.read_csv(osp.join(PROJECT_HOME, f"output_metric_parsed/{dataset_name}/GCN/log"), header=0, sep=",")
-    except:
-        return
-    full_acc = df[df.prune_algo == "original"]["test_acc"].values[0]
-    empty_acc = df[df.prune_algo == "empty"]["test_acc"].values[0]
-    if prune_algos is None:
-        df = df[~df.prune_algo.isin(["original", "empty", "original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted"])]
-    else:
-        df = df[df.prune_algo.isin(prune_algos)]
-
-    # remove prune rate < 0
-    df = df[df.prune_rate >= 0.05]
-    df = df[df.prune_rate < 0.93]
-    df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
-    df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
-
-    # sort df by prune rate
-    df = df.sort_values(by=['prune_rate'])
-    grouped = df.groupby('prune_algo')
-
-    ### plot MaxFlow stretch factor
-    plot_legend = True
-    if plot_legend:
-        fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation, figheight+figheight_legend_compensation))
-    else:
-        fig, ax = plt.subplots(figsize=(figwidth, figheight))
-    for key in grouped.groups.keys():
-        grouped.get_group(key).plot(x="prune_rate", y="test_acc", 
-                                    ax=ax, marker=marker_map[key], label=text_map[key], color=color_map[key], 
-                                    markersize=markersize, linewidth=linewidth)
-    if addTitle:
-        plt.title(f"GCN Test AUC-ROC ({dataset_name})", fontsize=titlefontsize)
-    plt.axhline(y=full_acc, color='g', linestyle='--', linewidth=linewidth)
-    plt.axhline(y=empty_acc, color='r', linestyle='--', linewidth=linewidth)
-    plt.xlabel("Prune Rate", fontsize=xlabelfontsize)
-    plt.ylabel("AUC-ROC", fontsize=ylabelfontsize)
-    plt.xticks(fontsize=xtickfontsize)
-    plt.yticks(fontsize=ytickfontsize)
-    plt.grid(gridon)
-
-    # make legend without error bar
-    if plot_legend:
-        handles = []
-        if prune_algos is None:
-            for key in ["Random", "KNeighbor", "RankDegree", "LocalDegree", "SpanningForest", "Spanner-3", "Spanner-5", 
-                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-weighted", "ER-unweighted"]:
-                handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
-                                        linewidth=linewidth, label=text_map[key])
-                handles.append(handle)
-        else:
-            for key in prune_algos:
-                handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
-                                        linewidth=linewidth, label=text_map[key])
-                handles.append(handle)
-        plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-        # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=5, fontsize=legendfontsize)
-    else:
-        plt.legend().set_visible(False)
-    plt.tight_layout()
-
-    # save plot
-    if outdir is None:
-        figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/GCN/{dataset_name}_GCN.{saveformat}")
-    else:
-        figpath = osp.join(outdir, f"{dataset_name}_GCN.{saveformat}")
-    os.makedirs(osp.dirname(figpath), exist_ok=True)
-    plt.savefig(figpath)
 
 def ClusterGCN(dataset_name, outdir=None, prune_algos=None):
     # read csv file, seprated by , and space
@@ -1447,16 +1377,15 @@ def ClusterGCN(dataset_name, outdir=None, prune_algos=None):
     full_acc = df[df.prune_algo == "original"]["test_acc"].values[0]
     empty_acc = df[df.prune_algo == "empty"]["test_acc"].values[0]
     if prune_algos is None:
-        df = df[~df.prune_algo.isin(["original", "empty", "original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted"])]
+        df = df[~df.prune_algo.isin(["original", "empty"])]
     else:
         df = df[df.prune_algo.isin(prune_algos)]
 
     # remove prune rate < 0
     df = df[df.prune_rate >= 0.05]
     df = df[df.prune_rate < 0.93]
-    df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
-    df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
-    df.loc[df.prune_algo == "ER-Max", "prune_algo"] = "ER"
+    df.loc[df.prune_algo == "ER_weighted", "prune_algo"] = "ER-weighted"
+    df.loc[df.prune_algo == "ER_unweighted", "prune_algo"] = "ER-unweighted"
 
     # sort df by prune rate
     df = df.sort_values(by=['prune_rate'])
@@ -1519,16 +1448,15 @@ def SAGE(dataset_name, outdir=None, prune_algos=None):
     full_acc = df[df.prune_algo == "original"]["test_acc"].values[0]
     empty_acc = df[df.prune_algo == "empty"]["test_acc"].values[0]
     if prune_algos is None:
-        df = df[~df.prune_algo.isin(["original", "empty", "original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted"])]
+        df = df[~df.prune_algo.isin(["original", "empty"])]
     else:
         df = df[df.prune_algo.isin(prune_algos)]
 
     # remove prune rate < 0
     df = df[df.prune_rate >= 0.05]
     df = df[df.prune_rate < 0.93]
-    df.loc[df.prune_algo == "ER-Max_weighted", "prune_algo"] = "ER-weighted"
-    df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER-unweighted"
-    df.loc[df.prune_algo == "ER-Max", "prune_algo"] = "ER"
+    df.loc[df.prune_algo == "ER_weighted", "prune_algo"] = "ER-weighted"
+    df.loc[df.prune_algo == "ER_unweighted", "prune_algo"] = "ER-unweighted"
 
     # sort df by prune rate
     df = df.sort_values(by=['prune_rate'])
@@ -1739,8 +1667,6 @@ if __name__ == "__main__":
             QuadraticFormSimilarity(args.dataset_name)
         elif args.metric == "MaxFlow":
             MaxFlow(args.dataset_name)
-        elif args.metric == "GCN":
-            GCN(args.dataset_name)
         elif args.metric == "ClusterGCN":
             ClusterGCN(args.dataset_name)
         elif args.metric == "SAGE":

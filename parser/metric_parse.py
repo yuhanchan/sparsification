@@ -15,245 +15,6 @@ if PROJECT_HOME is None:
 
 
 
-
-# seprator = "-------------------------------"
-
-
-# with open(args.dataset_name, 'r') as f:
-#     lines = f.readlines() 
-#     i = 0
-#     while i < len(lines):
-#         line = lines[i].strip()
-#         if line == seprator:
-#             metric = lines[i+1].strip()
-#             if metric == "degree distribution":
-#                 print("\ndegree distribution")
-#                 i += 2
-#                 res = []
-#                 while i < len(lines):
-#                     line = lines[i].strip()
-#                     if not line:
-#                         res = sorted(res, key=lambda x: (x[0], int(x[2])))
-#                         fileout = osp.join(PROJECT_HOME, "metric_parsed", args.dataset_name.split("/")[-1].replace(".txt", "") + "/degree_distribution")
-#                         os.makedirs(osp.dirname(fileout), exist_ok=True)
-#                         with open(fileout, 'w') as f:
-#                             f.write("prune_algo, num_nodes, num_edges, Bhattacharyya_distance" + "\n")
-#                             for r in res:
-#                                 f.write(", ".join(r) + "\n")
-#                             break
-#                     line = line.split()
-#                     prune_algo, num_nodes, num_edges, Bhattacharyya_distance = line[0], line[2], line[4], line[8]
-#                     res.append((prune_algo, num_nodes, num_edges, Bhattacharyya_distance))
-#                     i += 1
-#             elif metric == "Diameter":
-#                 print("\nDiameter")
-#                 i += 2
-#                 res = []
-#                 while i < len(lines):
-#                     line = lines[i].strip()
-#                     if not line:
-#                         res = sorted(res, key=lambda x: (x[0], int(x[2])))
-#                         fileout = osp.join(PROJECT_HOME, "metric_parsed", args.dataset_name.split("/")[-1].replace(".txt", "") + "/diameter")
-#                         os.makedirs(osp.dirname(fileout), exist_ok=True)
-#                         with open(fileout, 'w') as f:
-#                             f.write("prune_algo, num_nodes, num_edges, diameter" + "\n")
-#                             for r in res:
-#                                 f.write(", ".join(r) + "\n")
-#                             break
-#                     line = line.split()
-#                     prune_algo, num_nodes, num_edges, diameter = line[0], line[5], line[8], line[17].replace("(", "").replace(",", "")
-#                     res.append((prune_algo, num_nodes, num_edges, diameter))
-#                     i += 1
-#             elif metric == "Eccentricity":
-#                 print("\nEccentricity")
-#                 i += 2
-#                 res = []
-#                 while i < len(lines):
-#                     line = lines[i].strip()
-#                     if not line:
-#                         res = sorted(res, key=lambda x: (x[0], int(x[2])))
-#                         fileout = osp.join(PROJECT_HOME, "metric_parsed", args.dataset_name.split("/")[-1].replace(".txt", "") + "/eccentricity")
-#                         os.makedirs(osp.dirname(fileout), exist_ok=True)
-#                         with open(fileout, 'w') as f:
-#                             f.write("prune_algo, num_nodes, num_edges, ecc_ratio_min, ecc_ratio_max, ecc_ratio_mean, ecc_ratio_std, bhattacharyya_distance" + "\n")
-#                             for r in res:
-#                                 f.write(", ".join(r) + "\n")
-#                             break
-#                     line = line.split()
-#                     prune_algo, num_nodes, num_edges, ecc_ratio_min, ecc_ratio_max, ecc_ratio_mean, ecc_ratio_std, bhattacharyya_distance = line[0], line[2], line[4], line[13], line[15], line[17], line[19], line[22]
-#                     res.append((prune_algo, num_nodes, num_edges, ecc_ratio_min, ecc_ratio_max, ecc_ratio_mean, ecc_ratio_std, bhattacharyya_distance))
-#                     i += 1
-#             elif metric == "SPSP":
-#                 print("\nSPSP")
-#                 i += 2
-#                 res = []
-#                 while i < len(lines):
-#                     line = lines[i].strip()
-#                     if not line:
-#                         res = sorted(res, key=lambda x: (x[0], int(x[2])))
-#                         fileout = osp.join(PROJECT_HOME, "metric_parsed", args.dataset_name.split("/")[-1].replace(".txt", "") + "/spsp")
-#                         os.makedirs(osp.dirname(fileout), exist_ok=True)
-#                         with open(fileout, 'w') as f:
-#                             f.write("prune_algo, num_nodes, num_edges, dist_ratio_min, dist_ratio_max, dist_ratio_mean, dist_ratio_std, unreachable" + "\n")
-#                             for r in res:
-#                                 f.write(", ".join(r) + "\n")
-#                             break
-#                     line = line.split()
-#                     prune_algo, num_nodes, num_edges, dist_ratio_min, dist_ratio_max, dist_ratio_mean, dist_ratio_std, unreachable = line[0], line[2], line[4].replace(",", ""), line[13], line[15], line[17], line[19], line[22]
-#                     res.append((prune_algo, num_nodes, num_edges, dist_ratio_min, dist_ratio_max, dist_ratio_mean, dist_ratio_std, unreachable))
-#                     i += 1
-#             elif metric == "SPSP and Eccentricity":
-#                 print("\nSPSP and Eccentricity")
-#                 i += 2
-#                 res = []
-#                 while i < len(lines):
-#                     line = lines[i].strip()
-#                     if not line:
-#                         res = sorted(res, key=lambda x: (x[0], int(x[2])))
-#                         fileout = osp.join(PROJECT_HOME, "metric_parsed", args.dataset_name.split("/")[-1].replace(".txt", "") + "/spsp_eccentricity")
-#                         os.makedirs(osp.dirname(fileout), exist_ok=True)
-#                         with open(fileout, 'w') as f:
-#                             f.write("prune_algo, num_nodes, num_edges, dist_ratio_min, dist_ratio_max, dist_ratio_mean, dist_ratio_std, unreachable, ecc_ratio_min, ecc_ratio_max, ecc_ratio_mean, ecc_ratio_std, isolated" + "\n")
-#                             for r in res:
-#                                 f.write(", ".join(r) + "\n")
-#                             break
-#                     line = line.split()
-#                     prune_algo, num_nodes, num_edges = line[0], line[5], line[8]
-#                     if line[25] == "inf" or line[25] == "--":
-#                         dist_ratio_min, dist_ratio_max, dist_ratio_mean, dist_ratio_std, unreachable = "nan", "nan", "nan", "nan", "nan"
-#                     else:
-#                         dist_ratio_min, dist_ratio_max, dist_ratio_mean, dist_ratio_std, unreachable = line[25], line[27], line[29], line[31], line[34]
-#                     line = lines[i+1].strip().split()
-#                     if line[25] == "inf" or line[25] == "--":
-#                         ecc_ratio_min, ecc_ratio_max, ecc_ratio_mean, ecc_ratio_std, isolated = "nan", "nan", "nan", "nan", "nan"
-#                     else:
-#                         ecc_ratio_min, ecc_ratio_max, ecc_ratio_mean, ecc_ratio_std, isolated = line[25], line[27], line[29], line[31], line[34]
-#                     res.append((prune_algo, num_nodes, num_edges, dist_ratio_min, dist_ratio_max, dist_ratio_mean, dist_ratio_std, unreachable, ecc_ratio_min, ecc_ratio_max, ecc_ratio_mean, ecc_ratio_std, isolated))
-#                     i += 2
-#             elif "Centrality" in metric:
-#                 print(f"\n{metric}")
-#                 i += 2
-#                 res = []
-#                 while i < len(lines):
-#                     line = lines[i].strip()
-#                     if not line:
-#                         res = sorted(res, key=lambda x: (x[0], int(x[2])))
-#                         fileout = osp.join(PROJECT_HOME, "metric_parsed", args.dataset_name.split("/")[-1].replace(".txt", "") + f"/{metric.lower().replace(' ', '_')}")
-#                         os.makedirs(osp.dirname(fileout), exist_ok=True)
-#                         with open(fileout, 'w') as f:
-#                             f.write("prune_algo, num_nodes, num_edges, precision, correlation" + "\n")
-#                             for r in res:
-#                                 f.write(", ".join(r) + "\n")
-#                             break
-#                     line = line.split()
-#                     prune_algo, num_nodes, num_edges, precision, correlation = line[0], line[2], line[4], line[8], line[12]
-#                     res.append((prune_algo, num_nodes, num_edges, precision, correlation))
-#                     i += 1
-#             elif metric == "Detect Community":
-#                 print("\nDetect Community")
-#                 i += 2
-#                 res = []
-#                 while i < len(lines):
-#                     line = lines[i].strip()
-#                     if not line:
-#                         res = sorted(res, key=lambda x: (x[0], int(x[2])))
-#                         outfile = osp.join(PROJECT_HOME, "metric_parsed", args.dataset_name.split("/")[-1].replace(".txt", "") + "/detect_community")
-#                         os.makedirs(osp.dirname(outfile), exist_ok=True)
-#                         with open(outfile, 'w') as f:
-#                             f.write("prune_algo, num_nodes, num_edges, num_community, modularity" + "\n")
-#                             for r in res:
-#                                 f.write(", ".join(r) + "\n")
-#                             break
-#                     elif "#communities" in line:
-#                         line = lines[i].strip().split()
-#                         prune_algo, num_nodes, num_edges, num_community, modularity = line[0], line[2], line[4], line[6], line[8]
-#                         res.append((prune_algo, num_nodes, num_edges, num_community, modularity))
-#                         i += 2
-#                     else:
-#                         i += 1
-#             elif metric == "Local Clustering Coefficient":
-#                 print("\nLocal Clustering Coefficient")
-#                 i += 2
-#                 res = []
-#                 while i < len(lines):
-#                     line = lines[i].strip()
-#                     if not line:
-#                         res = sorted(res, key=lambda x: (x[0], int(x[2])))
-#                         outfile = osp.join(PROJECT_HOME, "metric_parsed", args.dataset_name.split("/")[-1].replace(".txt", "") + "/local_clustering_coefficient")
-#                         os.makedirs(osp.dirname(outfile), exist_ok=True)
-#                         with open(outfile, 'w') as f:
-#                             f.write("prune_algo, num_nodes, num_edges, lcc_ratio_min, lcc_ratio_max, lcc_ratio_mean, lcc_ratio_std, mcc" + "\n")
-#                             for r in res:
-#                                 f.write(", ".join(r) + "\n")
-#                             break
-#                     line = lines[i].strip().split()
-#                     prune_algo, num_nodes, num_edges, lcc_ratio_min, lcc_ratio_max, lcc_ratio_mean, lcc_ratio_std, mcc = line[0], line[5], line[8], line[27], line[29], line[31], line[33].replace(",", ""), line[37]
-#                     res.append((prune_algo, num_nodes, num_edges, lcc_ratio_min, lcc_ratio_max, lcc_ratio_mean, lcc_ratio_std, mcc))
-#                     i += 1
-#             elif metric == "Global Clustering Coefficient":
-#                 print("\nGlobal Clustering Coefficient")
-#                 i += 2
-#                 res = []
-#                 while i < len(lines):
-#                     line = lines[i].strip()
-#                     if not line:
-#                         res = sorted(res, key=lambda x: (x[0], int(x[2])))
-#                         outfile = osp.join(PROJECT_HOME, "metric_parsed", args.dataset_name.split("/")[-1].replace(".txt", "") + "/global_clustering_coefficient")
-#                         os.makedirs(osp.dirname(outfile), exist_ok=True)
-#                         with open(outfile, 'w') as f:
-#                             f.write("prune_algo, num_nodes, num_edges, global_clustering_coefficient" + "\n")
-#                             for r in res:
-#                                 f.write(", ".join(r) + "\n")
-#                             break
-#                     line = lines[i].strip().split()
-#                     prune_algo, num_nodes, num_edges, global_clustering_coefficient = line[0], line[5], line[8], line[19]
-#                     res.append((prune_algo, num_nodes, num_edges, global_clustering_coefficient))
-#                     i += 1
-#             elif metric == "Clustering F1 Similarity":
-#                 print("\nClustering F1 Similarity")
-#                 i += 2
-#                 res = []
-#                 while i < len(lines):
-#                     line = lines[i].strip()
-#                     if not line:
-#                         res = sorted(res, key=lambda x: (x[0], int(x[2])))
-#                         outfile = osp.join(PROJECT_HOME, "metric_parsed", args.dataset_name.split("/")[-1].replace(".txt", "") + "/clustering_f1_similarity")
-#                         os.makedirs(osp.dirname(outfile), exist_ok=True)
-#                         with open(outfile, 'w') as f:
-#                             f.write("prune_algo, num_nodes, num_edges, clustering_f1_similarity" + "\n")
-#                             for r in res:
-#                                 f.write(", ".join(r) + "\n")
-#                             break
-#                     line = lines[i].strip().split()
-#                     prune_algo, num_nodes, num_edges, clustering_f1_similarity = line[0], line[2], line[4], line[7].replace(",", "")
-#                     res.append((prune_algo, num_nodes, num_edges, clustering_f1_similarity))
-#                     i += 1
-#             elif metric == "Quadratic Form Similarity":
-#                 print("\nQuadratic Form Similarity")
-#                 i += 2
-#                 res = []
-#                 while i < len(lines):
-#                     line = lines[i].strip()
-#                     if not line:
-#                         res = sorted(res, key=lambda x: (x[0], int(x[2])))
-#                         outfile = osp.join(PROJECT_HOME, "metric_parsed", args.dataset_name.split("/")[-1].replace(".txt", "") + "/quadratic_form_similarity")
-#                         os.makedirs(osp.dirname(outfile), exist_ok=True)
-#                         with open(outfile, 'w') as f:
-#                             f.write("prune_algo, num_nodes, num_edges, qfs_ratio_min, qfs_ratio_max, qfs_ratio_mean, qfs_ratio_std" + "\n")
-#                             for r in res:
-#                                 f.write(", ".join(r) + "\n")
-#                             break
-#                     line = lines[i].strip().split()
-#                     prune_algo, num_nodes, num_edges, qfs_ratio_min, qfs_ratio_max, qfs_ratio_mean, qfs_ratio_std = line[0], line[2], line[4], line[13], line[15], line[17], line[19]
-#                     res.append((prune_algo, num_nodes, num_edges, qfs_ratio_min, qfs_ratio_max, qfs_ratio_mean, qfs_ratio_std))
-#                     i += 1
-#             else:
-#                 raise Exception("Unknown metric: {}".format(metric))
-
-#         i += 1
-        
-
-
 def degreeDistribution(dataset_name):
     infile = osp.join(PROJECT_HOME, f"output_metric_raw/{dataset_name}/degreeDistribution/log")
     outfile = osp.join(PROJECT_HOME, f"output_metric_parsed/{dataset_name}/degreeDistribution/log")
@@ -286,7 +47,7 @@ def degreeDistribution(dataset_name):
         df.to_csv(outfile, index=False, sep=',')
 
 def Centrality(dataset_name):
-    for c in ["EstimateBetweenness", "TopCloseness", "Degree", "Katz", "Laplacian", "Eigenvector", "CoreDecomposition", "PageRank"]:
+    for c in ["EstimateBetweenness", "TopCloseness", "Katz", "Eigenvector", "PageRank"]:
         infile = osp.join(PROJECT_HOME, f"output_metric_raw/{dataset_name}/{c}Centrality/log")
         outfile = osp.join(PROJECT_HOME, f"output_metric_parsed/{dataset_name}/{c}Centrality/log")
         os.makedirs(osp.dirname(outfile), exist_ok=True)
@@ -580,43 +341,6 @@ def MaxFlow(dataset_name):
         # output to file
         df.to_csv(outfile, index=False, sep=',')
 
-def GCN(dataset_name):
-    if dataset_name != "ogbn-proteins":
-        return
-    outfile = osp.join(PROJECT_HOME, f"output_metric_parsed/{dataset_name}/GCN/log")
-    os.makedirs(osp.dirname(outfile), exist_ok=True)
-    fout = open(outfile, 'w')
-    fout.write("prune_algo,prune_rate,test_acc\n")
-    for prune_algo in ["empty", "original"]:
-        folder = osp.join(PROJECT_HOME, f"experiments/GCN/{dataset_name}/{prune_algo}")
-        if not osp.exists(folder):
-            continue
-        if osp.exists(osp.join(folder, "test.csv")):
-            with open(osp.join(folder, "test.csv"), 'r') as fin:
-                lines = fin.readlines()
-                top_10 = [0] * 10
-                for i in range(1, len(lines)):
-                    line = lines[i].strip().split(',')
-                    if float(line[-1]) > min(top_10):
-                        top_10[top_10.index(min(top_10))] = float(line[-1])
-            prune_rate = 0
-            fout.write(f"{prune_algo},{prune_rate},{sum(top_10)/10}\n")
-    for prune_algo in ["ER-Max", "ER-Min", "ForestFire", "GSpar", "KNeighbor", "LocalDegree", "LocalSimilarity", "LSpar", "Random", "RankDegree", "SCAN", "SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7"]:
-        folder = osp.join(PROJECT_HOME, f"experiments/GCN/{dataset_name}/{prune_algo}")
-        if not osp.exists(folder):
-            continue
-        for subfolder in os.listdir(folder):
-            if osp.exists(osp.join(folder, subfolder, "test.csv")):
-                with open(osp.join(folder, subfolder, "test.csv"), 'r') as fin:
-                    lines = fin.readlines()
-                    top_10 = [0] * 10
-                    for i in range(1, len(lines)):
-                        line = lines[i].strip().split(',')
-                        if float(line[-1]) > min(top_10):
-                            top_10[top_10.index(min(top_10))] = float(line[-1])
-                prune_rate = float(subfolder)
-                fout.write(f"{prune_algo},{prune_rate},{sum(top_10)/10}\n")
-    fout.close()
 
 def SAGE(dataset_name):
     if dataset_name != "ogbn-proteins":
@@ -639,7 +363,7 @@ def SAGE(dataset_name):
                         top_10[top_10.index(min(top_10))] = float(line[-1])
             prune_rate = 0
             fout.write(f"{prune_algo},{prune_rate},{sum(top_10)/10}\n")
-    for prune_algo in ["ER-Max", "ER-Min", "ForestFire", "GSpar", "KNeighbor", "LocalDegree", "LocalSimilarity", "LSpar", "Random", "RankDegree", "SCAN", "SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7"]:
+    for prune_algo in ["ER", "ForestFire", "GSpar", "KNeighbor", "LocalDegree", "LocalSimilarity", "LSpar", "Random", "RankDegree", "SCAN", "SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7"]:
         folder = osp.join(PROJECT_HOME, f"experiments/SAGE/{dataset_name}/{prune_algo}")
         if not osp.exists(folder):
             continue
@@ -677,7 +401,7 @@ def ClusterGCN(dataset_name):
                         top_10[top_10.index(min(top_10))] = float(line[-1])
             prune_rate = 0
             fout.write(f"{prune_algo},{prune_rate},{sum(top_10)/10}\n")
-    for prune_algo in ["ER-Max", "ER-Min", "ForestFire", "GSpar", "KNeighbor", "LocalDegree", "LocalSimilarity", "LSpar", "Random", "RankDegree", "SCAN", "SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7"]:
+    for prune_algo in ["ER", "ForestFire", "GSpar", "KNeighbor", "LocalDegree", "LocalSimilarity", "LSpar", "Random", "RankDegree", "SCAN", "SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7"]:
         folder = osp.join(PROJECT_HOME, f"experiments/ClusterGCN/{dataset_name}/{prune_algo}")
         if not osp.exists(folder):
             continue
@@ -702,25 +426,17 @@ if __name__ == "__main__":
     if args.dataset_name == "all":
         for dataset_name in ["ego-Facebook",
                              "ego-Twitter", 
-                             "soc-Pokec", 
                              "human_gene2", 
-                             "cage14", 
                              "com-DBLP", 
-                             "com-LiveJournal", 
                              "com-Amazon", 
-                             "com-friendster", 
                              "email-Enron", 
-                             "wiki-Talk", 
-                             "cit-HepPh", 
                              "ca-AstroPh", 
                              "ca-HepPh", 
                              "web-BerkStan", 
                              "web-Google", 
                              "web-NotreDame", 
                              "web-Stanford", 
-                             "roadNet-CA", 
                              "Reddit", 
-                             "ogbn-products", 
                              "ogbn-proteins"]:
             degreeDistribution(dataset_name)
             Centrality(dataset_name)
@@ -732,7 +448,6 @@ if __name__ == "__main__":
             GlobalClusteringCoefficient(dataset_name)
             LocalClusteringCoefficient(dataset_name)
             MaxFlow(dataset_name)
-            GCN(dataset_name)
             SAGE(dataset_name)
             ClusterGCN(dataset_name)
     else:
@@ -746,7 +461,6 @@ if __name__ == "__main__":
         GlobalClusteringCoefficient(args.dataset_name)
         LocalClusteringCoefficient(args.dataset_name)
         MaxFlow(args.dataset_name)
-        GCN(args.dataset_name)
         SAGE(args.dataset_name)
         ClusterGCN(args.dataset_name)
     

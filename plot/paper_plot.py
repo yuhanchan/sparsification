@@ -20,6 +20,8 @@ if PROJECT_HOME is None:
 color_map = {
     "RankDegree": "#6baed6",
     "ER": "#0570b0",
+    "ER_unweighted": "#0570b0",
+    "ER_weighted": "#addd8e",
     "ER-unweighted": "#0570b0",
     "ER-weighted": "#addd8e",
     "ForestFire": "#238443",
@@ -49,17 +51,13 @@ color_map = {
     "SF": "#6a3d9a",
     "ER-uw": "#0570b0",
     "ER-w": "#addd8e",
-    "ER-Min": "#0570b0",
-    "ER-Min_unweighted": "#0570b0",
-    "ER-Min_weighted": "#0570b0",
-    "ER-Max": "#0570b0",
-    "ER-Max_unweighted": "#0570b0",
-    "ER-Max_weighted": "#addd8e",
 }
 
 marker_map = {
     "RankDegree": "o",
     "ER": "o",
+    "ER_unweighted": "o",
+    "ER_weighted": "o",
     "ER-unweighted": "o",
     "ER-weighted": "o",
     "ForestFire": "o",
@@ -89,20 +87,13 @@ marker_map = {
     "SF": "^",
     "ER-uw": "o",
     "ER-w": "o",
-    "ER-Min": "o",
-    "ER-Min_unweighted": "X",
-    "ER-Min_weighted": "o",
-    "ER-Max": "o",
-    "ER-Max_unweighted": "o",
-    "ER-Max_weighted": "o",
 }
 
 text_map = {
     "RankDegree": "RD",
     "ER": "ER",
-    "ER-Max": "ER",
-    "ER-Max_unweighted": "ER-uw",
-    "ER-Max_weighted": "ER-w",
+    "ER_unweighted": "ER-uw",
+    "ER_weighted": "ER-w",
     "ER-unweighted": "ER-uw",
     "ER-weighted": "ER-w",
     "ForestFire": "FF",
@@ -124,6 +115,8 @@ hatch_map = {
     "ER": "/",
     "ER-unweighted": "",
     "ER-weighted": "",
+    "ER_unweighted": "",
+    "ER_weighted": "",
     "ForestFire": "",
     "GSpar": "",
     "KNeighbor": "",
@@ -151,12 +144,6 @@ hatch_map = {
     "SF": "",
     "ER-uw": "",
     "ER-w": "",
-    "ER-Min": "o",
-    "ER-Min_unweighted": "X",
-    "ER-Min_weighted": "o",
-    "ER-Max": "",
-    "ER-Max_unweighted": "",
-    "ER-Max_weighted": "",
 }
 
 
@@ -252,12 +239,10 @@ def degreeDistribution(dataset_name, prune_algos=None):
     df = df[~((df.prune_algo == "ForestFire") & (df.prune_rate > 0.75))]
     df = df[~((df.prune_algo == "KNeighbor") & (df.prune_rate > 0.92))]
 
-    # rename er_min_weighted and er_max_weighted to er_min and er_max
     for key, value in text_map.items():
         df.loc[df.prune_algo == key, "prune_algo"] = value
 
-    # rename er_min_weighted and er_max_weighted to er_min and er_max
-    df.loc[df.prune_algo == "ER-Max_unweighted", "prune_algo"] = "ER"
+    df.loc[df.prune_algo == "ER_unweighted", "prune_algo"] = "ER"
 
     grouped = df.groupby('prune_algo')
 
@@ -369,7 +354,7 @@ def SPSP_Eccentricity(dataset_name, prune_algos=None):
     original_unreachable = df[df.prune_algo == "original"]["Unreachable_mean"].values[0]
     original_isolated = df[df.prune_algo == "original"]["Isolated_mean"].values[0]
 
-    df = df[~df.prune_algo.isin(["original", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted", "ER-Max_weighted"])]
+    df = df[~df.prune_algo.isin(["original"])]
 
     # remove prune rate < 0
     df = df[df.prune_rate >= 0]
@@ -854,9 +839,8 @@ def QuadraticFormSimilarity(dataset_name, prune_algos=None):
     plt.yticks(fontsize=ytickfontsize)
     plt.grid(gridon)
 
-    # replace "ER-Max_weighted" with "ER-weighted" in prune_algos
-    if "ER-Max_weighted" in prune_algos:
-        prune_algos[prune_algos.index("ER-Max_weighted")] = "ER-weighted"
+    if "ER_weighted" in prune_algos:
+        prune_algos[prune_algos.index("ER_weighted")] = "ER-weighted"
     # make legend without error bar
     handles = []
     if len(prune_algos) > 3:
@@ -1002,79 +986,6 @@ def MaxFlow(dataset_name, prune_algos=None):
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
-def GCN(dataset_name, prune_algos=None):
-    # read csv file, seprated by , and space
-    try:
-        df = pd.read_csv(osp.join(PROJECT_HOME, f"output_metric_parsed/{dataset_name}/GCN/log"), header=0, sep=",")
-    except:
-        return
-    full_acc = df[df.prune_algo == "original"]["test_acc"].values[0]
-    empty_acc = df[df.prune_algo == "empty"]["test_acc"].values[0]
-    if prune_algos is None:
-        df = df[~df.prune_algo.isin(["original", "empty", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted", "ER-Max_weighted"])]
-    else:
-        df = df[df.prune_algo.isin(prune_algos)]
-
-    # remove prune rate < 0
-    df = df[df.prune_rate >= 0]
-    df = df[df.prune_rate < 0.93]
-
-    # rename er_min_weighted and er_max_weighted to er_min and er_max
-    for key, value in text_map.items():
-        df.loc[df.prune_algo == key, "prune_algo"] = value
-
-    # sort df by prune rate
-    df = df.sort_values(by=['prune_rate'])
-    grouped = df.groupby('prune_algo')
-
-    ### plot MaxFlow stretch factor
-    plot_legend = True
-    if plot_legend:
-        fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation, figheight))
-        # fig, ax = plt.subplots(figsize=(figwidth+figwidth_legend_compensation, figheight+figheight_legend_compensation))
-    else:
-        fig, ax = plt.subplots(figsize=(figwidth, figheight))
-    for key in grouped.groups.keys():
-        grouped.get_group(key).plot(x="prune_rate", y="test_acc", 
-                                    ax=ax, marker=marker_map[key], label=key, color=color_map[key], 
-                                    markersize=markersize, linewidth=linewidth)
-    if addTitle:
-        plt.title(f"GCN Test AUC-ROC ({dataset_name})", fontsize=titlefontsize)
-    plt.axhline(y=full_acc, color='g', linestyle='--', linewidth=linewidth)
-    plt.axhline(y=empty_acc, color='r', linestyle='--', linewidth=linewidth)
-    plt.xlabel("Prune Rate", fontsize=xlabelfontsize)
-    plt.ylabel("AUC-ROC", fontsize=ylabelfontsize)
-    plt.xticks(fontsize=xtickfontsize)
-    plt.yticks(fontsize=ytickfontsize)
-    plt.grid(gridon)
-
-    # make legend without error bar
-    if plot_legend:
-        handles = []
-        if prune_algos is None:
-            for key in ["Random", "KNeighbor", "RankDegree", "LocalDegree", "SpanningForest", "Spanner-3", "Spanner-5", 
-                        "Spanner-7", "ForestFire", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-unweighted"]:
-                handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
-                                        linewidth=linewidth, label=text_map[key])
-                handles.append(handle)
-        else:
-            for key in prune_algos:
-                handle = mlines.Line2D([], [], color=color_map[key], marker=marker_map[key], markersize=markersize, 
-                                        linewidth=linewidth, label=key)
-                handles.append(handle)
-        plt.legend(handles=handles, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize=legendfontsize)
-        # plt.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.2), ncol=4, fontsize=legendfontsize)
-    else:
-        plt.legend().set_visible(False)
-    plt.tight_layout()
-
-    # save plot
-    if saveformat == "png":
-        figpath = osp.join(PROJECT_HOME, f"output_metric_plot/{dataset_name}/GCN/{dataset_name}_GCN.{saveformat}")
-    else:
-        figpath = osp.join(PROJECT_HOME, f"paper_fig/{dataset_name}_GCN.{saveformat}")
-    os.makedirs(osp.dirname(figpath), exist_ok=True)
-    plt.savefig(figpath)
 
 def ClusterGCN(dataset_name, prune_algos=None):
     # read csv file, seprated by , and space
@@ -1085,7 +996,7 @@ def ClusterGCN(dataset_name, prune_algos=None):
     full_acc = df[df.prune_algo == "original"]["test_acc"].values[0]
     empty_acc = df[df.prune_algo == "empty"]["test_acc"].values[0]
     if prune_algos is None:
-        df = df[~df.prune_algo.isin(["original", "empty", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted", "ER-Max_weighted"])]
+        df = df[~df.prune_algo.isin(["original", "empty"])]
     else:
         df = df[df.prune_algo.isin(prune_algos)]
 
@@ -1154,7 +1065,7 @@ def SAGE(dataset_name, prune_algos=None):
     full_acc = df[df.prune_algo == "original"]["test_acc"].values[0]
     empty_acc = df[df.prune_algo == "empty"]["test_acc"].values[0]
     if prune_algos is None:
-        df = df[~df.prune_algo.isin(["original", "empty", "ER-Min", "ER-Min_weighted", "ER-Min_unweighted", "ER-Max_weighted"])]
+        df = df[~df.prune_algo.isin(["original", "empty"])]
     else:
         df = df[df.prune_algo.isin(prune_algos)]
 
@@ -1247,18 +1158,18 @@ if __name__ == "__main__":
     # generate plots used in the paper
     SPSP_Eccentricity("ca-AstroPh")
     Centrality("ca-AstroPh", "TopCloseness", prune_algos=["Random", "LocalDegree", "RankDegree", "ForestFire", "LSpar", "GSpar", "SCAN"])
-    ClusteringF1Similarity("ca-HepPh", prune_algos=["Random", "KNeighbor", "LocalDegree", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER-Max_weighted", "ER-Max_unweighted"])
-    MaxFlow("ca-HepPh", prune_algos=["Random", "KNeighbor", "ForestFire", "ER-Max_weighted", "ER-Max_unweighted"])
+    ClusteringF1Similarity("ca-HepPh", prune_algos=["Random", "KNeighbor", "LocalDegree", "LSpar", "GSpar", "LocalSimilarity", "SCAN", "ER_weighted", "ER_unweighted"])
+    MaxFlow("ca-HepPh", prune_algos=["Random", "KNeighbor", "ForestFire", "ER_weighted", "ER_unweighted"])
     LocalClusteringCoefficient("com-Amazon", prune_algos=["Random", "KNeighbor", "SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7", "LocalSimilarity", "GSpar", "SCAN"])
-    QuadraticFormSimilarity("com-Amazon", prune_algos=["Random", "ER-Max_weighted"])
+    QuadraticFormSimilarity("com-Amazon", prune_algos=["Random", "ER_weighted"])
     Centrality("com-DBLP", "EstimateBetweenness", prune_algos=["Random", "LocalDegree", "RankDegree", "ForestFire", "LSpar", "GSpar", "SCAN"])
     DetectCommunity("com-DBLP", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "SpanningForest", "Spanner-3", "Spanner-5", "Spanner-7", "GSpar"])
     Diameter("ego-Facebook", prune_algos=["Random", "LocalDegree", "RankDegree", "GSpar", "LocalSimilarity", "SCAN"])
-    Centrality("web-Google", "PageRank", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "GSpar", "SCAN", "ER-Max_weighted", "ER-Max_unweighted"])
-    Centrality("ego-Facebook", "PageRank", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "GSpar", "SCAN", "ER-Max_weighted", "ER-Max_unweighted"])
-    Centrality("ego-Twitter", "Katz", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "ForestFire", "ER-Max_unweighted"])
+    Centrality("web-Google", "PageRank", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "GSpar", "SCAN", "ER_weighted", "ER_unweighted"])
+    Centrality("ego-Facebook", "PageRank", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "GSpar", "SCAN", "ER_weighted", "ER_unweighted"])
+    Centrality("ego-Twitter", "Katz", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "ForestFire", "ER_unweighted"])
     Centrality("email-Enron", "Eigenvector", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "ForestFire"])
-    GlobalClusteringCoefficient("human_gene2", prune_algos=["Random", "KNeighbor", "LocalSimilarity", "GSpar", "SCAN", "ER-Max_weighted"])
+    GlobalClusteringCoefficient("human_gene2", prune_algos=["Random", "KNeighbor", "LocalSimilarity", "GSpar", "SCAN", "ER_weighted"])
     degreeDistribution("ogbn-proteins", prune_algos=["Random", "KNeighbor", "LocalDegree", "RankDegree", "ForestFire"])
     SAGE("ogbn-proteins", prune_algos=["Random", "LocalDegree", "RankDegree", "GSpar", "LocalSimilarity", "SCAN"])
     ClusterGCN("Reddit", prune_algos=["Random", "LocalDegree", "RankDegree", "ForestFire", "GSpar", "SCAN"])
