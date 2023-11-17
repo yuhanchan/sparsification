@@ -122,7 +122,7 @@ for dataset_name in dataset_names:
                     dst=f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}/0/duw.el",
                     mode=2)
 
-    for prune_algo in ["ER-Min", "ER-Max"]:
+    for prune_algo in ["ER"]:
         if not osp.exists(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}"):
             continue
         for prune_rate in os.listdir(f"{PROJECT_HOME}/data/{dataset_name}/pruned/{prune_algo}"):
@@ -140,4 +140,4 @@ pool.close()
 pool.join()
 for result in results:
     out, err = result.get()
-    print(f"out: {out} err: {err}")
+    # print(f"out: {out} err: {err}")
