@@ -119,7 +119,7 @@ python $PROJECT_HOME/plot/paper_plot.py
 will reproduce the figures used in the paper.
 
 
-## Reproduce figures in the paper
+## Reproduce ego-Facebook figures in the paper
 In this section, we give instructions to preproduce figures 4(c) and 11(b) in the paper. Other figures can also be reproduced, but due to the very long run time, we recommend reproducing results on graph ``ego-Facebook`` (the smallest graph) first.
 
 1. Follow instructions to setup environments and install necessary dependencies.
@@ -141,4 +141,20 @@ python $PROJECT_HOME/parser/metric_parse.py --dataset_name ego-Facebook
 python $PROJECT_HOME/plot/paper_plot.py 
 ```
 
+The plots generated will be in ``$PROJECT_HOME/paper_fig/``. Note that the figure may be slightly different from the ones in the paper due to the randomness in the sparsify and eveluation process, but the discrepancy should be minimal.
+
+
+## Reproduce other figures in the paper
+To reproduce other figures in the paper, you can repeat the steps above, but change ``ego-Facebook`` to other datasets. Or change ``ego-Facebook`` to ``all`` to run all sparsifiers and evaluation on all datasets.
+
+**Warning**: This will take significantly long time and requires a lot of memory and storage space for large graphs.
+
+Alternatively, we provides our experiment logs in ``output_archive.zip``. To use it, run the following command:
+```bash
+# unzip the archive
+unzip output_archive.zip
+
+# plot the results
+python $PROJECT_HOME/plot/paper_plot.py
+```
 The plots generated will be in ``$PROJECT_HOME/paper_fig/``. Note that the figure may be slightly different from the ones in the paper due to the randomness in the sparsify and eveluation process, but the discrepancy should be minimal.
