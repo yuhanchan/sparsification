@@ -39,8 +39,6 @@ We may use the terms ``sparsify`` and ``prune`` interchangably in this doc
 ```
 
 
-
-
 ## Env
 
 Conda is recommendated to manage env. To install necessary packages:
@@ -119,3 +117,28 @@ python $PROJECT_HOME/plot/plot.py --dataset_name [dataset_name]/all --metric [me
 python $PROJECT_HOME/plot/paper_plot.py
 ``` 
 will reproduce the figures used in the paper.
+
+
+## Reproduce figures in the paper
+In this section, we give instructions to preproduce figures 4(c) and 11(b) in the paper. Other figures can also be reproduced, but due to the very long run time, we recommend reproducing results on graph ``ego-Facebook`` (the smallest graph) first.
+
+1. Follow instructions to setup environments and install necessary dependencies.
+2. run the following command in order to regenerate figure 4(c) and 11(b) in the paper:
+```bash
+# download and pre-process ego-Facebook
+python $PROJECT_HOME/utils/data_preparation.py --dataset_name ego-Facebook
+
+# Run sparsification on ego-Facebook
+python $PROJECT_HOME/src/main.py --dataset_name ego-Facebook --mode sparsify
+
+# Run evaluation on ego-Facebook, this will take ~ 20 minutes
+python $PROJECT_HOME/src/main.py --dataset_name ego-Facebook --mode sparsify
+
+# parse the results generated in the evaluation step
+python $PROJECT_HOME/parser/metric_parse.py --dataset_name ego-Facebook
+
+# plot the results
+python $PROJECT_HOME/plot/paper_plot.py 
+```
+
+The plots generated will be in ``$PROJECT_HOME/paper_fig/``. Note that the figure may be slightly different from the ones in the paper due to the randomness in the sparsify and eveluation process, but the discrepancy should be minimal.
