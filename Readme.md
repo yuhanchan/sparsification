@@ -158,3 +158,18 @@ unzip output_archive.zip
 python $PROJECT_HOME/plot/paper_plot.py
 ```
 The plots generated will be in ``$PROJECT_HOME/paper_fig/``. Note that the figure may be slightly different from the ones in the paper due to the randomness in the sparsify and eveluation process, but the discrepancy should be minimal.
+
+
+## Appendix
+The appendix file ``Appendix.pdf`` presents pseudocode for some of the sparsifiers, as well as full results for the evaluation of all metrics evaluated on all graphs. 
+
+You can also reproduce the figures in the appendix by running the following commands:
+
+```bash
+# unzip the archive
+unzip output_archive.zip
+
+# plot the results
+python $PROJECT_HOME/plot/plot.py --dataset_name all --metric all
+```
+The plots will be in ``$PROJECT_HOME/output_metric_plot/``
