@@ -1125,6 +1125,9 @@ def SAGE(dataset_name, prune_algos=None):
     os.makedirs(osp.dirname(figpath), exist_ok=True)
     plt.savefig(figpath)
 
+def rename(src, dst):
+    if osp.exists(src):
+        os.rename(src, dst)
 
 if __name__ == "__main__":
     # set plot parameters
@@ -1175,52 +1178,52 @@ if __name__ == "__main__":
     ClusterGCN("Reddit", prune_algos=["Random", "LocalDegree", "RankDegree", "ForestFire", "GSpar", "SCAN"])
     sparsifier_time("ogbn-proteins")
 
-    # rename figures to match with the paper
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ca-AstroPh_Eccentricity_isolated.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Fig_1b_ca-AstroPh_Eccentricity_isolated.{saveformat}"))
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ca-AstroPh_Eccentricity_stretch_factor.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Unused_ca-AstroPh_Eccentricity_stretch_factor.{saveformat}"))
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ca-AstroPh_Eccentricity_stretch_factor_with_unreachable_constraint.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Fig_4b_ca-AstroPh_Eccentricity_stretch_factor_with_unreachable_constraint.{saveformat}"))
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ca-AstroPh_SPSP_stretch_factor.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Unused_ca-AstroPh_SPSP_stretch_factor.{saveformat}"))
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ca-AstroPh_SPSP_stretch_factor_with_unreachable_constraint.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Fig_4a_ca-AstroPh_SPSP_stretch_factor_with_unreachable_constraint.{saveformat}"))
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ca-AstroPh_SPSP_unreachable.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Fig_1a_ca-AstroPh_SPSP_unreachable.{saveformat}"))
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ca-AstroPh_TopClosenessCentrality_precision.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Fig_5b_ca-AstroPh_TopClosenessCentrality_precision.{saveformat}"))
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ca-HepPh_ClusteringF1Similarity.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Fig_10_ca-HepPh_ClusteringF1Similarity.{saveformat}"))
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ca-HepPh_MaxFlow_stretch_factor.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Unused_ca-HepPh_MaxFlow_stretch_factor.{saveformat}"))
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ca-HepPh_MaxFlow_stretch_factor_with_constraint.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Fig_12_ca-HepPh_MaxFlow_stretch_factor_with_constraint.{saveformat}"))
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ca-HepPh_MaxFLow_unreachable.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Unused_ca-HepPh_MaxFLow_unreachable.{saveformat}"))
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/com-Amazon_MeanClusteringCoefficient.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Fig_9a_com-Amazon_MeanClusteringCoefficient.{saveformat}"))
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/com-Amazon_QuadraticFormSimilarity.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Fig_3_com-Amazon_QuadraticFormSimilarity.{saveformat}"))
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/com-DBLP_EstimateBetweennessCentrality_precision.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Fig_5a_com-DBLP_EstimateBetweennessCentrality_precision.{saveformat}"))
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/com-DBLP_num_community.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Fig_8_com-DBLP_num_community.{saveformat}"))
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ego-Facebook_Diameter.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Fig_4c_ego-Facebook_Diameter.{saveformat}"))
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ego-Facebook_PageRankCentrality_precision.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Fig_11b_ego-Facebook_PageRankCentrality_precision.{saveformat}"))
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ego-Twitter_KatzCentrality_precision.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Fig_7_ego-Twitter_KatzCentrality_precision.{saveformat}"))
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/email-Enron_EigenvectorCentrality_precision.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Fig_6_email-Enron_EigenvectorCentrality_precision.{saveformat}"))
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/human_gene2_GlobalClusteringCoefficient.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Fig_9b_human_gene2_GlobalClusteringCoefficient.{saveformat}"))
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ogbn-proteins_degreeDistribution.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Fig_2_ogbn-proteins_degreeDistribution.{saveformat}"))
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/ogbn-proteins_SAGE.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Fig_13a_ogbn-proteins_SAGE.{saveformat}"))
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/Reddit_ClusterGCN.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Fig_13b_Reddit_ClusterGCN.{saveformat}"))
-    os.rename(osp.join(PROJECT_HOME, f"paper_fig/web-Google_PageRankCentrality_precision.{saveformat}"), 
-              osp.join(PROJECT_HOME, f"paper_fig/Fig_11a_web-Google_PageRankCentrality_precision.{saveformat}"))
+    # rename figures to match with the paper, if the figure exists
+    rename(osp.join(PROJECT_HOME, f"paper_fig/ca-AstroPh_Eccentricity_isolated.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Fig_1b_ca-AstroPh_Eccentricity_isolated.{saveformat}"))
+    rename(osp.join(PROJECT_HOME, f"paper_fig/ca-AstroPh_Eccentricity_stretch_factor.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Unused_ca-AstroPh_Eccentricity_stretch_factor.{saveformat}"))
+    rename(osp.join(PROJECT_HOME, f"paper_fig/ca-AstroPh_Eccentricity_stretch_factor_with_unreachable_constraint.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Fig_4b_ca-AstroPh_Eccentricity_stretch_factor_with_unreachable_constraint.{saveformat}"))
+    rename(osp.join(PROJECT_HOME, f"paper_fig/ca-AstroPh_SPSP_stretch_factor.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Unused_ca-AstroPh_SPSP_stretch_factor.{saveformat}"))
+    rename(osp.join(PROJECT_HOME, f"paper_fig/ca-AstroPh_SPSP_stretch_factor_with_unreachable_constraint.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Fig_4a_ca-AstroPh_SPSP_stretch_factor_with_unreachable_constraint.{saveformat}"))
+    rename(osp.join(PROJECT_HOME, f"paper_fig/ca-AstroPh_SPSP_unreachable.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Fig_1a_ca-AstroPh_SPSP_unreachable.{saveformat}"))
+    rename(osp.join(PROJECT_HOME, f"paper_fig/ca-AstroPh_TopClosenessCentrality_precision.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Fig_5b_ca-AstroPh_TopClosenessCentrality_precision.{saveformat}"))
+    rename(osp.join(PROJECT_HOME, f"paper_fig/ca-HepPh_ClusteringF1Similarity.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Fig_10_ca-HepPh_ClusteringF1Similarity.{saveformat}"))
+    rename(osp.join(PROJECT_HOME, f"paper_fig/ca-HepPh_MaxFlow_stretch_factor.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Unused_ca-HepPh_MaxFlow_stretch_factor.{saveformat}"))
+    rename(osp.join(PROJECT_HOME, f"paper_fig/ca-HepPh_MaxFlow_stretch_factor_with_constraint.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Fig_12_ca-HepPh_MaxFlow_stretch_factor_with_constraint.{saveformat}"))
+    rename(osp.join(PROJECT_HOME, f"paper_fig/ca-HepPh_MaxFLow_unreachable.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Unused_ca-HepPh_MaxFLow_unreachable.{saveformat}"))
+    rename(osp.join(PROJECT_HOME, f"paper_fig/com-Amazon_MeanClusteringCoefficient.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Fig_9a_com-Amazon_MeanClusteringCoefficient.{saveformat}"))
+    rename(osp.join(PROJECT_HOME, f"paper_fig/com-Amazon_QuadraticFormSimilarity.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Fig_3_com-Amazon_QuadraticFormSimilarity.{saveformat}"))
+    rename(osp.join(PROJECT_HOME, f"paper_fig/com-DBLP_EstimateBetweennessCentrality_precision.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Fig_5a_com-DBLP_EstimateBetweennessCentrality_precision.{saveformat}"))
+    rename(osp.join(PROJECT_HOME, f"paper_fig/com-DBLP_num_community.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Fig_8_com-DBLP_num_community.{saveformat}"))
+    rename(osp.join(PROJECT_HOME, f"paper_fig/ego-Facebook_Diameter.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Fig_4c_ego-Facebook_Diameter.{saveformat}"))
+    rename(osp.join(PROJECT_HOME, f"paper_fig/ego-Facebook_PageRankCentrality_precision.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Fig_11b_ego-Facebook_PageRankCentrality_precision.{saveformat}"))
+    rename(osp.join(PROJECT_HOME, f"paper_fig/ego-Twitter_KatzCentrality_precision.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Fig_7_ego-Twitter_KatzCentrality_precision.{saveformat}"))
+    rename(osp.join(PROJECT_HOME, f"paper_fig/email-Enron_EigenvectorCentrality_precision.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Fig_6_email-Enron_EigenvectorCentrality_precision.{saveformat}"))
+    rename(osp.join(PROJECT_HOME, f"paper_fig/human_gene2_GlobalClusteringCoefficient.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Fig_9b_human_gene2_GlobalClusteringCoefficient.{saveformat}"))
+    rename(osp.join(PROJECT_HOME, f"paper_fig/ogbn-proteins_degreeDistribution.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Fig_2_ogbn-proteins_degreeDistribution.{saveformat}"))
+    rename(osp.join(PROJECT_HOME, f"paper_fig/ogbn-proteins_SAGE.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Fig_13a_ogbn-proteins_SAGE.{saveformat}"))
+    rename(osp.join(PROJECT_HOME, f"paper_fig/Reddit_ClusterGCN.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Fig_13b_Reddit_ClusterGCN.{saveformat}"))
+    rename(osp.join(PROJECT_HOME, f"paper_fig/web-Google_PageRankCentrality_precision.{saveformat}"), 
+           osp.join(PROJECT_HOME, f"paper_fig/Fig_11a_web-Google_PageRankCentrality_precision.{saveformat}"))
