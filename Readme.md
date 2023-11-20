@@ -1,4 +1,25 @@
-## Above all
+## Overview
+
+This repo is a framework to evaluate the effectiveness of various sparsifiers on preserving graph properties. If you find this repo useful, please cite our paper:
+
+```
+@inproceedings{chen2023sparsification,
+  author    = {Yuhan Chen and
+               Haojie Ye and
+               Sanketh Vedula and
+               Alex Bronstein and
+               Ronald Dreslinski and
+               Trevor Mudge and
+               Nishil Talati 
+               },
+  title     = {{Demystifying Graph Sparsification Algorithms in Graph Properties Preservation}},
+  booktitle = {{50th International Conference on Very Large Databases (VLDB 2024)}},
+  pages     = {},
+  publisher = {ACM},
+  year      = {2024}
+}
+```
+
 We may use the terms ``sparsify`` and ``prune`` interchangably in this doc
 
 ------
