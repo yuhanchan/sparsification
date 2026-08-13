@@ -1,3 +1,5 @@
+
+
 ## Overview
 
 This repo is a framework to evaluate the effectiveness of various sparsifiers on preserving graph properties. If you find this repo useful, please cite our paper:
@@ -153,7 +155,7 @@ python $PROJECT_HOME/utils/data_preparation.py --dataset_name ego-Facebook
 python $PROJECT_HOME/src/main.py --dataset_name ego-Facebook --mode sparsify
 
 # Run evaluation on ego-Facebook, this will take ~ 20 minutes
-python $PROJECT_HOME/src/main.py --dataset_name ego-Facebook --mode sparsify
+python $PROJECT_HOME/src/main.py --dataset_name ego-Facebook --mode eval
 
 # parse the results generated in the evaluation step
 python $PROJECT_HOME/parser/metric_parse.py --dataset_name ego-Facebook
